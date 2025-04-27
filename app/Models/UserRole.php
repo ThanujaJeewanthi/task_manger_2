@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class UserRole extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'active',
+    ];
+
+    /**
+     * Define the relationship with the User model.
+     */
+    public function users()
+    {
+        return $this->hasMany(User::class, 'user_role_id');
+    }
+
+    /**
+     * Define the relationship with the SpecialPrivilege model.
+     */
+    public function specialPrivileges()
+    {
+        return $this->hasMany(SpecialPrivilege::class, 'user_role_id');
+    }
+}
