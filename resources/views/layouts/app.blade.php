@@ -4,34 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spin App - @yield('title', 'Laundry Management System')</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- <link href="{{asset('boostrap/css/bootstrap.min.css')}}" rel="stylesheet">
+    <link href="{{asset('css/styles.css')}}" rel="stylesheet"> --}}
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    {{-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css"> --}}
     @yield('styles')
+    <style>
+        .sidebar-collapsed {
+            width: 60px !important;
+            overflow: hidden;
+        }
+        .sidebar-collapsed .nav-text {
+            display: none;
+        }
+        .sidebar-collapsed .list-group-item {
+            text-align: center;
+        }
+        .sidebar-collapsed .list-group-item i {
+            margin-right: 0;
+        }
+        .main-content {
+            transition: margin-left 0.3s ease;
+        }
+        .toggle-sidebar-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <div class="min-h-screen flex flex-col">
+<body class="" style="background-color: rgb(45, 63, 83) ">
+    <div class="d-flex flex-column min-vh-100">
         <!-- Navbar -->
         @include('layouts.navbar')
 
         <!-- Sidebar and Main Content -->
-        <div class="flex flex-1">
+        <div class="d-flex flex-grow-1">
             @auth
                 @include('layouts.sidebar')
             @endauth
 
             <!-- Main Content -->
-            <main class="flex-1 p-6">
+            <main class="main-content flex-grow-1 p-4">
                 @if(session('success'))
-                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
-                        <p>{{ session('success') }}</p>
+                    <div class="alert alert-success mb-4" role="alert">
+                        {{ session('success') }}
                     </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
-                        <p>{{ session('error') }}</p>
+                    <div class="alert alert-danger mb-4" role="alert">
+                        {{ session('error') }}
                     </div>
                 @endif
 
@@ -43,8 +72,31 @@
         @include('layouts.footer')
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts - Make sure jQuery loads before Bootstrap -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Check if sidebar state is stored in localStorage
+            if (localStorage.getItem('sidebarCollapsed') === 'true') {
+                toggleSidebar();
+            }
+
+            // Toggle sidebar function
+            function toggleSidebar() {
+                $('aside').toggleClass('sidebar-collapsed');
+                $('.main-content').toggleClass('ms-0').toggleClass('ms-250');
+                localStorage.setItem('sidebarCollapsed', $('aside').hasClass('sidebar-collapsed'));
+            }
+
+            // Toggle button click event
+            $('.toggle-sidebar-btn').click(function() {
+                toggleSidebar();
+            });
+        });
+    </script>
+
     @yield('scripts')
 </body>
 </html>

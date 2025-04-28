@@ -4,42 +4,64 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserRoleDetail;
+use App\Models\Page;
+
 class RoleAccessMiddleware
 {
-    public function handle(Request $request, Closure $next, $role)
+    /**
+     * Handle an incoming request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Closure  $next
+     * @param  string  $pageCode
+     * @return mixed
+     */
+    public function handle(Request $request, Closure $next, $pageCode = null)
     {
-        // First, check if the user is authenticated
+        // Check if user is authenticated
         if (!Auth::check()) {
-            return redirect('/login');
+            return redirect()->route('login');
         }
 
-        // Fetch the user and their role
         $user = Auth::user();
-        $userRoleId = $user->user_role_id;
 
-        // Check if the user has the correct role
-        if ($userRoleId) {
-            // Get the pages that the role can access
-            $allowedPages = UserRoleDetail::where('user_role_id', $userRoleId)
-                ->where('active', true)
-                ->pluck('code') // Fetch all codes the role has access to
-                ->toArray();
+        // Super admin bypass (assuming admin type has full access)
+        if ($user->type === 'admin') {
+            return $next($request);
+        }
 
-            // Get the current route name (which is the page code)
-            $currentPage = $request->route()->getName();
+        // If no specific page code is provided, get it from the route
+        if (!$pageCode) {
+            // Get current route and match it to a page code
+            $currentRoute = $request->route()->getName();
 
-            // Check if the role has access to the requested page
-            if (in_array($currentPage, $allowedPages)) {
-                return $next($request);
+
+            // This could be stored in a config file or database
+            $page = Page::where('code', $currentRoute)->first();
+
+            if ($page) {
+                $pageCode = $page->code;
             } else {
-                // If the role doesn't have access to this page
-                return redirect('/')->with('error', 'You do not have permission to access this page.');
+                // If page not found, deny access
+                return redirect()->route('dashboard')
+                    ->with('error', 'You do not have permission to access this page.');
             }
         }
 
-        return redirect('/login')->with('error', 'Please login to access this page.');
+        // Check if user has permission for this page
+        $hasPermission = UserRoleDetail::where('user_role_id', $user->user_role_id)
+            ->where('code', $pageCode)
+            ->where('active', true)
+            ->exists();
+
+        if ($hasPermission) {
+            return $next($request);
+        }
+
+        // Redirect with error message if no permission
+        return redirect()->route('dashboard')
+            ->with('error', 'You do not have permission to access this page.');
     }
 }

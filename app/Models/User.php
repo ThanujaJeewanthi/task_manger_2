@@ -37,10 +37,16 @@ class User extends Authenticatable
         return $this->belongsTo(UserRole::class, 'user_role_id');
     }
 
+    public function roleName()
+{
+    return strtolower($this->userRole->name);
+}
+
+
     //return userRole name
     public function hasRole()
     {
-        return $this->userRole->name;
+        return $this->userRole;
     }
     /**
      * Define the relationship with the SpecialPrivilege model.

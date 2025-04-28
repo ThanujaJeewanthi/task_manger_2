@@ -6,14 +6,14 @@ namespace App\Http\Controllers\Dashboard;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 
 class AdminDashboardController extends Controller
 {
     public function __construct()
     {
-       // $this->middleware(['auth', 'role:admin']);
+        $this->middleware(['auth', 'role.access:admin']);
     }
 
     public function index()
