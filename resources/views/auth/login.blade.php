@@ -1,8 +1,8 @@
-{{-- @extends('layouts.app') --}}
+@extends('layouts.app')
 
-{{-- @section('title', 'Login') --}}
+@section('title', 'Login')
 
-{{-- @section('content') --}}
+@section('content')
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -11,7 +11,7 @@
                     <h2 class="mb-0">Login to Spin App</h2>
                 </div>
                 <div class="card-body">
-                    @if ($errors->any())
+                    {{-- @if ($errors->any())
                         <div class="alert alert-danger" role="alert">
                             <ul class="mb-0">
                                 @foreach ($errors->all() as $error)
@@ -19,7 +19,7 @@
                                 @endforeach
                             </ul>
                         </div>
-                    @endif
+                    @endif --}}
 
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
@@ -97,4 +97,4 @@
         </div>
     </div>
 </div>
-{{-- @endsection --}}
+@endsection

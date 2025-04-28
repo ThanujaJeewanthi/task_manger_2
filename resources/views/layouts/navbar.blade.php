@@ -3,6 +3,7 @@
         <a href="{{ route('dashboard') }}" class="navbar-brand">
             <span class="fw-bold fs-4">Spin App</span>
         </a>
+        @auth
         <div class="search-bar   d-flex align-items-center me-3">
 
             <div class="input-group">
@@ -11,6 +12,8 @@
             </div>
 
         </div>
+        @endauth
+
 
 
 
