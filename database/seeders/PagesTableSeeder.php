@@ -57,8 +57,8 @@ class PagesTableSeeder extends Seeder
             //Order Pages
             ['name' => 'Create Order', 'code' => '6.1', 'page_category_id' => 6, 'active' => true],
             ['name' => 'Edit Order', 'code' => '6.2', 'page_category_id' => 6, 'active' => true],
-            ['name' => 'View Orders', 'code' => '6.3', 'page_category_id' => 6, 'active' => true],
-
+            ['name' => 'View Orders_client', 'code' => '6.3', 'page_category_id' => 6, 'active' => true],
+            ['name' => 'View Orders_rider', 'code' => '6.4', 'page_category_id' => 6, 'active' => true],
         ];
 
         foreach ($pages as $page) {

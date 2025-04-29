@@ -11,7 +11,10 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\Dashboard\ClientController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
+use App\Http\Controllers\Dashboard\ClientDashboardController;
 use App\Http\Controllers\Dashboard\CommonDashboardController;
+use App\Http\Controllers\Dashboard\RiderDashboardController;
+use App\Http\Controllers\Dashboard\LaundryDashboardController;
 
 // Authentication routes
 //Auth::routes();
@@ -22,9 +25,9 @@ Route::get('/', [CommonDashboardController::class, 'index'])->name('home');
 // Dashboard route
 Route::get('/dashboard', [CommonDashboardController::class, 'index'])->name('dashboard')->middleware('role.permission:1.1');
 Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard')->middleware('role.permission:1.2');
-Route::get('/client/dashboard', [ClientController::class, 'index'])->name('client.dashboard')->middleware('role.permission:1.3');
-Route::get('/rider/dashboard', [RiderController::class, 'index'])->name('rider.dashboard')->middleware('role.permission:1.4');
-Route::get('/laundry/dashboard', [LaundryController::class, 'index'])->name('laundry.dashboard')->middleware('role.permission:1.5');
+Route::get('/client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard')->middleware('role.permission:1.3');
+Route::get('/rider/dashboard', [RiderDashboardController::class, 'index'])->name('rider.dashboard')->middleware('role.permission:1.4');
+Route::get('/laundry/dashboard', [LaundryDashboardController::class, 'index'])->name('laundry.dashboard')->middleware('role.permission:1.5');
 
 Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login.form');
 Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
@@ -36,9 +39,9 @@ Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logo
 // Admin routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.permission'])->group(function () {
     // Permission management
-    Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index')->middleware('role.permission:2.1');
-    Route::get('/permissions/{role}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:2.2');
-    Route::put('/permissions/{role}', [PermissionController::class, 'update'])->name('permissions.update')->middleware('role.permission:2.3');
+    Route::get('/permissions/manage', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:2.3');
+    // Route::get('/permissions/{role}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:2.2');
+    Route::put('/permissions/{roleId}', [PermissionController::class, 'update'])->name('permissions.update');
 
     // Page Categories
     Route::get('/page-categories', [PageCategoryController::class, 'index'])->name('page-categories.index')->middleware('role.permission:2.4');

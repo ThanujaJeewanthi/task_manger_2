@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\UserRoleDetail;
 
-class RoleAccessMiddleware
+class RolePermissionMiddleware
 {
     /**
      * Handle an incoming request.
@@ -19,14 +19,14 @@ class RoleAccessMiddleware
      */
     public function handle(Request $request, Closure $next, $code = null)
     {
-        // Check if user is authenticated
+
         if (!Auth::check()) {
             return redirect()->route('login');
         }
 
         $user = Auth::user();
 
-        // Super admin bypass (assuming admin type has full access)
+
         if ($user->type === 'admin') {
             return $next($request);
         }
@@ -45,6 +45,7 @@ class RoleAccessMiddleware
         if ($permission) {
             return $next($request);
         }
+
 
         // Redirect to dashboard with error
         return redirect()->route('dashboard')

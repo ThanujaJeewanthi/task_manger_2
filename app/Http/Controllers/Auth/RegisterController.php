@@ -50,7 +50,7 @@ class RegisterController extends Controller
 
         // Determine the user type based on the selected role
         $userRole = UserRole::findOrFail($request->user_role_id);
-        $userType = ($userRole->name === 'Admin') ? 'admin' : 'user';
+        $userType = ($userRole->name === 'admin') ? 'admin' : 'user';
 
         // Create the user
         $user = User::create([

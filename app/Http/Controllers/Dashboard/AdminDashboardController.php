@@ -13,7 +13,7 @@ class AdminDashboardController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(['auth', 'role.access:admin']);
+
     }
 
     public function index()
@@ -33,7 +33,7 @@ class AdminDashboardController extends Controller
             'activeUsers' => $activeUsers,
             'user' => $user,
             'role' => $role,
-            // Add more admin-specific data
+
         ]);
     }
 }

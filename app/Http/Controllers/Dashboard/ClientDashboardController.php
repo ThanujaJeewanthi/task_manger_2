@@ -18,11 +18,10 @@ class ClientDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        // Get client-specific data here
 
         return view('dashboard.client', [
             'user' => $user,
-            // Add more client-specific data
+
         ]);
     }
 }

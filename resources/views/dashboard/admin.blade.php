@@ -9,8 +9,8 @@
 
         <div class="row mb-4">
             <div class="col-md-3 mb-4 mb-md-0">
-                <div class="dcards-card text-center bg-primary bg-opacity-10">
-                    <div class="dcards-card-body">
+                <div class="dcards-card text-center bg-primary bg-opacity-10 ">
+                    <div class="dcards-card-body ">
                         <h3 class="dcards-card-title h5 mb-2">Total Users</h3>
                         <h6 class="dcards-card-subtitle mb-2 text-muted">Card subtitle</h6>
                         <p class="display-5 fw-bold">{{ $totalUsers }}</p>
@@ -55,11 +55,11 @@
                     </div>
                     <div class="card-body">
                         <ul class="list-unstyled mb-0">
-                            {{-- <li class="mb-2"><a href="{{ route('users.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-users me-2"></i> User Management</a></li>
-                            <li class="mb-2"><a href="{{ route('roles.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-user-tag me-2"></i> Role Management</a></li>
-                            <li class="mb-2"><a href="{{ route('privileges.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-key me-2"></i> Special Privileges</a></li>
-                            <li class="mb-2"><a href="{{ route('pages.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-file me-2"></i> Page Management</a></li>
-                            <li><a href="{{ route('page-categories.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-folder me-2"></i> Page Categories</a></li> --}}
+                            {{-- <li class="mb-2"><a href="{{ route('users.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-users me-2"></i> User Management</a></li> --}}
+                            {{-- <li class="mb-2"><a href="{{ route('roles.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-user-tag me-2"></i> Role Management</a></li> --}}
+                            <li class="mb-2"><a href="{{ route('admin.permissions.manage') }}" class="text-primary d-flex align-items-center"><i class="fas fa-key me-2"></i> Permission Management</a></li>
+                            {{-- <li class="mb-2"><a href="{{ route('pages.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-file me-2"></i> Page Management</a></li> --}}
+                            {{-- <li><a href="{{ route('page-categories.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-folder me-2"></i> Page Categories</a></li> --}}
                         </ul>
                     </div>
                 </div>
