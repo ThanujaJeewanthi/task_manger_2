@@ -13,12 +13,15 @@ return new class extends Migration
     {
         Schema::create('user_role_details', function (Blueprint $table) {
             $table->id();
-            $table->string('code');
+            $table->string('code')->nullable();
             $table->foreignId('user_role_id')->constrained('user_roles')->onDelete('cascade');
             $table->foreignId('page_id')->constrained('pages')->onDelete('cascade');
             $table->foreignId('page_category_id')->constrained('page_categories')->onDelete('cascade');
             $table->boolean('active')->default(true);
             $table->timestamps();
+        });
+        Schema::table('user_role_details', function (Blueprint $table) {
+            $table->enum('status', ['allow', 'disallow'])->default('disallow');
         });
     }
 

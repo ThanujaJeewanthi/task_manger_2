@@ -10,6 +10,7 @@ use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\Dashboard\ClientController;
+use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\CommonDashboardController;
 
 // Authentication routes
@@ -19,7 +20,11 @@ use App\Http\Controllers\Dashboard\CommonDashboardController;
 Route::get('/', [CommonDashboardController::class, 'index'])->name('home');
 
 // Dashboard route
-Route::get('/dashboard', [CommonDashboardController::class, 'index'])->name('dashboard');
+Route::get('/dashboard', [CommonDashboardController::class, 'index'])->name('dashboard')->middleware('role.permission:1.1');
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard')->middleware('role.permission:1.2');
+Route::get('/client/dashboard', [ClientController::class, 'index'])->name('client.dashboard')->middleware('role.permission:1.3');
+Route::get('/rider/dashboard', [RiderController::class, 'index'])->name('rider.dashboard')->middleware('role.permission:1.4');
+Route::get('/laundry/dashboard', [LaundryController::class, 'index'])->name('laundry.dashboard')->middleware('role.permission:1.5');
 
 Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'showLoginForm'])->name('login.form');
 Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login'])->name('login');
