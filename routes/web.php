@@ -39,7 +39,7 @@ Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logo
 // Admin routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.permission'])->group(function () {
     // Permission management
-    Route::get('/permissions/manage', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:2.3');
+    Route::get('/permissions/manage/{roleId}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:2.3');
     // Route::get('/permissions/{role}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:2.2');
     Route::put('/permissions/{roleId}', [PermissionController::class, 'update'])->name('permissions.update');
 
@@ -67,7 +67,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.permission'])-
     Route::put('/roles/{role}', [UserRoleController::class, 'update'])->name('roles.update')->middleware('role.permission:2.2');
     Route::delete('/roles/{role}', [UserRoleController::class, 'destroy'])->name('roles.destroy')->middleware('role.permission:2.2');
     Route::post('/roles/clone-permissions', [UserRoleController::class, 'clonePermissions'])->name('roles.clone-permissions')->middleware('role.permission:2.2');
-});
+}) ;
+Route::get('/admin/pages/search', [PageController::class, 'search'])->name('admin.pages.search');
+
 
 // Client routes
 Route::prefix('client')->name('client.')->middleware(['auth', 'role.permission'])->group(function () {

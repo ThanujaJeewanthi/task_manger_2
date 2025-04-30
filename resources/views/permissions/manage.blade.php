@@ -8,6 +8,84 @@
                 <div class="card-header">
                     <h4>Manage Permissions</h4>
                 </div>
+                <div>
+                    <input type="text" id="search-input" class="form-control" placeholder="Search pages or categories...">
+                    <div id="search-results" class="list-group mt-2"></div>
+
+                    <script>
+                        document.getElementById('search-input').addEventListener('keyup', function () {
+                            let query = this.value;
+
+                            if (query.length < 2) {
+                                document.getElementById('search-results').innerHTML = '';
+                                return;
+                            }
+
+                            fetch(`/admin/pages/search?q=${query}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    let resultBox = document.getElementById('search-results');
+                                    resultBox.innerHTML = '';
+
+                                    if (data.length === 0) {
+                                        resultBox.innerHTML = '<div class="list-group-item">No results found.</div>';
+                                    }
+
+                                    data.forEach(item => {
+                                        let link = document.createElement('a');
+                                        link.href = '#'; // Using JavaScript navigation instead
+                                        link.className = 'list-group-item list-group-item-action';
+                                        link.innerHTML = `<strong>${item.name}</strong> <br><small>in ${item.page_category.name}</small>`;
+
+                                        // Store data attributes for navigation
+                                        link.dataset.pageId = item.id;
+                                        link.dataset.categoryId = item.page_category_id;
+                                        link.dataset.categoryName = item.page_category.name;
+                                        link.dataset.pageName = item.name;
+
+                                        link.addEventListener('click', function(e) {
+                                            e.preventDefault();
+                                            navigateToPage(item.id, item.page_category_id);
+                                        });
+
+                                        resultBox.appendChild(link);
+                                    });
+                                });
+                        });
+
+                        function navigateToPage(pageId, categoryId) {
+                            // First, find which role tab is currently active or select the first one
+                            let activeRoleTab = document.querySelector('.nav-link.active');
+                            let roleId = activeRoleTab.id.replace('role-', '').replace('-tab', '');
+
+                            // Activate the tab
+                            let tabElement = document.getElementById(`role-${roleId}-tab`);
+                            if (tabElement) {
+                                tabElement.click();
+                            }
+
+                            // Find the row with matching page ID
+                            let targetRow = document.querySelector(`tr[data-page-id="${pageId}"]`);
+
+                            if (targetRow) {
+                                // Remove highlighting from any previously highlighted row
+                                document.querySelectorAll('tr.highlight-row').forEach(row => {
+                                    row.classList.remove('highlight-row');
+                                });
+
+                                // Highlight the row
+                                targetRow.classList.add('highlight-row');
+
+                                // Scroll to the row
+                                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                                // Clear the search
+                                document.getElementById('search-input').value = '';
+                                document.getElementById('search-results').innerHTML = '';
+                            }
+                        }
+                    </script>
+                </div>
 
                 <div class="card-body">
                     {{-- @if(session('success'))
@@ -67,7 +145,7 @@
                                                         $permission = $tabRole->userRoleDetails->where('page_id', $page->id)->first();
                                                         $currentStatus = $permission ? $permission->status : 'disallow';
                                                     @endphp
-                                                    <tr>
+                                                    <tr data-page-id="{{ $page->id }}" data-category-id="{{ $category->id }}">
                                                         <td>{{ $category->name }}</td>
                                                         <td>{{ $page->name }}</td>
                                                         <td>{{ $page->code }}</td>
@@ -80,11 +158,11 @@
                                                                        {{ $currentStatus === 'allow' ? 'checked' : '' }}
                                                                        id="switch-{{ $page->id }}-{{ $tabRole->id }}"
                                                                        data-page-id="{{ $page->id }}">
-                                                                {{-- <label class="form-check-label status-label"
+                                                                <label class="form-check-label status-label"
                                                                        for="switch-{{ $page->id }}-{{ $tabRole->id }}"
                                                                        data-allowed="{{ $currentStatus === 'allow' ? '1' : '0' }}">
                                                                     {{ $currentStatus === 'allow' ? 'Allowed' : 'Disallowed' }}
-                                                                </label> --}}
+                                                                </label>
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -144,38 +222,95 @@
         margin-left: 0.5rem;
         font-size: 0.9rem;
     }
+
+    /* Highlight styling for the selected row */
+    tr.highlight-row {
+        background-color: #fff3cd;
+        transition: background-color 0.5s ease;
+        animation: highlight-fade 2s ease;
+    }
+
+    @keyframes highlight-fade {
+        0% { background-color: #ffe066; }
+        100% { background-color: #fff3cd; }
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-   document.addEventListener('DOMContentLoaded', function () {
-    // Update toggle switches and labels
-    document.querySelectorAll('.permission-toggle').forEach(toggle => {
-        const label = toggle.nextElementSibling;
+    document.addEventListener('DOMContentLoaded', function () {
+        // Update toggle switches and labels
+        document.querySelectorAll('.permission-toggle').forEach(toggle => {
+            const label = toggle.nextElementSibling;
 
-        // Initialize
-        updateLabelState(toggle, label);
-
-        // Handle changes
-        toggle.addEventListener('change', function() {
+            // Initialize
             updateLabelState(toggle, label);
+
+            // Handle changes
+            toggle.addEventListener('change', function() {
+                updateLabelState(toggle, label);
+            });
         });
+
+        function updateLabelState(toggle, label) {
+            const isAllowed = toggle.checked;
+            label.textContent = isAllowed ? 'Allowed' : 'Disallowed';
+            label.dataset.allowed = isAllowed ? '1' : '0';
+        }
+
+        // Check if there's a page to navigate to from URL hash
+        if (window.location.hash) {
+            try {
+                const hashParams = window.location.hash.substring(1).split('-');
+                if (hashParams.length === 2) {
+                    const pageId = hashParams[0];
+                    const categoryId = hashParams[1];
+
+                    // Add a small delay to ensure DOM is fully loaded
+                    setTimeout(() => {
+                        navigateToPage(pageId, categoryId);
+                    }, 300);
+                }
+            } catch (e) {
+                console.error('Error parsing hash parameters:', e);
+            }
+        }
     });
 
-    function updateLabelState(toggle, label) {
-        const isAllowed = toggle.checked;
-        label.textContent = isAllowed ? 'Allowed' : 'Disallowed';
-        label.dataset.allowed = isAllowed ? '1' : '0';
+    // Function that can be called from outside the DOMContentLoaded event
+    function navigateToPage(pageId, categoryId) {
+        // Find which role tab is currently active or select the first one
+        let activeRoleTab = document.querySelector('.nav-link.active');
+        let roleId = activeRoleTab.id.replace('role-', '').replace('-tab', '');
+
+        // Activate the tab
+        let tabElement = document.getElementById(`role-${roleId}-tab`);
+        if (tabElement) {
+            // Use Bootstrap's tab API
+            bootstrap.Tab.getOrCreateInstance(tabElement).show();
+        }
+
+        // Find the row with matching page ID
+        let targetRow = document.querySelector(`tr[data-page-id="${pageId}"]`);
+
+        if (targetRow) {
+            // Remove highlighting from any previously highlighted row
+            document.querySelectorAll('tr.highlight-row').forEach(row => {
+                row.classList.remove('highlight-row');
+            });
+
+            // Highlight the row
+            targetRow.classList.add('highlight-row');
+
+            // Scroll to the row
+            setTimeout(() => {
+                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 300); // Small delay to ensure tab content is visible
+
+            // Update URL hash for bookmarking
+            window.location.hash = `${pageId}-${categoryId}`;
+        }
     }
-
-    // Form submission handling
-    document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function(e) {
-            // No need for additional processing - form will submit all checked boxes
-        });
-    });
-});
-
 </script>
 @endpush

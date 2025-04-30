@@ -1,0 +1,57 @@
+:root {
+    /* Background Colors */
+    --light-main-bg-color: #1e1d2b; 
+    --light-sidebar-bg-color: #1e1d2b ;
+    --light-content-bg-color: #ffffff; 
+  
+    /* Text Colors */
+    --light-primary-text-color: #282828; 
+    --light-secondary-text-color: #7F7F7F;
+    --light-primary-link-color: #7F7F7F;
+    --light-secondary-link-color: #ffffff;
+
+    /* Accent Colors */
+    --light-primary-color: #3856C0;
+    --light-primary-color-hover: #2b4397;
+    --light-highlight-color: #1CA8FF;
+    --light-dark-active-color: #111119;
+
+    /* button colors */
+    --light-submitbutton-bg-color: #3856C0;
+    --light-resetbutton-bg-color: #cfd6ef;
+
+    /* icon colors */
+    --light-icon-color: #909090; 
+  
+    /* Borders and Shadows */
+    --light-border-color: #909090; 
+    --light-shadow-color: rgba(0, 0, 0, 0.1); 
+    
+    /* card colors */
+    --light-contentCard-color: #FBFBFB; 
+    --light-contentCardBackground-color: #f4f4f4;
+    --light-linkCard-color: #353142; 
+
+  }
+
+  .dark-theme {
+    --main-bg-color: #121212;
+    --sidebar-bg-color: #1a1a1a;
+    --content-bg-color: #181818;
+    --primary-text-color: #e0e0e0;
+    --secondary-text-color: #b0b0b0;
+    --primary-link-color: #bb86fc;
+    --secondary-link-color: #ffffff;
+    --light-primary-color: #bb86fc;
+    --primary-color-hover: #3700b3;
+    --highlight-color: #03dac6;
+    --dark-active-color: #292929;
+    --submitbutton-bg-color: #bb86fc;
+    --resetbutton-bg-color: #333333;
+    --icon-color: #b0b0b0;
+    --light-contentCard-color: #333333;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --contentCard-color: #1e1e1e;
+    --linkCard-color: #282828;
+}
+  

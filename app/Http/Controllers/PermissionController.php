@@ -19,7 +19,19 @@ class PermissionController extends Controller
         return view('permissions.manage', compact('roles', 'pageCategories'));
     }
 
-    public function manage()
+    public function manage( Request $request, $roleId)
+    {
+        $role = UserRole::findOrFail($roleId);
+        $permissions = UserRoleDetail::where('user_role_id', $roleId)->get();
+
+        // Get all pages that exist in the system
+        $page=Page::where ('active', true)->get();
+
+        // Get current permissions for this role
+        $currentPermissions = $permissions->pluck('page_id')->toArray();
+
+        return view('permissions.manage', compact('role', 'permissions', 'allPageIds', 'currentPermissions'));
+    }
     {
         $roles = UserRole::where('active', true)->get();
         $pageCategories = PageCategory::with('pages')->where('active', true)->get();
