@@ -41,7 +41,7 @@ class UserRoleController extends Controller
     /**
      * Show the form for creating a new user role.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function create()
     {
@@ -113,7 +113,7 @@ class UserRoleController extends Controller
      * Show the form for editing the specified user role.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function edit($id)
     {

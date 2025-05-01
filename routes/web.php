@@ -7,8 +7,9 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\RiderController;
 use App\Http\Controllers\LaundryController;
 use App\Http\Controllers\UserRoleController;
-use App\Http\Controllers\PermissionController;
+
 use App\Http\Controllers\PageCategoryController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Dashboard\ClientController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\ClientDashboardController;
@@ -41,8 +42,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.permission'])-
     // Permission management
     Route::get('/permissions/manage/{roleId}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:2.3');
     // Route::get('/permissions/{role}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:2.2');
-    Route::put('/permissions/{roleId}', [PermissionController::class, 'update'])->name('permissions.update');
-
+    Route::put('/permissions/update/{roleId}', [PermissionController::class, 'update'])->name('permissions.update');
+    Route::get('/permissions/search', [PermissionController::class, 'search'])->name('permissions.search')->middleware('role.permission:2.3');
     // Page Categories
     Route::get('/page-categories', [PageCategoryController::class, 'index'])->name('page-categories.index')->middleware('role.permission:2.4');
     Route::get('/page-categories/create', [PageCategoryController::class, 'create'])->name('page-categories.create')->middleware('role.permission:2.5');

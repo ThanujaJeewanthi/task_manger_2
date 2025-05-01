@@ -52,7 +52,7 @@
                                         <td>{{ $role->users->count() }}</td>
                                         <td>{{ $role->created_at->format('Y-m-d H:i') }}</td>
                                         <td>
-                                            <a href="{{ route('admin.permissions.manage', $role->id) }}" class="btn btn-sm btn-success">
+                                            <a href="{{ route('admin.permissions.manage', ['roleId' => $role->id])}}" class="btn btn-sm btn-success">
                                                 <i class="fas fa-key"></i> Permissions
                                             </a>
 

@@ -28,7 +28,7 @@ class LoginController extends Controller
             $user = Auth::user();
             Log::info('User authenticated', ['user_id' => $user->id, 'role' => $user->userRole ? $user->userRole->name : 'no role']);
 
-            // Redirect based on user role
+
             // Redirect based on user role
 switch (strtolower($user->userRole->name)) {
     case 'admin':
@@ -48,6 +48,7 @@ switch (strtolower($user->userRole->name)) {
         return back()->withErrors([
             'username' => 'The provided credentials do not match our records.',
         ]);
+
     }
 
     public function logout(Request $request)

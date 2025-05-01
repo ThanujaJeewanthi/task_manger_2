@@ -11,29 +11,33 @@ use Illuminate\Support\Facades\Auth;
 
 class AdminDashboardController extends Controller
 {
-    public function __construct()
-    {
 
-    }
 
     public function index()
     {
-        $totalUsers = User::count();
-        $activeUsers = User::where('active', 1)->count();
+        try{
+            $totalUsers = User::count();
+            $activeUsers = User::where('active', 1)->count();
 
-        $user = Auth::user();
-        $role = $user->userRole;
+            $user = Auth::user();
+            $role = $user->userRole;
 
-        if (!$role) {
-            dd('The userRole relationship is not loaded or is null.');
+            if (!$role) {
+                dd('The userRole relationship is not loaded or is null.');
+            }
+
+            return view('dashboard.admin', [
+                'totalUsers' => $totalUsers,
+                'activeUsers' => $activeUsers,
+                'user' => $user,
+                'role' => $role,
+
+            ]);
+        }
+        catch(\Exception $e){
+            return redirect()->route('login')->with('error', 'An error occurred while loading the dashboard. Please try again later.');
+
         }
 
-        return view('dashboard.admin', [
-            'totalUsers' => $totalUsers,
-            'activeUsers' => $activeUsers,
-            'user' => $user,
-            'role' => $role,
-
-        ]);
     }
 }

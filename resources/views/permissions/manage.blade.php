@@ -2,189 +2,95 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <h4>Manage Permissions</h4>
-                </div>
-                <div>
-                    <input type="text" id="search-input" class="form-control" placeholder="Search pages or categories...">
-                    <div id="search-results" class="list-group mt-2"></div>
+    <div class="card">
+        <div class="card-header">
+            <h4>Manage Permissions for {{ $role->name }}</h4>
+            <h6 class="text-muted">Role ID: {{ $role->id }}</h6>
+        </div>
 
-                    <script>
-                        document.getElementById('search-input').addEventListener('keyup', function () {
-                            let query = this.value;
+        <div class="p-3 border-bottom search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" class="form-control" placeholder="Search pages or categories...">
+            <div id="search-results" class="list-group mt-2"></div>
+        </div>
 
-                            if (query.length < 2) {
-                                document.getElementById('search-results').innerHTML = '';
-                                return;
-                            }
+        <div class="card-body">
+            <ul class="nav nav-tabs" role="tablist">
+                @foreach($pageCategories as $tabPageCategory)
+                    <li class="nav-item">
+                        <button class="nav-link {{ $loop->first ? 'active' : '' }}"
+                                id="category-{{ $tabPageCategory->id }}-tab"
+                                data-bs-toggle="tab"
+                                data-bs-target="#category-{{ $tabPageCategory->id }}">
+                            {{ $tabPageCategory->name }}
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
 
-                            fetch(`/admin/pages/search?q=${query}`)
-                                .then(response => response.json())
-                                .then(data => {
-                                    let resultBox = document.getElementById('search-results');
-                                    resultBox.innerHTML = '';
+            <div class="tab-content mt-3">
+                @foreach($pageCategories as $tabPageCategory)
+                    <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
+                         id="category-{{ $tabPageCategory->id }}"
+                         role="tabpanel">
 
-                                    if (data.length === 0) {
-                                        resultBox.innerHTML = '<div class="list-group-item">No results found.</div>';
-                                    }
+                        <form action="{{ route('admin.permissions.update', ['roleId' => $role->id]) }}"
+                              method="POST" class="permission-form">
+                            @csrf
+                            @method('PUT')
+                            <input type="hidden" name="page_category_id" value="{{ $tabPageCategory->id }}">
 
-                                    data.forEach(item => {
-                                        let link = document.createElement('a');
-                                        link.href = '#'; // Using JavaScript navigation instead
-                                        link.className = 'list-group-item list-group-item-action';
-                                        link.innerHTML = `<strong>${item.name}</strong> <br><small>in ${item.page_category.name}</small>`;
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Page Name</th>
+                                        <th>Allowed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($tabPageCategory->pages as $page)
+                                    @php
+                                        $detail = $page->userRoleDetails->where('user_role_id', $role->id)->first();
+                                        $isAllowed = $detail && $detail->status === 'allow';
+                                    @endphp
+                                        <tr data-page-id="{{ $page->id }}">
+                                            <td>{{ $page->name }}</td>
+                                            <td>
+                                                <div class="form-check form-switch">
+                                                    <input type="checkbox"
+                                                           class="form-check-input permission-toggle"
+                                                           id="permission-{{ $role->id }}-{{ $page->id }}"
+                                                           name="permissions[{{ $page->id }}]"
+                                                           value="allow"
+                                                           data-role-id="{{ $role->id }}"
+                                                           data-page-id="{{ $page->id }}"
+                                                           {{ $isAllowed ? 'checked' : '' }}>
 
-                                        // Store data attributes for navigation
-                                        link.dataset.pageId = item.id;
-                                        link.dataset.categoryId = item.page_category_id;
-                                        link.dataset.categoryName = item.page_category.name;
-                                        link.dataset.pageName = item.name;
+                                                    <label class="form-check-label"
+                                                           for="permission-{{ $role->id }}-{{ $page->id }}">
+                                                        {{ $isAllowed ? 'Allowed' : 'Disallowed' }}
+                                                    </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
 
-                                        link.addEventListener('click', function(e) {
-                                            e.preventDefault();
-                                            navigateToPage(item.id, item.page_category_id);
-                                        });
-
-                                        resultBox.appendChild(link);
-                                    });
-                                });
-                        });
-
-                        function navigateToPage(pageId, categoryId) {
-                            // First, find which role tab is currently active or select the first one
-                            let activeRoleTab = document.querySelector('.nav-link.active');
-                            let roleId = activeRoleTab.id.replace('role-', '').replace('-tab', '');
-
-                            // Activate the tab
-                            let tabElement = document.getElementById(`role-${roleId}-tab`);
-                            if (tabElement) {
-                                tabElement.click();
-                            }
-
-                            // Find the row with matching page ID
-                            let targetRow = document.querySelector(`tr[data-page-id="${pageId}"]`);
-
-                            if (targetRow) {
-                                // Remove highlighting from any previously highlighted row
-                                document.querySelectorAll('tr.highlight-row').forEach(row => {
-                                    row.classList.remove('highlight-row');
-                                });
-
-                                // Highlight the row
-                                targetRow.classList.add('highlight-row');
-
-                                // Scroll to the row
-                                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                                // Clear the search
-                                document.getElementById('search-input').value = '';
-                                document.getElementById('search-results').innerHTML = '';
-                            }
-                        }
-                    </script>
-                </div>
-
-                <div class="card-body">
-                    {{-- @if(session('success'))
-                        <div class="alert alert-success">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if(session('error'))
-                        <div class="alert alert-danger">
-                            {{ session('error') }}
-                        </div>
-                    @endif --}}
-
-                    <!-- Roles as Tabs -->
-                    <ul class="nav nav-tabs" id="rolesTab" role="tablist">
-                        @foreach($roles as $tabRole)
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link {{ $loop->first ? 'active' : '' }}"
-                                        id="role-{{ $tabRole->id }}-tab"
-                                        data-bs-toggle="tab"
-                                        data-bs-target="#role-{{ $tabRole->id }}"
-                                        type="button"
-                                        role="tab"
-                                        aria-controls="role-{{ $tabRole->id }}"
-                                        aria-selected="{{ $loop->first ? 'true' : 'false' }}">
-                                    {{ $tabRole->name }}
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
-
-                    <!-- Tab Content -->
-                    <div class="tab-content" id="rolesTabContent">
-                        @foreach($roles as $tabRole)
-                            <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"
-                                 id="role-{{ $tabRole->id }}"
-                                 role="tabpanel"
-                                 aria-labelledby="role-{{ $tabRole->id }}-tab">
-
-                                <form action="{{ route('admin.permissions.update', $tabRole->id) }}" method="POST" class="mt-4">
-                                    @csrf
-                                    @method('PUT')
-
-                                    <table class="table table-bordered">
-                                        <thead>
-                                            <tr>
-                                                <th>Category</th>
-                                                <th>Page</th>
-                                                <th>Code</th>
-                                                <th>Permission Status</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            @foreach($pageCategories as $category)
-                                                @foreach($category->pages as $page)
-                                                    @php
-                                                        $permission = $tabRole->userRoleDetails->where('page_id', $page->id)->first();
-                                                        $currentStatus = $permission ? $permission->status : 'disallow';
-                                                    @endphp
-                                                    <tr data-page-id="{{ $page->id }}" data-category-id="{{ $category->id }}">
-                                                        <td>{{ $category->name }}</td>
-                                                        <td>{{ $page->name }}</td>
-                                                        <td>{{ $page->code }}</td>
-                                                        <td>
-                                                            <div class="form-check form-switch">
-                                                                <input class="form-check-input permission-toggle"
-                                                                       type="checkbox"
-                                                                       name="permissions[{{ $page->id }}]"
-                                                                       value="allow"
-                                                                       {{ $currentStatus === 'allow' ? 'checked' : '' }}
-                                                                       id="switch-{{ $page->id }}-{{ $tabRole->id }}"
-                                                                       data-page-id="{{ $page->id }}">
-                                                                <label class="form-check-label status-label"
-                                                                       for="switch-{{ $page->id }}-{{ $tabRole->id }}"
-                                                                       data-allowed="{{ $currentStatus === 'allow' ? '1' : '0' }}">
-                                                                    {{ $currentStatus === 'allow' ? 'Allowed' : 'Disallowed' }}
-                                                                </label>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-
-                                    <div class="form-group mt-4">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save"></i> Save Permissions for {{ $tabRole->name }}
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        @endforeach
+                            <button type="submit" class="btn btn-primary mt-3">
+                                Update Permissions for {{ $tabPageCategory->name }}
+                            </button>
+                        </form>
                     </div>
-                </div>
+                @endforeach
             </div>
         </div>
     </div>
 </div>
+
+
+
+
 
 @endsection
 
@@ -223,6 +129,40 @@
         font-size: 0.9rem;
     }
 
+    /* Search styles */
+    .search-container {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+
+    #search-input {
+        padding-left: 2.5rem;
+        border-radius: 1.5rem;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 0.75rem;
+        color: #6c757d;
+    }
+
+    #search-results {
+        position: absolute;
+        width: 100%;
+        max-height: 350px;
+        overflow-y: auto;
+        z-index: 1000;
+        border-radius: 0.25rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    mark {
+        background-color: #fff3cd;
+        padding: 0.1rem 0.2rem;
+        border-radius: 0.2rem;
+    }
+
     /* Highlight styling for the selected row */
     tr.highlight-row {
         background-color: #fff3cd;
@@ -237,80 +177,3 @@
 </style>
 @endpush
 
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Update toggle switches and labels
-        document.querySelectorAll('.permission-toggle').forEach(toggle => {
-            const label = toggle.nextElementSibling;
-
-            // Initialize
-            updateLabelState(toggle, label);
-
-            // Handle changes
-            toggle.addEventListener('change', function() {
-                updateLabelState(toggle, label);
-            });
-        });
-
-        function updateLabelState(toggle, label) {
-            const isAllowed = toggle.checked;
-            label.textContent = isAllowed ? 'Allowed' : 'Disallowed';
-            label.dataset.allowed = isAllowed ? '1' : '0';
-        }
-
-        // Check if there's a page to navigate to from URL hash
-        if (window.location.hash) {
-            try {
-                const hashParams = window.location.hash.substring(1).split('-');
-                if (hashParams.length === 2) {
-                    const pageId = hashParams[0];
-                    const categoryId = hashParams[1];
-
-                    // Add a small delay to ensure DOM is fully loaded
-                    setTimeout(() => {
-                        navigateToPage(pageId, categoryId);
-                    }, 300);
-                }
-            } catch (e) {
-                console.error('Error parsing hash parameters:', e);
-            }
-        }
-    });
-
-    // Function that can be called from outside the DOMContentLoaded event
-    function navigateToPage(pageId, categoryId) {
-        // Find which role tab is currently active or select the first one
-        let activeRoleTab = document.querySelector('.nav-link.active');
-        let roleId = activeRoleTab.id.replace('role-', '').replace('-tab', '');
-
-        // Activate the tab
-        let tabElement = document.getElementById(`role-${roleId}-tab`);
-        if (tabElement) {
-            // Use Bootstrap's tab API
-            bootstrap.Tab.getOrCreateInstance(tabElement).show();
-        }
-
-        // Find the row with matching page ID
-        let targetRow = document.querySelector(`tr[data-page-id="${pageId}"]`);
-
-        if (targetRow) {
-            // Remove highlighting from any previously highlighted row
-            document.querySelectorAll('tr.highlight-row').forEach(row => {
-                row.classList.remove('highlight-row');
-            });
-
-            // Highlight the row
-            targetRow.classList.add('highlight-row');
-
-            // Scroll to the row
-            setTimeout(() => {
-                targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300); // Small delay to ensure tab content is visible
-
-            // Update URL hash for bookmarking
-            window.location.hash = `${pageId}-${categoryId}`;
-        }
-    }
-</script>
-@endpush
