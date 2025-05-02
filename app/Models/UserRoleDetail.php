@@ -13,11 +13,15 @@ class UserRoleDetail extends Model
     // Define relationship with pages (if needed)
     public function page()
     {
-        return $this->belongsTo(Page::class);
+        return $this->belongsTo(Page::class, 'page_id');
     }
     public function pageCategory()
     {
-        return $this->belongsTo(PageCategory::class);
+        return $this->belongsTo(PageCategory::class, 'page_category_id');
+    }
+    public function userRole( )
+    {
+        return $this->belongsTo(UserRole::class, 'user_role_id');
     }
     protected static function booted()
     {

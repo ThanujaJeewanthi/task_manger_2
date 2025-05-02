@@ -3,6 +3,15 @@
         <a href="{{ route('dashboard') }}" class="navbar-brand">
             <span class="fw-bold fs-4">Spin App</span>
         </a>
+
+        <button id="sidebar-toggle" class="sidebar-toggle">
+            <svg width="30" height="30" viewBox="0 0 100 100" class="hamburger-icon">
+                <rect class="line top" width="80" height="10" x="10" y="25" rx="5"></rect>
+                <rect class="line middle" width="80" height="10" x="10" y="45" rx="5"></rect>
+                <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
+            </svg>
+        </button>
+
         @auth
         <div class="search-bar   d-flex align-items-center me-3">
 

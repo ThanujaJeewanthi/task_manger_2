@@ -57,7 +57,7 @@
                         <ul class="list-unstyled mb-0">
                             {{-- <li class="mb-2"><a href="{{ route('users.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-users me-2"></i> User Management</a></li> --}}
                             {{-- <li class="mb-2"><a href="{{ route('roles.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-user-tag me-2"></i> Role Management</a></li> --}}
-                            <li class="mb-2"><a href="{{ route('admin.permissions.manage') }}" class="text-primary d-flex align-items-center"><i class="fas fa-key me-2"></i> Permission Management</a></li>
+                            <li class="mb-2"><a href="{{ route('admin.roles.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-key me-2"></i> Permission Management</a></li>
                             {{-- <li class="mb-2"><a href="{{ route('pages.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-file me-2"></i> Page Management</a></li> --}}
                             {{-- <li><a href="{{ route('page-categories.index') }}" class="text-primary d-flex align-items-center"><i class="fas fa-folder me-2"></i> Page Categories</a></li> --}}
                         </ul>

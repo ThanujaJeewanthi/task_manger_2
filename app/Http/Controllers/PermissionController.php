@@ -19,79 +19,92 @@ class PermissionController extends Controller
         return view('permissions.manage', compact('roles', 'pageCategories'));
     }
 
-    public function manage()
+    public function manage( Request $request, $roleId)
     {
-        $roles = UserRole::where('active', true)->get();
-        $pageCategories = PageCategory::with('pages')->where('active', true)->get();
 
-        return view('permissions.manage', compact('roles', 'pageCategories'));
+
+        // Get the role and its permissions
+
+        $role = UserRole::findOrFail($roleId);
+        $pageCategories = PageCategory::with('pages')->where('active', true)->get();
+        $permissions = UserRoleDetail::where('user_role_id', $roleId)->with('page','pageCategory')->get();
+
+
+
+
+        return view('permissions.manage', compact('role','pageCategories' ,'permissions'));
     }
 
     public function update(Request $request, $roleId)
-{
-    $request->validate([
-        'permissions' => 'sometimes|array',
-        'permissions.*' => 'in:allow'
-    ]);
+    {
+        // $role = UserRole::findOrFail($roleId);
+        $pageCategoryId = $request->input('page_category_id');
+        $permissions = $request->input('permissions', []);
 
-    $role = UserRole::findOrFail($roleId);
+        // Get all pages for this category
+        $pageCategory = PageCategory::with('pages')->findOrFail($pageCategoryId);
 
-    DB::beginTransaction();
-    try {
-        // Get all pages that exist in the system
-        $allPageIds = Page::pluck('id')->toArray();
+        foreach ($pageCategory->pages as $page) {
+            $pageId = $page->id;
 
-        // Get current permissions for this role
-        $currentPermissions = $role->userRoleDetails()->get();
+            // Check if permission detail already exists
+            $detail = UserRoleDetail::where('user_role_id', $roleId)
+                ->where('page_id', $pageId)
+                ->first();
 
-        // Process each possible page
-        foreach ($allPageIds as $pageId) {
-            $shouldAllow = isset($request->permissions[$pageId]);
-            $currentPermission = $currentPermissions->where('page_id', $pageId)->first();
+            // If permission exists in request, set to allow
+            $status = isset($permissions[$pageId]) ? 'allow' : 'disallow';
 
-            if ($shouldAllow) {
-                // Permission should be allowed
-                if ($currentPermission) {
-                    // Update existing permission
-                    if ($currentPermission->status !== 'allow') {
-                        $currentPermission->update([
-                            'status' => 'allow',
-                            'active' => true
-                        ]);
-                    }
-                } else {
-                    // Create new permission
-                    $page = Page::findOrFail($pageId);
-                    UserRoleDetail::create([
-                        'user_role_id' => $role->id,
-                        'page_id' => $pageId,
-                        'page_category_id' => $page->page_category_id,
-                        'status' => 'allow',
-                        'active' => true,
-                        'code' => $page->code
-                    ]);
-                }
+            if ($detail) {
+                // Update existing
+                $detail->update([
+                    'status' => $status,
+                    'page_category_id' => $pageCategoryId
+                ]);
             } else {
-                // Permission should be disallowed
-                if ($currentPermission) {
-                    // Update existing permission to disallow
-                    if ($currentPermission->status !== 'disallow') {
-                        $currentPermission->update([
-                            'status' => 'disallow',
-                            'active' => false
-                        ]);
-                    }
-                }
-                // If no permission record exists, it's already disallowed by default
+                // Create new
+                UserRoleDetail::create([
+                    'user_role_id' => $roleId,
+                    'page_id' => $pageId,
+                    'page_category_id' => $pageCategoryId,
+                    'status' => $status,
+                    'code' => $page->code,
+                    'active' => true
+                ]);
             }
         }
 
-        DB::commit();
-        return redirect()->back()->with('success', 'Permissions updated successfully');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return redirect()->back()->with('error', 'Failed to update permissions: '.$e->getMessage());
+        return redirect()->back()->with('success', "Permissions for {$pageCategory->name} updated successfully");
     }
-}
+
+    public function search(Request $request)
+    {
+        $query = $request->input('q');
+
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([
+                'pages' => [],
+                'categories' => []
+            ]);
+        }
+
+        // Search for pages
+        $pages = Page::where('name', 'like', "%{$query}%")
+            ->orWhere('code', 'like', "%{$query}%")
+            ->where('active', true)
+            ->with('pageCategory')
+            ->limit(10)
+            ->get();
+
+        // Search for categories
+        $categories = PageCategory::where('name', 'like', "%{$query}%")
+            ->where('active', true)
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'pages' => $pages,
+            'categories' => $categories
+        ]);
+    }
 }

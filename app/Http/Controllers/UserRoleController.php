@@ -2,87 +2,123 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Page;
 use App\Models\UserRole;
-use App\Services\RolePermissionService;
+use App\Models\PageCategory;
 use Illuminate\Http\Request;
+use App\Models\UserRoleDetail;
+use Illuminate\Support\Facades\DB;
+use App\Services\RolePermissionService;
 
 class UserRoleController extends Controller
 {
     /**
      * The role permission service instance.
      *
-     * @var RolePermissionService
+
      */
     protected $rolePermissionService;
 
     /**
      * Create a new controller instance.
      *
-     * @param RolePermissionService $rolePermissionService
-     * @return void
+     *
+
      */
-    public function __construct(RolePermissionService $rolePermissionService)
-    {
-        $this->rolePermissionService = $rolePermissionService;
-    }
+
 
     /**
      * Display a listing of the user roles.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function index()
     {
         $roles = UserRole::all();
-        return view('admin.roles.index', compact('roles'));
+        return response()->view('roles.index', compact('roles'));
     }
 
     /**
      * Show the form for creating a new user role.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function create()
     {
-        return view('admin.roles.create');
+        $pageCategories = PageCategory::all();
+        $pages = Page::all();
+
+        return response()-> view('roles.create' , compact('pageCategories','pages'));
     }
 
     /**
      * Store a newly created user role in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
+        // Validate the request
         $request->validate([
-            'name' => 'required|string|max:255|unique:user_roles',
-            'active' => 'sometimes|boolean',
-            'is_admin' => 'sometimes|boolean',
+            'name' => 'required|string|max:255',
         ]);
 
-        $role = UserRole::create([
-            'name' => $request->name,
-            'active' => $request->has('active'),
-        ]);
+        try {
+            // Begin transaction to ensure all or none of the operations are completed
+            DB::beginTransaction();
 
-        // Initialize permissions for this role
-        $this->rolePermissionService->initializePermissions($role, $request->has('is_admin'));
+            // Create new role
+            $role = new UserRole();
+            $role->name = $request->name;
+            $role->active = $request->has('is_active');
+            $role->save();
 
-        return redirect()->route('admin.roles.index')
-            ->with('success', 'User role created successfully.');
+
+            $pagePermissions = array_map('strval', array_keys($request->input('page_status', [])));
+
+            $allPages = Page::with('pageCategory')->get();
+
+            foreach ($allPages as $page) {
+                $userRoleDetail = new UserRoleDetail();
+                $userRoleDetail->user_role_id = $role->id;
+                $userRoleDetail->page_id = $page->id;
+                $userRoleDetail->page_category_id = $page->page_category_id;
+                $userRoleDetail->code = $page->code;
+
+                // Set status based on whether the page was checked in the form
+                $userRoleDetail->status = isset($pagePermissions[$page->id]) ? 'allow' : 'disallow';
+
+
+                $userRoleDetail->active = true;
+                $userRoleDetail->save();
+            }
+
+            DB::commit();
+
+            return redirect()->route('admin.roles.index')
+                ->with('success', 'Role created successfully with permissions');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()->back()
+                ->with('error', 'An error occurred while creating the role: ' . $e->getMessage())
+                ->withInput();
+        }
     }
+
 
     /**
      * Show the form for editing the specified user role.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function edit($id)
     {
         $role = UserRole::findOrFail($id);
-        return view('admin.roles.edit', compact('role'));
+        return response()-> view('roles.edit', compact('role'));
     }
 
     /**

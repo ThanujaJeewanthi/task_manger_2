@@ -26,7 +26,6 @@ class RolePermissionMiddleware
 
         $user = Auth::user();
 
-
         if ($user->type === 'admin') {
             return $next($request);
         }

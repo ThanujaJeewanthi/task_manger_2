@@ -23,6 +23,6 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('special_priviledges');
+        Schema::dropIfExists('special_privileges');
     }
 };

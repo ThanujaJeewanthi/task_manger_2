@@ -11,7 +11,7 @@ class PageController extends Controller
     /**
      * Display a listing of the pages.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function index()
     {
@@ -119,4 +119,19 @@ class PageController extends Controller
         return redirect()->route('admin.pages.index')
             ->with('success', 'Page deleted successfully.');
     }
+    public function search(Request $request)
+{
+    $query = $request->get('q');
+
+    $pages = Page::with('pageCategory')
+        ->where('name', 'LIKE', "%{$query}%")
+        ->orWhereHas('pageCategory', function ($q) use ($query) {
+            $q->where('name', 'LIKE', "%{$query}%");
+        })
+        ->get();
+
+    return response()->json($pages);
 }
+
+}
+

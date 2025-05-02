@@ -10,10 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class ClientDashboardController extends Controller
 {
-    public function __construct()
-    {
-    //    $this->middleware(['auth', 'role:client']);
-    }
+
 
     public function index()
     {
@@ -25,3 +22,7 @@ class ClientDashboardController extends Controller
         ]);
     }
 }
+
+
+
+
