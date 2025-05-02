@@ -21,11 +21,14 @@
             <span class="side-link"> Dashboard</span>
             <i class="fa fa-caret-down"></i>
         </button> --}}
-        <button class="dropdown-btn">
-            <i class="fas fa-tachometer-alt me-2 icon-only"></i>
-            <span class="side-link">Dashboard</span>
-            <i class="fa fa-caret-down"></i>
+
+        <button  class="dropdown-btn">
+                <i class="fas fa-tachometer-alt me-2 icon-only"><a href="{{route('dashboard')}}"></a></i>
+                <span class="side-link">Dashboard</span>
+
         </button>
+
+
         {{-- <div class="dropdown-container">
             <a href="#">Users</a>
             <a href="#">Roles</a>
