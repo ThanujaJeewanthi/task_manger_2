@@ -5,14 +5,16 @@
         <img src="assets/images/samplelogod.png" alt="Logo" class="me-3" />
         <h2 class="d-none d-md-block">SpinApp</h2>
     </div> --}}
-    <nav class="sidebar-menu flex-grow-1 overflow-auto">
-        <a href="#" class="dashboard-link">
-            <i class="fa fa-desktop icon-spacing"> </i>
-            <h2> @php
+    <nav class="sidebar-menu flex-grow-1 overflow-auto mt-0" style="top:50px;">
+
+        <a href="#" class="dashboard-link mt-0">
+             <h5> @php
                 $userRole = Auth::user()->userRole->name ?? 'User';
             @endphp
             {{ ucfirst($userRole) }} Dashboard
-        </h2>
+        </h5>
+
+
         </a>
 
 

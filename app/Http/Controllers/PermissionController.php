@@ -79,32 +79,58 @@ class PermissionController extends Controller
 
     public function search(Request $request)
     {
-        $query = $request->input('q');
+        $request->validate([
+            'search' => 'required|string',
+            'role_id' => 'required|exists:user_roles,id'
+        ]);
 
-        if (empty($query) || strlen($query) < 2) {
-            return response()->json([
-                'pages' => [],
-                'categories' => []
-            ]);
+        $searchTerm = $request->input('search');
+        $roleId = $request->input('role_id');
+
+        // Get the role
+        $role = UserRole::findOrFail($roleId);
+
+        // Search for pages matching the search term
+        $pages = Page::where('name', 'like', "%{$searchTerm}%")
+            ->with(['pageCategory', 'userRoleDetails' => function($query) use ($roleId) {
+                $query->where('user_role_id', $roleId);
+            }])
+            ->get();
+
+        // Also search in categories to include all pages from matching categories
+        $categoryIds = PageCategory::where('name', 'like', "%{$searchTerm}%")
+            ->pluck('id')
+            ->toArray();
+
+        if (!empty($categoryIds)) {
+            $categoryPages = Page::whereIn('page_category_id', $categoryIds)
+                ->with(['pageCategory', 'userRoleDetails' => function($query) use ($roleId) {
+                    $query->where('user_role_id', $roleId);
+                }])
+                ->get();
+
+            // Merge with pages found by name, avoiding duplicates
+            $existingIds = $pages->pluck('id')->toArray();
+            $categoryPages = $categoryPages->filter(function($page) use ($existingIds) {
+                return !in_array($page->id, $existingIds);
+            });
+
+            $pages = $pages->merge($categoryPages);
         }
 
-        // Search for pages
-        $pages = Page::where('name', 'like', "%{$query}%")
-            ->orWhere('code', 'like', "%{$query}%")
-            ->where('active', true)
-            ->with('pageCategory')
-            ->limit(10)
-            ->get();
+        // Format the results
+        $results  = $pages->map(function($page) use ($roleId) {
+            $detail = $page->userRoleDetails->first();
 
-        // Search for categories
-        $categories = PageCategory::where('name', 'like', "%{$query}%")
-            ->where('active', true)
-            ->limit(5)
-            ->get();
+            return [
+                'page_id' => $page->id,
+                'page_name' => $page->name,
+                'category_id' => $page->page_category_id,
+                'category_name' => $page->pageCategory->name,
+                'is_allowed' => $detail ? ($detail->status === 'allow') : false
+            ];
+        });
 
-        return response()->json([
-            'pages' => $pages,
-            'categories' => $categories
-        ]);
+        return response()->json($results);
     }
 }

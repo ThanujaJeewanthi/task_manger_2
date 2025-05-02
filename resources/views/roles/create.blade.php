@@ -13,6 +13,16 @@
                 </div>
 
                 <div class="card-body">
+                    @if (session('status'))
+                        <div class="alert alert-success mt-3">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger mt-3">
+                            {{ session('error') }}
+                        </div>
+                    @endif
                     <form action="{{ route('admin.roles.store') }}" method="POST">
                         @csrf
 
@@ -80,11 +90,11 @@
                         </div>
                     </form>
 
-                    {{-- role permissions link  --}}
-                    <div>
-                        <a href="{{ route('admin.permissions.manage') }}" class="btn btn-link">Manage Role Permissions</a>
-                    </div>
-                </div>
+
+
+
+
+
             </div>
         </div>
     </div>

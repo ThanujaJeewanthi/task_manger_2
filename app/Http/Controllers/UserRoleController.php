@@ -75,29 +75,12 @@ class UserRoleController extends Controller
             $role->save();
 
 
-            $pagePermissions = array_map('strval', array_keys($request->input('page_status', [])));
 
-            $allPages = Page::with('pageCategory')->get();
-
-            foreach ($allPages as $page) {
-                $userRoleDetail = new UserRoleDetail();
-                $userRoleDetail->user_role_id = $role->id;
-                $userRoleDetail->page_id = $page->id;
-                $userRoleDetail->page_category_id = $page->page_category_id;
-                $userRoleDetail->code = $page->code;
-
-                // Set status based on whether the page was checked in the form
-                $userRoleDetail->status = isset($pagePermissions[$page->id]) ? 'allow' : 'disallow';
-
-
-                $userRoleDetail->active = true;
-                $userRoleDetail->save();
-            }
 
             DB::commit();
 
             return redirect()->route('admin.roles.index')
-                ->with('success', 'Role created successfully with permissions');
+                ->with('success', 'Role created successfully ');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -126,31 +109,42 @@ class UserRoleController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, $id)
-    {
-        $role = UserRole::findOrFail($id);
+    public function update(Request $request, $roleId)
+{
+    $role = UserRole::findOrFail($roleId);
 
-        $request->validate([
-            'name' => 'required|string|max:255|unique:user_roles,name,' . $id,
-            'active' => 'sometimes|boolean',
-        ]);
+    $request->validate([
+        'name' => 'required|string|max:255|unique:user_roles,name,' . $roleId,
+    ]);
 
-        $role->update([
-            'name' => $request->name,
-            'active' => $request->has('active'),
-        ]);
+    try {
+        // Begin transaction
+        DB::beginTransaction();
+
+        $role->name = $request->name;
+        $role->active = $request->has('active');
+        $role->save();
+
+        DB::commit();
 
         return redirect()->route('admin.roles.index')
             ->with('success', 'User role updated successfully.');
-    }
+    } catch (\Exception $e) {
+        // Rollback transaction on error
+        DB::rollBack();
 
+        return redirect()->back()
+            ->with('error', 'An error occurred: ' . $e->getMessage())
+            ->withInput();
+    }
+}
     /**
      * Remove the specified user role from storage.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
      */
     public function destroy($id)
     {
@@ -164,7 +158,7 @@ class UserRoleController extends Controller
 
         // Delete the role's permissions
         $role->userRoleDetails()->delete();
-        $role->specialPrivileges()->delete();
+
 
         $role->delete();
 
@@ -178,19 +172,5 @@ class UserRoleController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\Response
      */
-    public function clonePermissions(Request $request)
-    {
-        $request->validate([
-            'source_role_id' => 'required|exists:user_roles,id',
-            'target_role_id' => 'required|exists:user_roles,id|different:source_role_id',
-        ]);
 
-        $sourceRole = UserRole::findOrFail($request->source_role_id);
-        $targetRole = UserRole::findOrFail($request->target_role_id);
-
-        $this->rolePermissionService->clonePermissions($sourceRole, $targetRole);
-
-        return redirect()->route('admin.permissions.manage', $targetRole->id)
-            ->with('success', 'Permissions cloned successfully from ' . $sourceRole->name . ' to ' . $targetRole->name);
-    }
 }

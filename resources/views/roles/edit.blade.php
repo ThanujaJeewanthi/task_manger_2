@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid">
@@ -22,14 +22,20 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="active" name="active" {{ $role->active ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="active">Active</label>
-                            </div>
-                        </div>
+
+<div class="d-com-flex justify-content-start mb-4">
+    <label class="d-label-text me-2">Status</label>
+    <label class="d-toggle position-relative">
+        <input type="checkbox" class="form-check-input d-section-toggle" name="active" {{ old('active', $role->active) ? 'checked' : '' }} />
+        <span class="d-slider">
+            <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
+            <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
+        </span>
+    </label>
+</div>
 
                         <div class="form-group">
+
                             <button type="submit" class="btn btn-primary">Update Role</button>
                             <a href="{{ route('admin.roles.index') }}" class="btn btn-secondary">Cancel</a>
                         </div>
