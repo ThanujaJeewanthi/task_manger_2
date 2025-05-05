@@ -1,4 +1,7 @@
-<footer class="bg-dark text-white py-3">
+<footer class="bg-dark text-white py-3" style=" width: 100%;
+    flex-shrink: 0;
+    position:relative;
+    ">
     <div class="container">
         <div class="d-flex justify-content-between">
             <div>

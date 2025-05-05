@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid">
@@ -48,7 +48,7 @@
                                         <td><code>{{ $page->code }}</code></td>
                                         <td>{{ $page->category->name }}</td>
                                         <td>
-                                            <span class="badge {{ $page->active ? 'badge-success' : 'badge-danger' }}">
+                                            <span class="badge {{ $page->active ? 'bg-success' : 'bg-danger' }}">
                                                 {{ $page->active ? 'Active' : 'Inactive' }}
                                             </span>
                                         </td>
