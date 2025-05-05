@@ -3,7 +3,7 @@
 @section('title', 'Login')
 
 @section('content')
-<div class="container">
+<div class="container " style="margin-top: 100px;" >
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card mt-4">
@@ -71,26 +71,31 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="form-group row mb-0">
-                            <div class="col-md-8 offset-md-4 d-flex justify-content-between">
-                                <button type="submit" class="btn btn-primary">
-                                    {{ __('Login') }}
-                                </button>
-
-                                <a href="#" class="btn btn-link">
-                                    {{ __('Forgot Password?') }}
-                                </a>
-                            </div>
+                        <div class="form-group row mb-3">
+                        <button type="submit" class="btn btn-primary " style="margin-left:295px; width: 90px;">
+                            {{ __('Login') }}
+                        </button>
                         </div>
+<div class="form-group row mb-3">
+    <div class="form-group  mb-0" style="margin-left: 0px;">
+        <div class="col-md-8 offset-md-4 d-flex justify-content-between">
 
-                        <div class="form-group row mt-3">
-                            <div class="col-md-8 offset-md-4">
-                                <a href="{{ route('register.form') }}" class="btn btn-link ps-0">
-                                    {{ __('Need an account? Register') }}
-                                </a>
-                            </div>
-                        </div>
+
+            <a href="#" class="btn btn-link">
+                {{ __('Forgot Password?') }}
+            </a>
+        </div>
+    </div>
+
+    <div class="form-group  mt-3" style="margin-left: 10px;">
+        <div class="col-md-8 offset-md-4">
+            <a href="{{ route('register.form') }}" class="btn btn-link ps-0">
+                {{ __('Need an account? Register') }}
+            </a>
+        </div>
+    </div>
+</div>
+
                     </form>
                 </div>
             </div>
