@@ -4,8 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Spin App - @yield('title', 'SpinApp Laundry Management System')</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
-
+  <!-- Google Fonts Import -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+        crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+        integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+        crossorigin="anonymous"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
@@ -13,7 +22,7 @@
 {{-- AddPack css --}}
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<link href="{{asset('assets/boostrap/css/bootstrap.min.css')}}" rel="stylesheet">
+<link href="{{asset('assets/bootstrap/css/bootstrap.min.css')}}" rel="stylesheet">
 <link href="{{asset('assets/css/styles.css')}}" rel="stylesheet">
 {{-- AddPack css --}}
 
@@ -124,35 +133,22 @@
         @include('layouts.footer')
     </div>
 
-    <!-- Scripts - Make sure jQuery loads before Bootstrap -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery -->
+    <!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 
    {{-- Addpack scripts --}}
-   <script>
-    const themeToggle = document.getElementById('theme-toggle');
-    const htmlElement = document.documentElement;
-
-    // Check for previously saved theme preference
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-        htmlElement.classList.add(savedTheme);
-        themeToggle.textContent = savedTheme === 'dark-theme' ? 'Switch to Light Theme' : 'Switch to Dark Theme';
-    }
-
-    themeToggle.addEventListener('click', () => {
-        if (htmlElement.classList.contains('dark-theme')) {
-            htmlElement.classList.remove('dark-theme');
-            localStorage.setItem('theme', '');
-            themeToggle.textContent = 'Switch to Dark Theme';
-        } else {
-            htmlElement.classList.add('dark-theme');
-            localStorage.setItem('theme', 'dark-theme');
-            themeToggle.textContent = 'Switch to Light Theme';
-        }
-    });
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+<script src="{{asset('assets/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+{{-- <script src="{{asset('assets/js/scripts.js')}}"></script> --}}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <script>
     const toggleBtn = document.getElementById('sidebar-toggle');
@@ -185,20 +181,9 @@
     }
 </script>
 
-<script>
-    // date picker
-    document.querySelector(".d-date-picker-button").addEventListener("click", () => {
-        const dateInput = document.querySelector("#d-date-input");
-        dateInput.showPicker(); // Opens the date picker on supported browsers
-    });
 
-    document.querySelector(".d-refresh-button").addEventListener("click", () => {
-        document.querySelector("#d-date-input").value = ""; // Clears the date input
-    });
-
-</script>
-<script src="{{asset('assets/boostrap/js/bootstrap.bundle.min.js')}}"></script>
-  {{-- Addpack scripts --}}
+<script src="/assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+{{-- Addpack scripts --}}
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {

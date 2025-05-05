@@ -1,19 +1,22 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a href="{{ route('dashboard') }}" class="navbar-brand">
-            <span class="fw-bold fs-4">Spin App</span>
-        </a>
+    <div class="container" style="margin-left:22px;">
 
-        <button id="sidebar-toggle" class="sidebar-toggle">
-            <svg width="30" height="30" viewBox="0 0 100 100" class="hamburger-icon">
-                <rect class="line top" width="80" height="10" x="10" y="25" rx="5"></rect>
-                <rect class="line middle" width="80" height="10" x="10" y="45" rx="5"></rect>
-                <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
-            </svg>
-        </button>
+<div  class="d-flex align-items-center  " style=" margin-left: 0px; width: 70px;">
+    <a href="{{ route('dashboard') }}" class="navbar-brand " style="margin-left: 0px;margin-right:30px; width: 90px;">
+        <span class="fw-bold mt-3 mb-0 " >Spin App</span>
+    </a>
+    <button id="sidebar-toggle" class="sidebar-toggle" style="margin-left: 38px;">
+        <svg width="30" height="30" viewBox="0 0 100 100" class="hamburger-icon">
+            <rect class="line top" width="80" height="10" x="10" y="25" rx="5"></rect>
+            <rect class="line middle" width="80" height="10" x="10" y="45" rx="5"></rect>
+            <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
+        </svg>
+    </button>
+</div>
+
 
         @auth
-        <div class="search-bar   d-flex align-items-center me-3">
+        <div class="search-bar   d-flex align-items-center me-3" style="width: 200px;">
 
             <div class="input-group">
                 <span class="input-group-text bg-dark text-light border-0"><i class="fas fa-search"></i></span>

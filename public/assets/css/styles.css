@@ -521,7 +521,7 @@
     }
 
     .top-nav .search-bar input {
-        width: 100%;
+        /* width: 100%; */
         /* Ensure the input fills the allocated width */
         padding: 10px;
         border: none;

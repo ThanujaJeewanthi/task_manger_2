@@ -31,12 +31,11 @@
         <!-- Navbar -->
 
 
-        <!-- Sidebar and Main Content -->
-        <div class="d-flex flex-grow-1">
+
 
 
             <!-- Main Content -->
-            <main class="main-content flex-grow-1 p-4">
+            <main class="main-content flex-grow-1 p-4 mb-4" >
                 @if(session('success'))
                     <div class="alert alert-success mb-4" role="alert">
                         {{ session('success') }}
@@ -51,7 +50,6 @@
 
                 @yield('content')
             </main>
-        </div>
 
         <!-- Footer -->
         @include('layouts.footer')

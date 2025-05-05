@@ -45,7 +45,7 @@
                                         <td>{{ $role->id }}</td>
                                         <td>{{ $role->name }}</td>
                                         <td>
-                                            <span class="badge {{ $role->active ? 'badge-success' : 'badge-danger' }}">
+                                            <span class="badge {{ $role->active ? 'bg-success' : 'bg-danger' }}">
                                                 {{ $role->active ? 'Active' : 'Inactive' }}
                                             </span>
                                         </td>
@@ -56,11 +56,11 @@
                                                 <i class="fas fa-key"></i> Permissions
                                             </a>
 
-                                            <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-sm btn-info">
+                                            <a href="{{ route('admin.roles.edit', ['roleId'=>$role->id]) }}" class="btn btn-sm btn-info">
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>
 
-                                            <form action="{{ route('admin.roles.destroy', $role->id) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('admin.roles.destroy',  ['roleId'=>$role->id]) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this role?')">
@@ -80,40 +80,7 @@
                         </table>
                     </div>
 
-                    <div class="mt-4">
-                        <h5>Clone Permissions</h5>
-                        <form action="{{ route('admin.roles.clone-permissions') }}" method="POST" class="row">
-                            @csrf
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="source_role_id">From Role</label>
-                                    <select name="source_role_id" id="source_role_id" class="form-control" required>
-                                        <option value="">Select Source Role</option>
-                                        @foreach($roles as $role)
-                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label for="target_role_id">To Role</label>
-                                    <select name="target_role_id" id="target_role_id" class="form-control" required>
-                                        <option value="">Select Target Role</option>
-                                        @foreach($roles as $role)
-                                            <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-group">
-                                    <label>&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary d-block">Clone Permissions</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+
                 </div>
             </div>
         </div>

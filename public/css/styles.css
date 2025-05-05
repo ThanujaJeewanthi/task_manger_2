@@ -465,7 +465,7 @@
     }
 
     .hamburger-icon {
-        fill: none;
+        /* fill: none; */
     }
 
     .hamburger-icon .line {
