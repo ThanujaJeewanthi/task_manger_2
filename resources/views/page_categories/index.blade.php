@@ -44,7 +44,7 @@
                                         <td>{{ $category->id }}</td>
                                         <td>{{ $category->name }}</td>
                                         <td>
-                                            <span class="badge {{ $category->active ? 'badge-success' : 'badge-danger' }}">
+                                            <span class="badge {{ $category->active ? 'bg-success' : 'bg-danger' }}">
                                                 {{ $category->active ? 'Active' : 'Inactive' }}
                                             </span>
                                         </td>

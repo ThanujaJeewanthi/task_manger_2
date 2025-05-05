@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid">
@@ -51,11 +51,23 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        {{-- <div class="form-group">
                             <div class="custom-control custom-checkbox">
                                 <input type="checkbox" class="custom-control-input" id="active" name="active" {{ $page->active ? 'checked' : '' }}>
                                 <label class="custom-control-label" for="active">Active</label>
                             </div>
+                        </div> --}}
+                        <div class="form-group">
+                        <div class="d-com-flex justify-content-start mb-4">
+                            <label class="custom-control-label" for="active">Active</label>
+                            <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
+                                <input type="checkbox" class="custom-control-input" id="active" name="active" {{ $page->active ? 'checked' : '' }}>
+                               <span class="d-slider " >
+                                    <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
+                                    <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
+                                </span>
+                            </label>
+                        </div>
                         </div>
 
                         <div class="form-group">

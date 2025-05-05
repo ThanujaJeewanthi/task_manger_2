@@ -87,3 +87,12 @@ Route::prefix('rider')->name('rider.')->middleware(['auth', 'role.permission'])-
 Route::prefix('laundry')->name('laundry.')->middleware(['auth', 'role.permission'])->group(function () {
     Route::get('/jobs', [LaundryController::class, 'jobs'])->name('jobs')->middleware('role.permission:5.1');
 });
+
+
+Route::get('/thanuu', function () {
+    return view('test');
+})->name('thanuu')->middleware('role.permission:8.3');
+
+Route::get('/test', function () {
+    return view('test');
+})->name('test')->middleware('role.permission:7.1');

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid">
@@ -22,16 +22,16 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="code">Page Code</label>
+                            <label for="code">Page Number</label>
                             <div class="input-group">
                                 <input type="text" class="form-control @error('code') is-invalid @enderror" id="code" name="code" value="{{ old('code') }}" placeholder="e.g. 3.1" required>
-                                <div class="input-group-append">
+                                {{-- <div class="input-group-append">
                                     <span class="input-group-text">
                                         <i class="fas fa-info-circle" data-toggle="tooltip" title="Format: CategoryID.PageNumber (e.g. 3.1 for 'Create Client' in Client category)"></i>
                                     </span>
-                                </div>
+                                </div> --}}
                             </div>
-                            <small class="form-text text-muted">Use format: CategoryID.PageNumber (e.g. 3.1 for 'Create Client' in Client category)</small>
+                            <small class="form-text text-muted">The code will be in the format: CategoryID.PageNumber </small>
                             @error('code')
                                 <span class="invalid-feedback">{{ $message }}</span>
                             @enderror
@@ -51,9 +51,16 @@
                         </div>
 
                         <div class="form-group">
-                            <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="active" name="active" checked>
-                                <label class="custom-control-label" for="active">Active</label>
+                            <div class="d-com-flex justify-content-start mb-4">
+                                <label class="d-label-text me-2">Active</label>
+                                <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
+                                    <input type="checkbox" class="form-check-input d-section-toggle" id="active" name="active" checked />
+                                    <span class="d-slider " >
+                                        <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
+                                        <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
+                                    </span>
+                                </label>
+
                             </div>
                         </div>
 
@@ -70,19 +77,5 @@
 @endsection
 
 @push('scripts')
-<script>
-    $(function () {
-        $('[data-toggle="tooltip"]').tooltip();
 
-        // Auto-generate code based on category selection
-        $('#page_category_id').on('change', function() {
-            if (!$('#code').val()) {
-                const categoryId = $(this).val();
-                if (categoryId) {
-                    $('#code').val(categoryId + '.');
-                }
-            }
-        });
-    });
-</script>
 @endpush

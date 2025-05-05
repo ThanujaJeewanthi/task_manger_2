@@ -5,68 +5,82 @@ namespace App\Http\Controllers;
 use App\Models\Page;
 use App\Models\PageCategory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class PageController extends Controller
 {
     /**
      * Display a listing of the pages.
      *
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\Contracts\View\View
      */
     public function index()
     {
         $pages = Page::with('category')->get();
-        return view('admin.pages.index', compact('pages'));
+        return view('pages.index', compact('pages'));
     }
 
     /**
      * Show the form for creating a new page.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function create()
     {
         $categories = PageCategory::where('active', true)->pluck('name', 'id');
-        return view('admin.pages.create', compact('categories'));
+        return view('pages.create', compact('categories'));
     }
 
     /**
      * Store a newly created page in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'code' => 'required|string|max:255|unique:pages',
-            'page_category_id' => 'required|exists:page_categories,id',
-            'active' => 'sometimes|boolean',
-        ]);
+            'code' => 'required|string|max:255|unique:pages,code',
 
-        Page::create([
-            'name' => $request->name,
-            'code' => $request->code,
-            'page_category_id' => $request->page_category_id,
-            'active' => $request->has('active'),
         ]);
+try{
+    DB::beginTransaction();
+        $page = new Page();
+        $page->name = $request->name;
+        $page->page_category_id = $request->page_category_id;
+        //page code is created using the page category id +.code
+        $page->code = $request->page_category_id . '.' . $request->code;
+
+        $page->page_category_id = $request->page_category_id;
+        $page->active = $request->has('active');
+        $page->save();
+        DB::commit();
+
+
 
         return redirect()->route('admin.pages.index')
             ->with('success', 'Page created successfully.');
+    }
+    catch(\Exception $e){
+        DB::rollBack();
+        return redirect()->back()
+            ->with('error', 'An error occurred while creating the page: ' . $e->getMessage())
+            ->withInput();
+    }
     }
 
     /**
      * Show the form for editing the specified page.
      *
      * @param  int  $id
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Contracts\View\View
      */
     public function edit($id)
     {
         $page = Page::findOrFail($id);
         $categories = PageCategory::where('active', true)->pluck('name', 'id');
-        return view('admin.pages.edit', compact('page', 'categories'));
+        return view('pages.edit', compact('page', 'categories'));
     }
 
     /**
@@ -75,6 +89,8 @@ class PageController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, $id)
     {
@@ -83,19 +99,28 @@ class PageController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:255|unique:pages,code,' . $id,
-            'page_category_id' => 'required|exists:page_categories,id',
-            'active' => 'sometimes|boolean',
-        ]);
 
-        $page->update([
-            'name' => $request->name,
-            'code' => $request->code,
-            'page_category_id' => $request->page_category_id,
-            'active' => $request->has('active'),
         ]);
+        try{
+            DB::beginTransaction();
+        $page->name = $request->name;
+        $page->code = $request->code;
+        $page->page_category_id = $request->page_category_id;
+        $page->active = $request->has('active');
+        $page->save();
+        DB::commit();
+
+
 
         return redirect()->route('admin.pages.index')
             ->with('success', 'Page updated successfully.');
+    }
+    catch(\Exception $e){
+        DB::rollBack();
+        return redirect()->back()
+            ->with('error', 'An error occurred while updating the page: ' . $e->getMessage())
+            ->withInput();
+    }
     }
 
     /**
@@ -103,6 +128,8 @@ class PageController extends Controller
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy($id)
     {

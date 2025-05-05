@@ -95,7 +95,7 @@
         background-color: var(--light-main-bg-color);
         display: flex;
         flex-direction: column;
-        height: 100vh;
+        /* height: 100vh; */
         transition: width 0.3s ease;
         position: relative;
     }

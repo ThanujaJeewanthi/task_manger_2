@@ -5,18 +5,12 @@
     <a href="{{ route('dashboard') }}" class="navbar-brand " style="margin-left: 0px;margin-right:30px; width: 90px;">
         <span class="fw-bold mt-3 mb-0 " >Spin App</span>
     </a>
-    <button id="sidebar-toggle" class="sidebar-toggle" style="margin-left: 38px;">
-        <svg width="30" height="30" viewBox="0 0 100 100" class="hamburger-icon">
-            <rect class="line top" width="80" height="10" x="10" y="25" rx="5"></rect>
-            <rect class="line middle" width="80" height="10" x="10" y="45" rx="5"></rect>
-            <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
-        </svg>
-    </button>
+
 </div>
 
 
         @auth
-        <div class="search-bar   d-flex align-items-center me-3" style="width: 200px;">
+        <div class="search-bar   d-flex align-items-center me-3" style="width:50px !important; margin-left: 50px;  margin-right: 50px;">
 
             <div class="input-group">
                 <span class="input-group-text bg-dark text-light border-0"><i class="fas fa-search"></i></span>
@@ -33,7 +27,7 @@
             <span class="navbar-toggler-icon"></span>
         </button> --}}
 
-        <div class=" justify-content-end" id="navbarContent">
+        <div class=" justify-content-end w-190" id="navbarContent">
             @auth
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

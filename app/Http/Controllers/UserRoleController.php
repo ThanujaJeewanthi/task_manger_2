@@ -61,7 +61,7 @@ class UserRoleController extends Controller
     {
         // Validate the request
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:user_roles,name',
         ]);
 
         try {
@@ -166,11 +166,5 @@ class UserRoleController extends Controller
             ->with('success', 'User role deleted successfully.');
     }
 
-    /**
-     * Clone permissions from one role to another.
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\Response
-     */
 
 }
