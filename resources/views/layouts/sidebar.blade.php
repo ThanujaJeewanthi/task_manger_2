@@ -48,7 +48,7 @@
             <a href="#">Link 3</a>
         </div> --}}
 
-@if (Auth::user()->type=='admin')
+@if (Auth::user()->type =='admin')
 <button class="dropdown-btn">
     <i class="fas fa-plus-circle me-2 icon-only"></i>
     <span class="side-link">User Management</span>

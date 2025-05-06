@@ -1,20 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
 
+use Illuminate\Support\Facades\Auth;
+
+use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\RiderController;
 use App\Http\Controllers\LaundryController;
-use App\Http\Controllers\UserRoleController;
+use App\Http\Controllers\Auth\ProfileController;
 
-use App\Http\Controllers\PageCategoryController;
+use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\Dashboard\ClientController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
+use App\Http\Controllers\Dashboard\RiderDashboardController;
 use App\Http\Controllers\Dashboard\ClientDashboardController;
 use App\Http\Controllers\Dashboard\CommonDashboardController;
-use App\Http\Controllers\Dashboard\RiderDashboardController;
 use App\Http\Controllers\Dashboard\LaundryDashboardController;
 
 // Authentication routes
@@ -35,7 +37,7 @@ Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'login
 Route::get('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register.form');
 Route::post('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'register'])->name('register');
 Route::post('/logout', [\App\Http\Controllers\Auth\LoginController::class, 'logout'])->name('logout');
-
+Route::get('/profile', [ProfileController::class, 'index'])->name('profile')->middleware('role.permission:6.1');
 
 // Admin routes
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.permission'])->group(function () {
