@@ -5,10 +5,10 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-body">
-        <h5 class="h2 mb-4">Admin Dashboard</h5>
+        <h5 class=" mb-4">Admin Dashboard</h5>
 
         <div class="row mb-4">
-            <div class="col-lg-6 col-xl-3  col-sm-12 mb-4 mb-md-0">
+            <div class="col-lg-2 col-xl-3  col-sm-12 mb-4 mb-md-0">
                 <div class="dcards-card text-center bg-primary bg-opacity-10 ">
                     <div class="dcards-card-body ">
                         <h3 class="dcards-card-title h5 mb-2">Total Users</h3>
@@ -19,7 +19,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-6 col-xl-3  col-sm-12 mb-4 mb-md-0">
+            <div class="col-lg-2 col-xl-3  col-sm-12 mb-4 mb-md-0">
                 <div class="dcards-card text-center bg-primary bg-opacity-10 ">
                     <div class="dcards-card-body ">
                         <h3 class="h5 mb-2">Active Users</h3>
@@ -28,7 +28,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-6 col-xl-3  col-sm-12 mb-4 mb-md-0">
+            <div class="col-lg-2 col-xl-3  col-sm-12 mb-4 mb-md-0">
                 <div class="dcards-card text-center bg-primary bg-opacity-10 ">
                     <div class="dcards-card-body ">
                         <h3 class="h5 mb-2">Total Orders</h3>
@@ -37,7 +37,7 @@
                 </div>
             </div>
 
-            <div class="col-lg-3  col-md-6 col-sm-12">
+            <div class="col-lg-2  col-xl-3 col-sm-12">
                 <div class="dcards-card text-center bg-primary bg-opacity-10 ">
                     <div class="dcards-card-body ">
                         <h3 class="h5 mb-2">Completed Orders</h3>
@@ -78,4 +78,18 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('styles')
+<style>
+.dcards-card
+    {
+   width:250px;
+
+    margin: 0 auto;
+    border-radius: 10px;
+}
+
+</style>
+
 @endsection

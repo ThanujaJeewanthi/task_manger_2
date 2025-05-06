@@ -624,9 +624,9 @@
 
     /* Media Query for Small Screens */
     @media (max-width: 768px) {
-        .sidebar {
+        /* .sidebar {
             width: 70px;
-        }
+        } */
 
         /* .sidebar .sidebar-logo h2 {
             display: none;
@@ -642,13 +642,13 @@
     }
 
     @media (max-width: 576px) {
-        .sidebar {
+        /* .sidebar {
             display: none;
-        }
-
+        } */
+/*
         #sidebar-toggle {
             display: block;
-        }
+        } */
     }
 
     /* Responsive Grid */

@@ -48,63 +48,73 @@
             <a href="#">Link 3</a>
         </div> --}}
 
+@if (Auth::user()->type =='admin')
+<button class="dropdown-btn">
+    <i class="fas fa-plus-circle me-2 icon-only"></i>
+    <span class="side-link">User Management</span>
+    <i class="fa fa-caret-down"></i>
+</button>
+<div class="dropdown-container">
+    {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
+    <a href="{{route('admin.roles.index')}}">Roles</a>
+    <a href="#">Link 3</a>
+</div>
 
-        <button class="dropdown-btn">
-            <i class="fas fa-plus-circle me-2 icon-only"></i>
-            <span class="side-link">User Management</span>
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-container">
-            {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
-            <a href="{{route('admin.roles.index')}}">Roles</a>
-            <a href="#">Link 3</a>
-        </div>
+<button class="dropdown-btn">
+    <i class="fas fa-user-tag"></i>
+    <span class="side-link">Pages</span>
+    <i class="fa fa-caret-down"></i>
+</button>
+<div class="dropdown-container">
+    <a href="{{route('admin.pages.index')}}">Pages</a>
+    <a href="{{route('admin.pages.create')}}">Create Pages</a>
+    <a href="{{route('admin.page-categories.index')}}">Page Categories</a>
+    <a href="{{route('admin.page-categories.create')}}">Create Page Categories</a>
+</div>
+@endif
 
-        <button class="dropdown-btn">
-            <i class="fas fa-user-tag"></i>
-            <span class="side-link">Pages</span>
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-container">
-            <a href="{{route('admin.pages.index')}}">Pages</a>
-            <a href="{{route('admin.pages.create')}}">Create Pages</a>
-            <a href="{{route('admin.page-categories.index')}}">Page Categories</a>
-            <a href="{{route('admin.page-categories.create')}}">Create Page Categories</a>
-        </div>
-        <button class="dropdown-btn">
-            <i class="fas fa-plus-circle me-2 icon-only"></i>
-            <span class="side-link"> Orders</span>
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
-        </div>
 
-        <button class="dropdown-btn">
-            <i class="fas fa-motorcycle me-2 icon-only"></i>
-            <span class="side-link"> Riders</span>
+@if (Auth::user()->userRole() =='client')
+<button class="dropdown-btn">
+    <i class="fas fa-plus-circle me-2 icon-only"></i>
+    <span class="side-link"> Orders</span>
+    <i class="fa fa-caret-down"></i>
+</button>
+<div class="dropdown-container">
+    <a href="#">Link 1</a>
+    <a href="#">Link 2</a>
+    <a href="#">Link 3</a>
+</div>
+@endif
 
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
-        </div>
+@if (Auth::user()->userRole() =='rider')
+<button class="dropdown-btn">
+    <i class="fas fa-motorcycle me-2 icon-only"></i>
+    <span class="side-link"> Jobs</span>
 
-        <button class="dropdown-btn">
-            <i class="fas fa-plus-circle me-2 icon-only"></i>
-            <span class="side-link">Laundry</span>
+    <i class="fa fa-caret-down"></i>
+</button>
+<div class="dropdown-container">
+    <a href="#">Link 1</a>
+    <a href="#">Link 2</a>
+    <a href="#">Link 3</a>
+</div>
+@endif
 
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
-        </div>
+@if (Auth::user()->userRole() =='laundry')
+<button class="dropdown-btn">
+    <i class="fas fa-plus-circle me-2 icon-only"></i>
+    <span class="side-link">Jobs</span>
+
+    <i class="fa fa-caret-down"></i>
+</button>
+<div class="dropdown-container">
+    <a href="#">Link 1</a>
+    <a href="#">Link 2</a>
+    <a href="#">Link 3</a>
+</div>
+@endif
+
         <button class="dropdown-btn">
             <i class="fas fa-plus-circle me-2 icon-only"></i>
             <span class="side-link">Permission Management</span>
