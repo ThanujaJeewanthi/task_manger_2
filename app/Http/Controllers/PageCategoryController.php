@@ -123,11 +123,10 @@ try{
     {
         $pageCategory = PageCategory::findOrFail($id);
 
-        // Check if the category has pages
-        if ($pageCategory->pages->count() > 0) {
-            return redirect()->route('admin.page-categories.index')
-                ->with('error', 'Cannot delete category that has pages. Remove pages first.');
-        }
+        // delete all pages associated with this category
+        $pageCategory->pages()->delete();
+        // delete the page category
+
 
         $pageCategory->delete();
 

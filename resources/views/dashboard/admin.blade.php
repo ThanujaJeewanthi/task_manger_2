@@ -5,7 +5,7 @@
 @section('content')
 <div class="card shadow mb-4">
     <div class="card-body">
-        <h5 class=" mb-4">Admin Dashboard</h5>
+        <h6 class="h5 mb-4">Admin Dashboard</h6>
 
         <div class="row mb-4">
             <div class="col-lg-2 col-xl-3  col-sm-12 mb-4 mb-md-0">

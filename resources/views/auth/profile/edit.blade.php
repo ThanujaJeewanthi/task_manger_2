@@ -52,7 +52,7 @@
                                         @error('profile_picture')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
-                                        <small class="form-text text-muted">Upload a square image for best results.</small>
+                                        {{-- <small class="form-text text-muted">Upload a square image for best results.</small> --}}
                                     </div>
                                 </div>
 
@@ -66,7 +66,14 @@
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>
-
+                                    <div class="form-group mb-4">
+                                        <label for="username">Username</label>
+                                        <input type=" text" class="form-control @error('username') is-invalid @enderror"
+                                               id="username" name="username" value="{{ old('username', Auth::user()->username) }}" required>
+                                        @error('username')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
                                     <!-- Email Field -->
                                     <div class="form-group mb-4">
                                         <label for="email">Email Address</label>
@@ -79,10 +86,10 @@
 
                                     <!-- Phone Field -->
                                     <div class="form-group mb-4">
-                                        <label for="phone">Phone Number</label>
-                                        <input type="text" class="form-control @error('phone') is-invalid @enderror"
-                                               id="phone" name="phone" value="{{ old('phone', Auth::user()->phone) }}" required>
-                                        @error('phone')
+                                        <label for="phone_number">Phone Number</label>
+                                        <input type="text" class="form-control @error('phone_number') is-invalid @enderror"
+                                               id="phone_number" name="phone_number" value="{{ old('phone_number', Auth::user()->phone_number) }}" required>
+                                        @error('phone_number')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>

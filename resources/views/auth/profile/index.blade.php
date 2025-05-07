@@ -12,11 +12,16 @@
                 </div>
 
                 <div class="card-body">
-                    @if (session('success'))
+                    {{-- @if (session('success'))
                         <div class="alert alert-success mt-3">
                             {{ session('success') }}
                         </div>
                     @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger mt-3">
+                            {{ session('error') }}
+                        </div>
+                    @endif --}}
 
                     <div class="d-component-container">
                         <div class="row">
@@ -34,28 +39,32 @@
                                              alt="Default Profile Picture">
                                     @endif
                                 </div>
-                                <h4>{{ Auth::user()->name }}</h4>
+                                <h4>{{ Auth::user()->username }}</h4>
                             </div>
 
                             <div class="col-md-8">
                                 <div class="profile-details">
-                                    <div class="row mb-3">
-                                        <div class="col-md-3 fw-bold">Email:</div>
-                                        <div class="col-md-9">{{ Auth::user()->email }}</div>
+                                    <div class="form-group mb-4">
+                                        <label>Name:</label>
+                                        <div>{{ Auth::user()->name }}</div>
+                                    </div>
+                                    <div class="form-group mb-4">
+                                        <label>Email:</label>
+                                        <div>{{ Auth::user()->email }}</div>
                                     </div>
 
-                                    <div class="row mb-3">
-                                        <div class="col-md-3 fw-bold">Phone:</div>
-                                        <div class="col-md-9">{{ Auth::user()->phone }}</div>
+                                    <div class="form-group mb-4">
+                                        <label>Phone:</label>
+                                        <div>{{ Auth::user()->phone_number }}</div>
                                     </div>
 
-                                    <div class="row mb-3">
-                                        <div class="col-md-3 fw-bold">Member Since:</div>
-                                        <div class="col-md-9">{{ Auth::user()->created_at->format('F d, Y') }}</div>
+                                    <div class="form-group mb-4">
+                                        <label>Member Since:</label>
+                                        <div>{{ Auth::user()->created_at->format('F d, Y') }}</div>
                                     </div>
                                 </div>
 
-                                <div class="mt-4">
+                                <div class="form-group mt-4">
                                     <a href="{{ route('profile.edit') }}" class="btn btn-primary">Edit Profile</a>
                                     <button type="button" class="btn btn-secondary ms-2" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
                                         Change Password

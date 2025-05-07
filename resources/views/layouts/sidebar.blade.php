@@ -35,20 +35,19 @@
             <i class="fa fa-caret-down"></i>
         </button> --}}
 
-        <button  class="dropdown-btn">
-                <i class="fas fa-tachometer-alt me-2 icon-only"><a href="{{route('dashboard')}}"></a></i>
-                <span class="side-link">Dashboard</span>
 
-        </button>
+    <a href="{{ route('dashboard') }}" class="dropdown-btn">
+        <i class="fas fa-tachometer-alt me-2 icon-only"></i>
+        <span class="side-link">Dashboard</span>
+    </a>
 
 
-        {{-- <div class="dropdown-container">
-            <a href="#">Users</a>
-            <a href="#">Roles</a>
-            <a href="#">Link 3</a>
-        </div> --}}
+    @php
+    $useraccessiblePageCategoryNames = session('user_accessible_page_category_names') ?? [];
+@endphp
 
-@if (Auth::user()->type =='admin')
+@if (in_array('Management', $useraccessiblePageCategoryNames))
+
 <button class="dropdown-btn">
     <i class="fas fa-plus-circle me-2 icon-only"></i>
     <span class="side-link">User Management</span>
@@ -57,9 +56,11 @@
 <div class="dropdown-container">
     {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
     <a href="{{route('admin.roles.index')}}">Roles</a>
-    <a href="#">Link 3</a>
+    <a href="{{route('admin.users.index')}}">Users</a>
 </div>
+@endif
 
+{{-- @if (in_array('Pages', $useraccessiblePageCategoryNames)) --}}
 <button class="dropdown-btn">
     <i class="fas fa-user-tag"></i>
     <span class="side-link">Pages</span>
@@ -71,10 +72,10 @@
     <a href="{{route('admin.page-categories.index')}}">Page Categories</a>
     <a href="{{route('admin.page-categories.create')}}">Create Page Categories</a>
 </div>
-@endif
+{{-- @endif --}}
 
 
-@if (Auth::user()->userRole() =='client')
+
 <button class="dropdown-btn">
     <i class="fas fa-plus-circle me-2 icon-only"></i>
     <span class="side-link"> Orders</span>
@@ -85,9 +86,9 @@
     <a href="#">Link 2</a>
     <a href="#">Link 3</a>
 </div>
-@endif
 
-@if (Auth::user()->userRole() =='rider')
+
+
 <button class="dropdown-btn">
     <i class="fas fa-motorcycle me-2 icon-only"></i>
     <span class="side-link"> Jobs</span>
@@ -99,9 +100,9 @@
     <a href="#">Link 2</a>
     <a href="#">Link 3</a>
 </div>
-@endif
 
-@if (Auth::user()->userRole() =='laundry')
+
+
 <button class="dropdown-btn">
     <i class="fas fa-plus-circle me-2 icon-only"></i>
     <span class="side-link">Jobs</span>
@@ -113,7 +114,7 @@
     <a href="#">Link 2</a>
     <a href="#">Link 3</a>
 </div>
-@endif
+
 
         <button class="dropdown-btn">
             <i class="fas fa-plus-circle me-2 icon-only"></i>
