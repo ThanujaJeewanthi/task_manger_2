@@ -43,24 +43,31 @@
 
 
     @php
-    $useraccessiblePageCategoryNames = session('user_accessible_page_category_names') ?? [];
+   $categorizedPages = session('categorized_pages', []);
 @endphp
 
-@if (in_array('Management', $useraccessiblePageCategoryNames))
+
+
+{{-- @if (in_array('3', $categorizedPages)) --}}
+@if( array_key_exists(3, $categorizedPages))
+
+
 
 <button class="dropdown-btn">
     <i class="fas fa-plus-circle me-2 icon-only"></i>
-    <span class="side-link">User Management</span>
+    <span class="side-link">Permissions </span>
     <i class="fa fa-caret-down"></i>
 </button>
 <div class="dropdown-container">
     {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
-    <a href="{{route('admin.roles.index')}}">Roles</a>
-    <a href="{{route('admin.users.index')}}">Users</a>
+    <a href="{{route('admin.roles.index')}}">User Roles</a>
+    <a href="{{route('admin.roles.create')}}">Create User Roles</a>
 </div>
 @endif
 
-{{-- @if (in_array('Pages', $useraccessiblePageCategoryNames)) --}}
+
+{{-- @if (in_array('2', $categorizedPages)) --}}
+@if( array_key_exists(2, $categorizedPages))
 <button class="dropdown-btn">
     <i class="fas fa-user-tag"></i>
     <span class="side-link">Pages</span>
@@ -72,24 +79,25 @@
     <a href="{{route('admin.page-categories.index')}}">Page Categories</a>
     <a href="{{route('admin.page-categories.create')}}">Create Page Categories</a>
 </div>
-{{-- @endif --}}
+@endif
 
 
 
+@if( array_key_exists(4, $categorizedPages))
 <button class="dropdown-btn">
     <i class="fas fa-plus-circle me-2 icon-only"></i>
-    <span class="side-link"> Orders</span>
+    <span class="side-link"> Users</span>
     <i class="fa fa-caret-down"></i>
 </button>
 <div class="dropdown-container">
-    <a href="#">Link 1</a>
-    <a href="#">Link 2</a>
-    <a href="#">Link 3</a>
+    <a href="{{route('admin.users.index')}}">Users</a>
+    <a href="{{route('admin.users.create')}}">Create User</a>
+
 </div>
+@endif
 
 
-
-<button class="dropdown-btn">
+{{-- <button class="dropdown-btn">
     <i class="fas fa-motorcycle me-2 icon-only"></i>
     <span class="side-link"> Jobs</span>
 
@@ -126,9 +134,10 @@
             <a href="#">Link 1</a>
             <a href="#">Link 2</a>
             <a href="#">Link 3</a>
-        </div>
+        </div> --}}
 
         <button class="dropdown-btn">
+
             <i class="fas fa-plus-circle me-2 icon-only"></i>
             <span class="side-link"> Link page 1</span>
 

@@ -4,8 +4,9 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\UserRoleDetail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class RolePermissionMiddleware
 {
@@ -26,7 +27,12 @@ class RolePermissionMiddleware
 
         $user = Auth::user();
 
-        if ($user->type === 'admin') {
+        // if ($user->type === 'admin') {
+        //     return $next($request);
+        // }
+
+        //if the route is exactly  'dashboard' proceed request
+        if ($request->is('dashboard')) {
             return $next($request);
         }
 
@@ -35,19 +41,20 @@ class RolePermissionMiddleware
 
         // Check if user has permission for this code and if status is 'allow'
         $permission = UserRoleDetail::where('user_role_id', $userRoleId)
-            ->where('code', $code)
+            ->where('code', (string)$code)
             ->where('active', true)
             ->where('status', 'allow')
             ->exists();
 
         // If permission exists and status is 'allow', grant access
         if ($permission) {
+
             return $next($request);
         }
 
 
         // Redirect to dashboard with error
-        return redirect()->route('dashboard')
+        return redirect()->route('home')
             ->with('error', 'You do not have permission to access this page.');
     }
 }

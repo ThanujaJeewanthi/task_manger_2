@@ -50,16 +50,27 @@ Route::get('/profile/change-password', [ProfileController::class, 'changePasswor
 
 
 // Admin routes
-Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.permission'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
 
     // Page Categories
-    Route::get('/page-categories', [PageCategoryController::class, 'index'])->name('page-categories.index')->middleware('role.permission:2.1');
-    Route::get('/page-categories/create', [PageCategoryController::class, 'create'])->name('page-categories.create')->middleware('role.permission:2.2');
-    Route::post('/page-categories', [PageCategoryController::class, 'store'])->name('page-categories.store');
-    Route::get('/page-categories/{pageCategory}/edit', [PageCategoryController::class, 'edit'])->name('page-categories.edit')->middleware('role.permission:2.3');
-    Route::put('/page-categories/{pageCategory}', [PageCategoryController::class, 'update'])->name('page-categories.update');
-    Route::delete('/page-categories/{pageCategory}', [PageCategoryController::class, 'destroy'])->name('page-categories.destroy');
-
+    Route::get('/page-categories', [PageCategoryController::class, 'index'])
+        ->name('page-categories.index')
+        ->middleware('role.permission:2.1');
+    Route::get('/page-categories/create', [PageCategoryController::class, 'create'])
+        ->name('page-categories.create')
+        ->middleware('role.permission:2.2');
+    Route::post('/page-categories', [PageCategoryController::class, 'store'])
+        ->name('page-categories.store')
+        ->middleware('role.permission:2.2');
+    Route::get('/page-categories/{pageCategory}/edit', [PageCategoryController::class, 'edit'])
+        ->name('page-categories.edit')
+        ->middleware('role.permission:2.3');
+    Route::put('/page-categories/{pageCategory}', [PageCategoryController::class, 'update'])
+        ->name('page-categories.update')
+        ->middleware('role.permission:2.3');
+    Route::delete('/page-categories/{pageCategory}', [PageCategoryController::class, 'destroy'])
+        ->name('page-categories.destroy')
+        ->middleware('role.permission:2.1');
     // Pages
     Route::get('/pages', [PageController::class, 'index'])->name('pages.index')->middleware('role.permission:2.4');
     Route::get('/pages/create', [PageController::class, 'create'])->name('pages.create')->middleware('role.permission:2.5');
@@ -92,28 +103,32 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role.permission'])-
 }) ;
 
 
+Route::fallback(function(){
+return 'Fallback';
+});
+
 
 // Client routes
-Route::prefix('client')->name('client.')->middleware(['auth', 'role.permission'])->group(function () {
-    Route::get('/create', [ClientController::class, 'create'])->name('create')->middleware('role.permission:3.1');
-    Route::post('/store', [ClientController::class, 'store'])->name('store')->middleware('role.permission:3.1');
-});
+// Route::prefix('client')->name('client.')->middleware(['auth', 'role.permission'])->group(function () {
+//     Route::get('/create', [ClientController::class, 'create'])->name('create')->middleware('role.permission:3.1');
+//     Route::post('/store', [ClientController::class, 'store'])->name('store')->middleware('role.permission:3.1');
+// });
 
 // Rider routes
-Route::prefix('rider')->name('rider.')->middleware(['auth', 'role.permission'])->group(function () {
-    Route::get('/assignments', [RiderController::class, 'assignments'])->name('assignments')->middleware('role.permission:4.1');
-});
+// Route::prefix('rider')->name('rider.')->middleware(['auth', 'role.permission'])->group(function () {
+//     Route::get('/assignments', [RiderController::class, 'assignments'])->name('assignments')->middleware('role.permission:4.1');
+// });
 
 // Laundry routes
-Route::prefix('laundry')->name('laundry.')->middleware(['auth', 'role.permission'])->group(function () {
-    Route::get('/jobs', [LaundryController::class, 'jobs'])->name('jobs')->middleware('role.permission:5.1');
-});
+// Route::prefix('laundry')->name('laundry.')->middleware(['auth', 'role.permission'])->group(function () {
+//     Route::get('/jobs', [LaundryController::class, 'jobs'])->name('jobs')->middleware('role.permission:5.1');
+// });
 
 
-Route::get('/thanuu', function () {
-    return view('test');
-})->name('thanuu')->middleware('role.permission:8.3');
+// Route::get('/thanuu', function () {
+//     return view('test');
+// })->name('thanuu')->middleware('role.permission:8.3');
 
-Route::get('/test', function () {
-    return view('test');
-})->name('test')->middleware('role.permission:7.1');
+// Route::get('/test', function () {
+//     return view('test');
+// })->name('test')->middleware('role.permission:7.1');
