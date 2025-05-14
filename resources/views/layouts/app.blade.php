@@ -132,7 +132,7 @@
      }
 
      .sidebar.collapsed .side-link,
-     .sidebar.collapsed .sidebar-header h5 {
+     .sidebar.collapsed .sidebar-header h5  {
          display: none;
      }
 

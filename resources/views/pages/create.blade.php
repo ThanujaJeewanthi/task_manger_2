@@ -6,14 +6,17 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h4>Create New Page</h4>
+                     <div class="d-component-title">
+                    <span>Create New Page</span>
+                    </div>
+
                 </div>
 
                 <div class="card-body">
                     <form action="{{ route('admin.pages.store') }}" method="POST">
                         @csrf
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="name">Page Name</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
                             @error('name')
@@ -21,10 +24,10 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="code">Page Number</label>
                             <div class="input-group">
-                                <input type="text" class="form-control @error('code') is-invalid @enderror" id="code" name="code" value="{{ old('code') }}" placeholder="e.g. 3.1" required>
+                                <input type="text" class="form-control @error('code') is-invalid @enderror" id="code" name="code" value="{{ old('code') }}" placeholder="e.g. 1" required>
                                 {{-- <div class="input-group-append">
                                     <span class="input-group-text">
                                         <i class="fas fa-info-circle" data-toggle="tooltip" title="Format: CategoryID.PageNumber (e.g. 3.1 for 'Create Client' in Client category)"></i>
@@ -37,7 +40,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="page_category_id">Category</label>
                             <select class="form-control @error('page_category_id') is-invalid @enderror" id="page_category_id" name="page_category_id" required>
                                 <option value="">Select Category</option>
@@ -50,7 +53,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <div class="d-com-flex justify-content-start mb-4">
                                 <label class="d-label-text me-2">Active</label>
                                 <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
@@ -64,7 +67,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <button type="submit" class="btn btn-primary">Create Page</button>
                             <a href="{{ route('admin.pages.index') }}" class="btn btn-secondary">Cancel</a>
                         </div>

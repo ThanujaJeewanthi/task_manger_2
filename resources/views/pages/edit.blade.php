@@ -14,7 +14,7 @@
                         @csrf
                         @method('PUT')
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="name">Page Name</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $page->name) }}" required>
                             @error('name')
@@ -22,7 +22,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="code">Page Code</label>
                             <div class="input-group">
                                 <input type="text" class="form-control @error('code') is-invalid @enderror" id="code" name="code" value="{{ old('code', $page->code) }}" required>
@@ -38,7 +38,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="page_category_id">Category</label>
                             <select class="form-control @error('page_category_id') is-invalid @enderror" id="page_category_id" name="page_category_id" required>
                                 <option value="">Select Category</option>
@@ -57,7 +57,7 @@
                                 <label class="custom-control-label" for="active">Active</label>
                             </div>
                         </div> --}}
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                         <div class="d-com-flex justify-content-start mb-4">
                             <label class="custom-control-label" for="active">Active</label>
                             <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
@@ -70,7 +70,7 @@
                         </div>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <button type="submit" class="btn btn-primary">Update Page</button>
                             <a href="{{ route('admin.pages.index') }}" class="btn btn-secondary">Cancel</a>
                         </div>

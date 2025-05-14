@@ -14,7 +14,7 @@
                         @csrf
                         @method('PUT')
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="name">Category Name</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $pageCategory->name) }}" required>
                             @error('name')
@@ -28,7 +28,7 @@
                                 <label class="custom-control-label" for="active">Active</label>
                             </div>
                         </div> --}}
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                         <div class="d-com-flex justify-content-start mb-4">
                             <label class="custom-control-label" for="active">Active</label>
                             <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
@@ -42,7 +42,7 @@
                         </div>
 
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <button type="submit" class="btn btn-primary">Update Category</button>
                             <a href="{{ route('admin.page-categories.index') }}" class="btn btn-secondary">Cancel</a>
                         </div>

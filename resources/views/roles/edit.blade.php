@@ -14,7 +14,7 @@
                         @csrf
                         @method('PUT')
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="name">Role Name</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $role->name) }}" required>
                             @error('name')
@@ -34,7 +34,7 @@
     </label>
 </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
 
                             <button type="submit" class="btn btn-primary">Update Role</button>
                             <a href="{{ route('admin.roles.index') }}" class="btn btn-secondary">Cancel</a>

@@ -7,7 +7,10 @@
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">User Roles</h4>
+                       <div class="d-component-title">
+                    <span>User Roles</span>
+                    </div>
+                        {{-- <h5 class="mb-0">User Roles</h5> --}}
                         <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add New Role
                         </a>

@@ -1,4 +1,3 @@
-
 <aside class="sidebar d-flex flex-column" style="  left: 0; height:auto; background-color: #282c30; color: #fff; ">
     {{-- <div class="sidebar-logo d-flex align-items-center justify-content-center">
         <img src="assets/images/samplelogod.png" alt="Logo" class="me-3" />
@@ -17,12 +16,12 @@
                     <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
                 </svg>
             </button>
-            <a href="#" class="dashboard-link mt-0">
-                 <h5> @php
+            <a href="#" class="dashboard-link text-small mt-0">
+                <h5> @php
                     $userRole = Auth::user()->userRole->name ?? 'User';
                 @endphp
-                {{ ucfirst($userRole) }} Dashboard
-            </h5>
+                    {{ ucfirst($userRole) }} Dashboard
+                </h5>
 
             </a>
 
@@ -35,60 +34,66 @@
             <i class="fa fa-caret-down"></i>
         </button> --}}
 
-        <button  class="dropdown-btn">
-                <i class="fas fa-tachometer-alt me-2 icon-only"><a href="{{route('dashboard')}}"></a></i>
-                <span class="side-link">Dashboard</span>
 
-        </button>
-
-
-        {{-- <div class="dropdown-container">
-            <a href="#">Users</a>
-            <a href="#">Roles</a>
-            <a href="#">Link 3</a>
-        </div> --}}
-
-@if (Auth::user()->type =='admin')
-<button class="dropdown-btn">
-    <i class="fas fa-plus-circle me-2 icon-only"></i>
-    <span class="side-link">User Management</span>
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
-    <a href="{{route('admin.roles.index')}}">Roles</a>
-    <a href="#">Link 3</a>
-</div>
-
-<button class="dropdown-btn">
-    <i class="fas fa-user-tag"></i>
-    <span class="side-link">Pages</span>
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    <a href="{{route('admin.pages.index')}}">Pages</a>
-    <a href="{{route('admin.pages.create')}}">Create Pages</a>
-    <a href="{{route('admin.page-categories.index')}}">Page Categories</a>
-    <a href="{{route('admin.page-categories.create')}}">Create Page Categories</a>
-</div>
-@endif
+        <a href="{{ route('dashboard') }}" class="dropdown-btn">
+            <i class="fas fa-tachometer-alt me-2 icon-only"></i>
+            <span class="side-link">Dashboard</span>
+        </a>
 
 
-@if (Auth::user()->userRole() =='client')
-<button class="dropdown-btn">
-    <i class="fas fa-plus-circle me-2 icon-only"></i>
-    <span class="side-link"> Orders</span>
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    <a href="#">Link 1</a>
-    <a href="#">Link 2</a>
-    <a href="#">Link 3</a>
-</div>
-@endif
+        @php
+            $categorizedPages = session('categorized_pages', []);
+        @endphp
 
-@if (Auth::user()->userRole() =='rider')
-<button class="dropdown-btn">
+
+
+        {{-- @if (in_array('3', $categorizedPages)) --}}
+        @if (array_key_exists(3, $categorizedPages))
+            <button class="dropdown-btn">
+                <i class="fas fa-plus-circle me-2 icon-only"></i>
+                <span class="side-link">Permissions </span>
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
+                <a href="{{ route('admin.roles.index') }}">User Roles</a>
+                <a href="{{ route('admin.roles.create') }}">Create User Roles</a>
+            </div>
+        @endif
+
+
+        {{-- @if (in_array('2', $categorizedPages)) --}}
+        @if (array_key_exists(2, $categorizedPages))
+            <button class="dropdown-btn">
+                <i class="fas fa-user-tag"></i>
+                <span class="side-link">Pages</span>
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                <a href="{{ route('admin.pages.index') }}">Pages</a>
+                <a href="{{ route('admin.pages.create') }}">Create Pages</a>
+                <a href="{{ route('admin.page-categories.index') }}">Page Categories</a>
+                <a href="{{ route('admin.page-categories.create') }}">Create Page Categories</a>
+            </div>
+        @endif
+
+
+
+        @if (array_key_exists(4, $categorizedPages))
+            <button class="dropdown-btn">
+                <i class="fas fa-plus-circle me-2 icon-only"></i>
+                <span class="side-link"> Users</span>
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                <a href="{{ route('admin.users.index') }}">Users</a>
+                <a href="{{ route('admin.users.create') }}">Create User</a>
+
+            </div>
+        @endif
+
+
+        {{-- <button class="dropdown-btn">
     <i class="fas fa-motorcycle me-2 icon-only"></i>
     <span class="side-link"> Jobs</span>
 
@@ -99,9 +104,9 @@
     <a href="#">Link 2</a>
     <a href="#">Link 3</a>
 </div>
-@endif
 
-@if (Auth::user()->userRole() =='laundry')
+
+
 <button class="dropdown-btn">
     <i class="fas fa-plus-circle me-2 icon-only"></i>
     <span class="side-link">Jobs</span>
@@ -113,7 +118,7 @@
     <a href="#">Link 2</a>
     <a href="#">Link 3</a>
 </div>
-@endif
+
 
         <button class="dropdown-btn">
             <i class="fas fa-plus-circle me-2 icon-only"></i>
@@ -125,9 +130,10 @@
             <a href="#">Link 1</a>
             <a href="#">Link 2</a>
             <a href="#">Link 3</a>
-        </div>
+        </div> --}}
 
         <button class="dropdown-btn">
+
             <i class="fas fa-plus-circle me-2 icon-only"></i>
             <span class="side-link"> Link page 1</span>
 
@@ -181,4 +187,3 @@
     </nav>
 
 </aside>
-
