@@ -15,7 +15,7 @@ class PageCategoryController extends Controller
      */
     public function index()
     {
-       $pageCategories = PageCategory::paginate(10);
+        $pageCategories = PageCategory::paginate(10);
         return view('page_categories.index', compact('pageCategories'));
     }
 
@@ -38,22 +38,21 @@ class PageCategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:page_categories',
 
         ]);
         try {
-             DB::beginTransaction();
+            DB::beginTransaction();
 
-             $pageCategory =new PageCategory();
-             $pageCategory->name = $request->name;
-                $pageCategory->active = $request->has('active');
-                $pageCategory->save();
-                DB::commit();
+            $pageCategory = new PageCategory();
+            $pageCategory->name = $request->name;
+            $pageCategory->active = $request->has('active');
+            $pageCategory->save();
+            DB::commit();
 
-        return redirect()->route('admin.page-categories.index')
-            ->with('success', 'Page category created successfully.');
-    }
-        catch(\Exception $e){
+            return redirect()->route('admin.page-categories.index')
+                ->with('success', 'Page category created successfully.');
+        } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
                 ->with('error', 'An error occurred while creating the page category: ' . $e->getMessage())
@@ -86,28 +85,27 @@ class PageCategoryController extends Controller
     public function update(Request $request, $id)
     {
         $pageCategory = PageCategory::findOrFail($id);
-        $request->validate([
-            'name' => 'required|string|max:255',
+       $request->validate([
+    'name' => 'required|string|max:255|unique:page_categories,name,' . $id,
+]);
 
-        ] );
-try{
-    DB::beginTransaction();
-    $pageCategory->name = $request->name;
-    $pageCategory->active = $request->has('active');
-    $pageCategory->save();
-    DB::commit();
+        try {
+            DB::beginTransaction();
+            $pageCategory->name = $request->name;
+            $pageCategory->active = $request->has('active');
+            $pageCategory->save();
+            DB::commit();
 
 
 
-        return redirect()->route('admin.page-categories.index')
-            ->with('success', 'Page category updated successfully.');
-    }
-    catch(\Exception $e){
-        DB::rollBack();
-        return redirect()->back()
-            ->with('error', 'An error occurred while updating the page category: ' . $e->getMessage())
-            ->withInput();
-    }
+            return redirect()->route('admin.page-categories.index')
+                ->with('success', 'Page category updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'An error occurred while updating the page category: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
 

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Auth;
 
 use App\Models\User;
@@ -35,14 +36,14 @@ class ProfileController extends Controller
             return back()->withErrors(['error' => 'User not authenticated.']);
         }
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string |max:255',
             'username' => 'required|string|max:255|unique:users,username,' . $user->id,
-           'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-        'phone_number' => 'required|string|max:15',
-        'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'phone_number' => 'required|string|max:15',
+            'profile_picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
 
         ]);
-        try{
+        try {
             DB::beginTransaction();
 
             $user->name = $request->name;
@@ -54,19 +55,18 @@ class ProfileController extends Controller
             if ($request->hasFile('profile_picture')) {
                 $path = $request->file('profile_picture')->store('profile_pictures', 'public');
                 $user->profile_picture = $path;
-
             }
             $user->save();
             DB::commit();
 
 
             return redirect()->route('profile')->with('status', 'Profile updated successfully!');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Error updating profile: ' . $e->getMessage());
-        return back()->withErrors(['error' => 'Failed to update profile.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating profile: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Failed to update profile.']);
+        }
     }
-}
 
     public function changePassword(Request $request)
     {
@@ -87,14 +87,10 @@ class ProfileController extends Controller
             DB::commit();
 
             return redirect()->route('profile')->with('success', 'Password changed successfully!');
-
-
         } catch (\Exception $e) {
             Log::error('Error starting transaction: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Failed to start transaction.']);
         }
-
-
     }
     public function deleteProfile(Request $request)
     {

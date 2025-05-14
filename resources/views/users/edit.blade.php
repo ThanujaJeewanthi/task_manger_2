@@ -38,6 +38,15 @@
                             </div>
 
                             <!-- Username Field -->
+                                   <div class="form-group mb-4">
+                                <label for="username">Username</label>
+                                <input type="text" class="form-control @error('username') is-invalid @enderror" id="username" name="username" value="{{ old('username', $user->username) }}" required>
+                                @error('username')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                             <!-- Name Field -->
                             <div class="form-group mb-4">
                                 <label for="name">Name</label>
                                 <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name', $user->name) }}" required>

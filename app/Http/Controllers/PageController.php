@@ -44,30 +44,29 @@ class PageController extends Controller
             'code' => 'required|string|max:255|unique:pages,code',
 
         ]);
-try{
-    DB::beginTransaction();
-        $page = new Page();
-        $page->name = $request->name;
-        $page->page_category_id = $request->page_category_id;
-        //page code is created using the page category id +.code
-        $page->code = $request->page_category_id . '.' . $request->code;
+        try {
+            DB::beginTransaction();
+            $page = new Page();
+            $page->name = $request->name;
+            $page->page_category_id = $request->page_category_id;
+            //page code is created using the page category id +.code
+            $page->code = $request->page_category_id . '.' . $request->code;
 
-        $page->page_category_id = $request->page_category_id;
-        $page->active = $request->has('active');
-        $page->save();
-        DB::commit();
+            $page->page_category_id = $request->page_category_id;
+            $page->active = $request->has('active');
+            $page->save();
+            DB::commit();
 
 
 
-        return redirect()->route('admin.pages.index')
-            ->with('success', 'Page created successfully.');
-    }
-    catch(\Exception $e){
-        DB::rollBack();
-        return redirect()->back()
-            ->with('error', 'An error occurred while creating the page: ' . $e->getMessage())
-            ->withInput();
-    }
+            return redirect()->route('admin.pages.index')
+                ->with('success', 'Page created successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'An error occurred while creating the page: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
@@ -101,26 +100,25 @@ try{
             'code' => 'required|string|max:255|unique:pages,code,' . $id,
 
         ]);
-        try{
+        try {
             DB::beginTransaction();
-        $page->name = $request->name;
-        $page->code = $request->code;
-        $page->page_category_id = $request->page_category_id;
-        $page->active = $request->has('active');
-        $page->save();
-        DB::commit();
+            $page->name = $request->name;
+            $page->code = $request->code;
+            $page->page_category_id = $request->page_category_id;
+            $page->active = $request->has('active');
+            $page->save();
+            DB::commit();
 
 
 
-        return redirect()->route('admin.pages.index')
-            ->with('success', 'Page updated successfully.');
-    }
-    catch(\Exception $e){
-        DB::rollBack();
-        return redirect()->back()
-            ->with('error', 'An error occurred while updating the page: ' . $e->getMessage())
-            ->withInput();
-    }
+            return redirect()->route('admin.pages.index')
+                ->with('success', 'Page updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'An error occurred while updating the page: ' . $e->getMessage())
+                ->withInput();
+        }
     }
 
     /**
@@ -147,18 +145,16 @@ try{
             ->with('success', 'Page deleted successfully.');
     }
     public function search(Request $request)
-{
-    $query = $request->get('q');
+    {
+        $query = $request->get('q');
 
-    $pages = Page::with('pageCategory')
-        ->where('name', 'LIKE', "%{$query}%")
-        ->orWhereHas('pageCategory', function ($q) use ($query) {
-            $q->where('name', 'LIKE', "%{$query}%");
-        })
-        ->get();
+        $pages = Page::with('pageCategory')
+            ->where('name', 'LIKE', "%{$query}%")
+            ->orWhereHas('pageCategory', function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%");
+            })
+            ->get();
 
-    return response()->json($pages);
+        return response()->json($pages);
+    }
 }
-
-}
-

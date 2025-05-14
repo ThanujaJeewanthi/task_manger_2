@@ -57,9 +57,9 @@ class UserController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'email' => ['string', 'email', 'max:255', 'unique:users'],
-            'name' => [ 'required','string', 'max:255', 'unique:users'],
+            'name' => [ 'required','string', 'max:255' ],
             'username' => ['required','string', 'max:255', 'unique:users'],
-            'phone_number' => ['required', 'string', 'max:20'],
+            'phone_number' => ['required', 'string', 'max:15'],
             'role_id' => ['required','exists:user_roles,id'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
@@ -73,6 +73,7 @@ class UserController extends Controller
 
         // Generate random password if not provided
         $password = $request->password ?? Str::random(12);
+
 
         $user = new User();
         $user->email = $request->email;
@@ -133,10 +134,11 @@ class UserController extends Controller
 
         $validator = Validator::make($request->all(), [
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'name' => ['nullable', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'phone_number' => ['nullable', 'string', 'max:20'],
-            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role_id' => ['nullable', 'exists:user_roles,id'],
+            'username'=>['required','string','max:255',Rule::unique('users')->ignore($user->id)],
+            'name' => ['required', 'string', 'max:255'],
+            'phone_number' => ['required', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'role_id' => ['required', 'exists:user_roles,id'],
         ]);
 
         if ($validator->fails()) {
@@ -147,12 +149,13 @@ class UserController extends Controller
         }
 
         $user->email = $request->email;
+        $user->username = $request->username;
         $user->name = $request->name;
         $user->phone_number = $request->phone_number;
-
-
-
         $user->user_role_id = $request->role_id;
+
+
+
         $user->active = $request->has('active');
         $user->save();
 
@@ -171,9 +174,6 @@ class UserController extends Controller
     public function delete($id)
     {
         $user = User::findOrFail($id);
-
-
-
         $user->active = false;
         $user->save();
 

@@ -1,121 +1,131 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-component-title">
-                        <span>Create New User</span>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-component-title">
+                            <span>Create New User</span>
+                        </div>
                     </div>
-                </div>
 
-                <div class="card-body">
-                    @if (session('status'))
-                        <div class="alert alert-success mt-3">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-                    @if (session('error'))
-                        <div class="alert alert-danger mt-3">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    <form action="{{ route('admin.users.store') }}" method="POST">
-                        @csrf
-
-                        <div class="d-component-container">
-                            <!-- Email Field -->
-                            <div class="form-group mb-4">
-                                <label for="email">Email Address</label>
-                                <input type="email" class="form-control @error('email') is-invalid @enderror" id="email" name="email" value="{{ old('email') }}" required>
-                                @error('email')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
+                    <div class="card-body">
+                        @if (session('status'))
+                            <div class="alert alert-success mt-3">
+                                {{ session('status') }}
                             </div>
-                            <div class="form-group mb-4">
-                                <label for="username">Username </label>
-                                <input type="text" class="form-control @error('username') is-invalid @enderror" id="username" name="username" value="{{ old('username') }}" required>
-                                @error('username')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
+                        @endif
+                        @if (session('error'))
+                            <div class="alert alert-danger mt-3">
+                                {{ session('error') }}
                             </div>
+                        @endif
+
+                        <form action="{{ route('admin.users.store') }}" method="POST">
+                            @csrf
+
+                            <div class="d-component-container">
+                                <!-- Email Field -->
+                                <div class="form-group mb-4">
+                                    <label for="email">Email Address</label>
+                                    <input type="email" class="form-control @error('email') is-invalid @enderror"
+                                        id="email" name="email" value="{{ old('email') }}" required>
+                                    @error('email')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="username">Username </label>
+                                    <input type="text" class="form-control @error('username') is-invalid @enderror"
+                                        id="username" name="username" value="{{ old('username') }}" required>
+                                    @error('username')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
 
 
-                            <div class="form-group mb-4">
-                                <label for="name">Name </label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
-                                @error('name')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                                <div class="form-group mb-4">
+                                    <label for="name">Name </label>
+                                    <input type="text" class="form-control @error('name') is-invalid @enderror"
+                                        id="name" name="name" value="{{ old('name') }}" required>
+                                    @error('name')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
 
-                            <!-- Phone Number Field (Optional) -->
-                            <div class="form-group mb-4">
-                                <label for="phone_number">Phone Number </label>
-                                <input type="text" class="form-control @error('phone_number') is-invalid @enderror" id="phone_number" name="phone_number" value="{{ old('phone_number') }}" required>
-                                @error('phone_number')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                                <!-- Phone Number Field (Optional) -->
+                                <div class="form-group mb-4">
+                                    <label for="phone_number">Phone Number </label>
+                                    <input type="text" class="form-control @error('phone_number') is-invalid @enderror"
+                                        id="phone_number" name="phone_number" value="{{ old('phone_number') }}" required>
+                                    @error('phone_number')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
 
-                            <!-- Password Field -->
-                            <div class="form-group mb-4">
-                                <label for="password">Password</label>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" required>
-                                @error('password')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-                            <div class="form-group mb-4">
-                                <label for="password_confirmation">Confirm Password</label>
-                                <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" id="password_confirmation" name="password_confirmation" required>
-                                @error('password_confirmation')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                                <!-- Password Field -->
+                                <div class="form-group mb-4">
+                                    <label for="password">Password</label>
+                                    <input type="password" class="form-control @error('password') is-invalid @enderror"
+                                        id="password" name="password" required>
+                                    @error('password')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="form-group mb-4">
+                                    <label for="password_confirmation">Confirm Password</label>
+                                    <input type="password"
+                                        class="form-control @error('password_confirmation') is-invalid @enderror"
+                                        id="password_confirmation" name="password_confirmation" required>
+                                    @error('password_confirmation')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
 
 
-                            <!-- Role Selection -->
-                            <div class="form-group mb-4">
-                                <label for="role_id">User Role</label>
-                                <select class="form-control @error('role_id') is-invalid @enderror" id="role_id" name="role_id" required>
-                                    <option value="">Select a role</option>
-                                    @foreach($roles as $role)
-                                        <option value="{{ $role->id }}" {{ old('user_role_id') == $role->id ? 'selected' : '' }}>
-                                            {{ $role->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('role_id')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                                <!-- Role Selection -->
+                                <div class="form-group mb-4">
+                                    <label for="role_id">User Role</label>
+                                    <select class="form-control @error('role_id') is-invalid @enderror" id="role_id"
+                                        name="role_id" required>
+                                        <option value="">Select a role</option>
+                                        @foreach ($roles as $role)
+                                            <option value="{{ $role->id }}"
+                                                {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                                                {{ $role->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('role_id')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
 
-                            <!-- User Status Toggle -->
-                            <div class="d-com-flex justify-content-start mb-4">
-                                <label class="d-label-text me-2">Active</label>
-                                <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                    <input type="checkbox" class="form-check-input d-section-toggle" name="active" checked />
-                                    <span class="d-slider">
-                                        <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
-                                        <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
-                                    </span>
-                                </label>
-                            </div>
+                                <!-- User Status Toggle -->
+                                <div class="d-com-flex justify-content-start mb-4">
+                                    <label class="d-label-text me-2">Active</label>
+                                    <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
+                                        <input type="checkbox" class="form-check-input d-section-toggle" name="active"
+                                            checked />
+                                        <span class="d-slider">
+                                            <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
+                                            <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
+                                        </span>
+                                    </label>
+                                </div>
 
-                            <!-- Submit Button -->
-                            <div class="form-group mt-4">
-                                <button type="submit" class="btn btn-primary">Create User</button>
-                                <a href="{{ route('admin.users.index') }}" class="btn btn-secondary ms-2">Cancel</a>
+                                <!-- Submit Button -->
+                                <div class="form-group mt-4">
+                                    <button type="submit" class="btn btn-primary">Create User</button>
+                                    <a href="{{ route('admin.users.index') }}" class="btn btn-secondary ms-2">Cancel</a>
+                                </div>
                             </div>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 @endsection

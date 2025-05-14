@@ -16,7 +16,7 @@
                     <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
                 </svg>
             </button>
-            <a href="#" class="dashboard-link text-small mt-0">
+            <a href="#" class="dashboard-link  mt-0">
                 <h5> @php
                     $userRole = Auth::user()->userRole->name ?? 'User';
                 @endphp
@@ -50,7 +50,7 @@
         {{-- @if (in_array('3', $categorizedPages)) --}}
         @if (array_key_exists(3, $categorizedPages))
             <button class="dropdown-btn">
-                <i class="fas fa-plus-circle me-2 icon-only"></i>
+                <i class="fas fa-key me-2 icon-only"></i>
                 <span class="side-link">Permissions </span>
                 <i class="fa fa-caret-down"></i>
             </button>
@@ -65,8 +65,8 @@
         {{-- @if (in_array('2', $categorizedPages)) --}}
         @if (array_key_exists(2, $categorizedPages))
             <button class="dropdown-btn">
-                <i class="fas fa-user-tag"></i>
-                <span class="side-link">Pages</span>
+                <i class="fas fa-address-book me-2 icon-only"></i>
+                <span class="side-link"> Pages</span>
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-container">
@@ -81,7 +81,7 @@
 
         @if (array_key_exists(4, $categorizedPages))
             <button class="dropdown-btn">
-                <i class="fas fa-plus-circle me-2 icon-only"></i>
+                <i class="fas fa-user-tag me-2 icon-only"></i>
                 <span class="side-link"> Users</span>
                 <i class="fa fa-caret-down"></i>
             </button>
