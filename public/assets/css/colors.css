@@ -1,40 +1,39 @@
 :root {
     /* Background Colors */
-    --light-main-bg-color: #1e1d2b; 
-    --light-sidebar-bg-color: #1e1d2b ;
-    --light-content-bg-color: #ffffff; 
-  
+    --light-main-bg-color: #1e1d2b;
+    --light-sidebar-bg-color: #1e1d2b;
+    --light-content-bg-color: #ffffff;
+
     /* Text Colors */
-    --light-primary-text-color: #282828; 
-    --light-secondary-text-color: #7F7F7F;
-    --light-primary-link-color: #7F7F7F;
+    --light-primary-text-color: #282828;
+    --light-secondary-text-color: #7f7f7f;
+    --light-primary-link-color: #7f7f7f;
     --light-secondary-link-color: #ffffff;
 
     /* Accent Colors */
-    --light-primary-color: #3856C0;
+    --light-primary-color: #3856c0;
     --light-primary-color-hover: #2b4397;
-    --light-highlight-color: #1CA8FF;
+    --light-highlight-color: #1ca8ff;
     --light-dark-active-color: #111119;
 
     /* button colors */
-    --light-submitbutton-bg-color: #3856C0;
+    --light-submitbutton-bg-color: #3856c0;
     --light-resetbutton-bg-color: #cfd6ef;
 
     /* icon colors */
-    --light-icon-color: #909090; 
-  
+    --light-icon-color: #909090;
+
     /* Borders and Shadows */
-    --light-border-color: #909090; 
-    --light-shadow-color: rgba(0, 0, 0, 0.1); 
-    
+    --light-border-color: #909090;
+    --light-shadow-color: rgba(0, 0, 0, 0.1);
+
     /* card colors */
-    --light-contentCard-color: #FBFBFB; 
+    --light-contentCard-color: #fbfbfb;
     --light-contentCardBackground-color: #f4f4f4;
-    --light-linkCard-color: #353142; 
+    --light-linkCard-color: #353142;
+}
 
-  }
-
-  .dark-theme {
+.dark-theme {
     --main-bg-color: #121212;
     --sidebar-bg-color: #1a1a1a;
     --content-bg-color: #181818;
@@ -54,4 +53,3 @@
     --contentCard-color: #1e1e1e;
     --linkCard-color: #282828;
 }
-  

@@ -87,10 +87,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::put('/roles/{roleId}', [UserRoleController::class, 'update'])->name('roles.update');
     Route::delete('/roles/{roleId}', [UserRoleController::class, 'destroy'])->name('roles.destroy');
 
- // Permission management
- Route::get('/permissions/manage/{roleId}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:3.4');
- Route::put('/permissions/update/{roleId}', [PermissionController::class, 'update'])->name('permissions.update');
- Route::post('/permissions/search', [PermissionController::class, 'search'])->name('permissions.search');
+    // Permission management
+    Route::get('/permissions/manage/{roleId}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:3.4');
+    Route::put('/permissions/update/{roleId}', [PermissionController::class, 'update'])->name('permissions.update');
+    Route::post('/permissions/search', [PermissionController::class, 'search'])->name('permissions.search');
 
     // Users
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('role.permission:4.1');
@@ -99,12 +99,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/users/{userId}/edit', [UserController::class, 'edit'])->name('users.edit')->middleware('role.permission:4.3');
     Route::put('/users/{userId}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{userId}', [UserController::class, 'delete'])->name('users.delete');
+});
 
-}) ;
 
-
-Route::fallback(function(){
-return 'Fallback';
+Route::fallback(function () {
+    return 'Fallback';
 });
 
 

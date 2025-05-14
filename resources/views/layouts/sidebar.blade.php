@@ -1,4 +1,3 @@
-
 <aside class="sidebar d-flex flex-column" style="  left: 0; height:auto; background-color: #282c30; color: #fff; ">
     {{-- <div class="sidebar-logo d-flex align-items-center justify-content-center">
         <img src="assets/images/samplelogod.png" alt="Logo" class="me-3" />
@@ -18,11 +17,11 @@
                 </svg>
             </button>
             <a href="#" class="dashboard-link mt-0">
-                 <h5> @php
+                <h5> @php
                     $userRole = Auth::user()->userRole->name ?? 'User';
                 @endphp
-                {{ ucfirst($userRole) }} Dashboard
-            </h5>
+                    {{ ucfirst($userRole) }} Dashboard
+                </h5>
 
             </a>
 
@@ -36,68 +35,65 @@
         </button> --}}
 
 
-    <a href="{{ route('dashboard') }}" class="dropdown-btn">
-        <i class="fas fa-tachometer-alt me-2 icon-only"></i>
-        <span class="side-link">Dashboard</span>
-    </a>
+        <a href="{{ route('dashboard') }}" class="dropdown-btn">
+            <i class="fas fa-tachometer-alt me-2 icon-only"></i>
+            <span class="side-link">Dashboard</span>
+        </a>
 
 
-    @php
-   $categorizedPages = session('categorized_pages', []);
-@endphp
-
-
-
-{{-- @if (in_array('3', $categorizedPages)) --}}
-@if( array_key_exists(3, $categorizedPages))
+        @php
+            $categorizedPages = session('categorized_pages', []);
+        @endphp
 
 
 
-<button class="dropdown-btn">
-    <i class="fas fa-plus-circle me-2 icon-only"></i>
-    <span class="side-link">Permissions </span>
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
-    <a href="{{route('admin.roles.index')}}">User Roles</a>
-    <a href="{{route('admin.roles.create')}}">Create User Roles</a>
-</div>
-@endif
+        {{-- @if (in_array('3', $categorizedPages)) --}}
+        @if (array_key_exists(3, $categorizedPages))
+            <button class="dropdown-btn">
+                <i class="fas fa-plus-circle me-2 icon-only"></i>
+                <span class="side-link">Permissions </span>
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
+                <a href="{{ route('admin.roles.index') }}">User Roles</a>
+                <a href="{{ route('admin.roles.create') }}">Create User Roles</a>
+            </div>
+        @endif
 
 
-{{-- @if (in_array('2', $categorizedPages)) --}}
-@if( array_key_exists(2, $categorizedPages))
-<button class="dropdown-btn">
-    <i class="fas fa-user-tag"></i>
-    <span class="side-link">Pages</span>
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    <a href="{{route('admin.pages.index')}}">Pages</a>
-    <a href="{{route('admin.pages.create')}}">Create Pages</a>
-    <a href="{{route('admin.page-categories.index')}}">Page Categories</a>
-    <a href="{{route('admin.page-categories.create')}}">Create Page Categories</a>
-</div>
-@endif
+        {{-- @if (in_array('2', $categorizedPages)) --}}
+        @if (array_key_exists(2, $categorizedPages))
+            <button class="dropdown-btn">
+                <i class="fas fa-user-tag"></i>
+                <span class="side-link">Pages</span>
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                <a href="{{ route('admin.pages.index') }}">Pages</a>
+                <a href="{{ route('admin.pages.create') }}">Create Pages</a>
+                <a href="{{ route('admin.page-categories.index') }}">Page Categories</a>
+                <a href="{{ route('admin.page-categories.create') }}">Create Page Categories</a>
+            </div>
+        @endif
 
 
 
-@if( array_key_exists(4, $categorizedPages))
-<button class="dropdown-btn">
-    <i class="fas fa-plus-circle me-2 icon-only"></i>
-    <span class="side-link"> Users</span>
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    <a href="{{route('admin.users.index')}}">Users</a>
-    <a href="{{route('admin.users.create')}}">Create User</a>
+        @if (array_key_exists(4, $categorizedPages))
+            <button class="dropdown-btn">
+                <i class="fas fa-plus-circle me-2 icon-only"></i>
+                <span class="side-link"> Users</span>
+                <i class="fa fa-caret-down"></i>
+            </button>
+            <div class="dropdown-container">
+                <a href="{{ route('admin.users.index') }}">Users</a>
+                <a href="{{ route('admin.users.create') }}">Create User</a>
 
-</div>
-@endif
+            </div>
+        @endif
 
 
-{{-- <button class="dropdown-btn">
+        {{-- <button class="dropdown-btn">
     <i class="fas fa-motorcycle me-2 icon-only"></i>
     <span class="side-link"> Jobs</span>
 
@@ -191,4 +187,3 @@
     </nav>
 
 </aside>
-
