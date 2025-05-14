@@ -15,7 +15,7 @@ class PageCategoryController extends Controller
      */
     public function index()
     {
-        $pageCategories = PageCategory::all();
+       $pageCategories = PageCategory::paginate(10);
         return view('page_categories.index', compact('pageCategories'));
     }
 

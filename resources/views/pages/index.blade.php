@@ -7,7 +7,9 @@
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">Pages</h4>
+                          <div class="d-component-title">
+                    <span>Pages</span>
+                    </div>
                         <a href="{{ route('admin.pages.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add New Page
                         </a>
@@ -76,6 +78,9 @@
                                 @endif
                             </tbody>
                         </table>
+                        <div>
+    {{ $pages->links() }}
+</div>
                     </div>
                 </div>
             </div>

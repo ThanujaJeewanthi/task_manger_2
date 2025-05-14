@@ -6,14 +6,17 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header">
-                    <h4>Create Page Category</h4>
+                   <div class="d-component-title">
+                    <span>Create Page Category</span>
+                    </div>
                 </div>
+
 
                 <div class="card-body">
                     <form action="{{ route('admin.page-categories.store') }}" method="POST">
                         @csrf
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <label for="name">Category Name</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name" name="name" value="{{ old('name') }}" required>
                             @error('name')
@@ -21,7 +24,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <div class="d-com-flex justify-content-start mb-4">
                                 <label class="d-label-text me-2">Active</label>
                                 <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
@@ -35,7 +38,7 @@
                             </div>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <button type="submit" class="btn btn-primary">Create Category</button>
                             <a href="{{ route('admin.page-categories.index') }}" class="btn btn-secondary">Cancel</a>
                         </div>

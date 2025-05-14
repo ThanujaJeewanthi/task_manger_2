@@ -16,7 +16,7 @@
                     <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
                 </svg>
             </button>
-            <a href="#" class="dashboard-link mt-0">
+            <a href="#" class="dashboard-link text-small mt-0">
                 <h5> @php
                     $userRole = Auth::user()->userRole->name ?? 'User';
                 @endphp

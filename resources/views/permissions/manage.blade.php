@@ -4,7 +4,10 @@
 <div class="container-fluid">
     <div class="card">
         <div class="card-header">
-            <h4>Manage Permissions for {{ $role->name }}</h4>
+             <div class="d-component-title">
+                    <span>Manage Permissions for {{ $role->name }}</span>
+                    </div>
+
             <h6 class="text-muted">Role ID: {{ $role->id }}</h6>
         </div>
         <form id="search-form">

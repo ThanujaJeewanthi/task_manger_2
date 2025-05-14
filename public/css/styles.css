@@ -488,7 +488,7 @@ html {
     display: flex;
     background-color: var(--light-main-bg-color);
     flex-direction: column;
-    height: 100vh;
+    /* height: 100vh; */
     overflow-y: auto;
     flex-direction: column;
 }

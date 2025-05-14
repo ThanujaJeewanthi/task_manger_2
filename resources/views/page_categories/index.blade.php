@@ -7,7 +7,11 @@
             <div class="card">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h4 class="mb-0">Page Categories</h4>
+
+                        <div class="d-component-title">
+                    <span>Page Categories</span>
+                    </div>
+
                         <a href="{{ route('admin.page-categories.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add New Category
                         </a>
@@ -72,6 +76,9 @@
                                 @endif
                             </tbody>
                         </table>
+                           <div>
+    {{ $pageCategories->links() }}
+</div>
                     </div>
                 </div>
             </div>

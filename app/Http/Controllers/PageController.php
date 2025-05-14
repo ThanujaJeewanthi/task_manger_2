@@ -16,7 +16,7 @@ class PageController extends Controller
      */
     public function index()
     {
-        $pages = Page::with('category')->get();
+        $pages = Page::with('category')->paginate(10);
         return view('pages.index', compact('pages'));
     }
 
