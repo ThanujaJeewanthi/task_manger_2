@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
@@ -55,6 +56,7 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $loggedInUser=Auth::user();
         $validator = Validator::make($request->all(), [
             'email' => ['string', 'email', 'max:255', 'unique:users'],
             'name' => [ 'required','string', 'max:255' ],
@@ -83,6 +85,7 @@ class UserController extends Controller
         $user->password = Hash::make($password);
         $user->user_role_id = $request->role_id;
         $user->active = $request->has('active');
+        $user->created_by=$loggedInUser->id;
         $user->save();
 
         // If a random password was generated, you may want to notify the user
@@ -130,6 +133,7 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
+          $loggedInUser=Auth::user();
         $user = User::findOrFail($id);
 
         $validator = Validator::make($request->all(), [
@@ -157,6 +161,7 @@ class UserController extends Controller
 
 
         $user->active = $request->has('active');
+        $user->updated_by= $loggedInUser->id;
         $user->save();
 
         return redirect()

@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\UserRole;
 use App\Models\Page;
+use App\Models\UserRole;
 use App\Models\PageCategory;
+use Illuminate\Http\Request;
 use App\Models\UserRoleDetail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PermissionController extends Controller
 {
@@ -41,6 +42,7 @@ class PermissionController extends Controller
         $pageCategoryId = $request->input('page_category_id');
         $permissions = $request->input('permissions', []);
 
+
         // Get all pages for this category
         $pageCategory = PageCategory::with('pages')->findOrFail($pageCategoryId);
 
@@ -59,7 +61,8 @@ class PermissionController extends Controller
                 // Update existing
                 $detail->update([
                     'status' => $status,
-                    'page_category_id' => $pageCategoryId
+                    'page_category_id' => $pageCategoryId,
+                    'updated_by'=>Auth::user()->id
                 ]);
             } else {
                 // Create new
@@ -69,7 +72,8 @@ class PermissionController extends Controller
                     'page_category_id' => $pageCategoryId,
                     'status' => $status,
                     'code' => $page->code,
-                    'active' => true
+                    'active' => true,
+                    'created_by'=>Auth::user()->id
                 ]);
             }
         }

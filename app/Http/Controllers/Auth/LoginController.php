@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Models\UserRoleDetail;
-use App\Models\PageCategory;
+use App\Models\Log;
 use App\Models\Page;
+use App\Models\PageCategory;
 use Illuminate\Http\Request;
+use App\Models\UserRoleDetail;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -24,14 +24,33 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
         Log::info('Login attempt', ['username' => $request->username]);
+        $log=new Log();
+        $log->action = 'login attempt';
+        $log->user_id=Auth::user()->id;
+         $log->user_role_id=Auth::user()->userRole->id;
+         $log->
 
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
             $user = Auth::user();
-            Log::info('User authenticated', ['user_id' => $user->id, 'role' => $user->userRole ? $user->userRole->name : 'no role']);
 
             $userRole = $user->userRole;
+            if (!$userRole || $userRole->active != 1) {
+                Auth::logout();
+                Log::warning('Login denied due to inactive role', [
+                    'user_id' => $user->id,
+                    'role' => $userRole ? $userRole->name : 'no role',
+                    'active' => $userRole ? $userRole->active : 'N/A'
+                ]);
+
+                return back()->withErrors([
+                    'username' => 'Your account role is inactive. Please contact administrator.',
+                ]);
+            }
+
+
+            Log::info('User authenticated', ['user_id' => $user->id, 'role' => $user->userRole ? $user->userRole->name : 'no role']);
+
+            $request->session()->regenerate();
             $roleName = strtolower($userRole->name);
 
             // Store user details in session

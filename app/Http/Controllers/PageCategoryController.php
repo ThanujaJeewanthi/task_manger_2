@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\PageCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PageCategoryController extends Controller
 {
@@ -37,6 +38,7 @@ class PageCategoryController extends Controller
      */
     public function store(Request $request)
     {
+        $user=Auth::user();
         $request->validate([
             'name' => 'required|string|max:255|unique:page_categories',
 
@@ -47,6 +49,7 @@ class PageCategoryController extends Controller
             $pageCategory = new PageCategory();
             $pageCategory->name = $request->name;
             $pageCategory->active = $request->has('active');
+              $pageCategory->created_by= $user->id;
             $pageCategory->save();
             DB::commit();
 
@@ -84,6 +87,7 @@ class PageCategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
+         $user=Auth::user();
         $pageCategory = PageCategory::findOrFail($id);
        $request->validate([
     'name' => 'required|string|max:255|unique:page_categories,name,' . $id,
@@ -93,6 +97,7 @@ class PageCategoryController extends Controller
             DB::beginTransaction();
             $pageCategory->name = $request->name;
             $pageCategory->active = $request->has('active');
+            $pageCategory->updated_by= $user->id;
             $pageCategory->save();
             DB::commit();
 

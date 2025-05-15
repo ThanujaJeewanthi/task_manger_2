@@ -8,6 +8,7 @@ use App\Models\PageCategory;
 use Illuminate\Http\Request;
 use App\Models\UserRoleDetail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use App\Services\RolePermissionService;
 
 class UserRoleController extends Controller
@@ -59,6 +60,7 @@ class UserRoleController extends Controller
      */
     public function store(Request $request)
     {
+        $user=Auth::user();
         // Validate the request
         $request->validate([
             'name' => 'required|string|max:255|unique:user_roles,name',
@@ -72,6 +74,7 @@ class UserRoleController extends Controller
             $role = new UserRole();
             $role->name = $request->name;
             $role->active = $request->has('is_active');
+            $role->created_by=$user->id;
             $role->save();
 
 
@@ -114,7 +117,7 @@ class UserRoleController extends Controller
     public function update(Request $request, $roleId)
 {
     $role = UserRole::findOrFail($roleId);
-
+   $user=Auth::user();
     $request->validate([
         'name' => 'required|string|max:255|unique:user_roles,name,' . $roleId,
     ]);
@@ -125,6 +128,7 @@ class UserRoleController extends Controller
 
         $role->name = $request->name;
         $role->active = $request->has('active');
+         $role->updated_by = $user->id;
         $role->save();
 
         DB::commit();

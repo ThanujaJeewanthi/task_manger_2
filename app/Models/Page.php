@@ -14,6 +14,8 @@ class Page extends Model
         'code',
         'page_category_id',
         'active',
+        'created_by',
+    'updated_by',
     ];
 
     /**

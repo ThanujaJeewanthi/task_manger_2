@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Page;
 use App\Models\PageCategory;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller
 {
@@ -39,21 +41,46 @@ class PageController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:255|unique:pages,code',
+           $user=Auth::user();
+      $request->validate([
+    'name' => [
+        'required',
+        'string',
+        'max:255',
+        Rule::unique('pages')->where(function ($query) use ($request) {
+            return $query->where('page_category_id', $request->page_category_id);
+        }),
+    ],
+    'code' => [
+        'required',
+        'string',
+        'max:255',
+    ],
+    'page_category_id' => ['required', 'exists:page_categories,id'],
+]);
 
-        ]);
+ $finalCode = $request->page_category_id . '.' . $request->code;
+
+
+    $exists = Page::where('code', $finalCode)->exists();
+    if ($exists) {
+        return redirect()->back()
+            ->withErrors(['code' => 'The generated page code "' . $finalCode . '" already exists.'])
+            ->withInput();
+    }
+
         try {
             DB::beginTransaction();
             $page = new Page();
             $page->name = $request->name;
             $page->page_category_id = $request->page_category_id;
             //page code is created using the page category id +.code
-            $page->code = $request->page_category_id . '.' . $request->code;
+            $page->code = $finalCode;
+
 
             $page->page_category_id = $request->page_category_id;
             $page->active = $request->has('active');
+            $page->created_by = $user->id;
             $page->save();
             DB::commit();
 
@@ -93,19 +120,33 @@ class PageController extends Controller
      */
     public function update(Request $request, $id)
     {
+           $user=Auth::user();
         $page = Page::findOrFail($id);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'code' => 'required|string|max:255|unique:pages,code,' . $id,
-
-        ]);
+ $request->validate([
+    'name' => [
+        'required',
+        'string',
+        'max:255',
+        Rule::unique('pages')->where(function ($query) use ($request) {
+            return $query->where('page_category_id', $request->page_category_id);
+        })->ignore($id),
+    ],
+    'code' => [
+        'required',
+        'string',
+        'max:255',
+        Rule::unique('pages', 'code')->ignore($id),
+    ],
+    'page_category_id' => 'required|exists:page_categories,id',
+]);
         try {
             DB::beginTransaction();
             $page->name = $request->name;
             $page->code = $request->code;
             $page->page_category_id = $request->page_category_id;
             $page->active = $request->has('active');
+            $page->updated_by = $user->id;
             $page->save();
             DB::commit();
 

@@ -12,6 +12,8 @@ class PageCategory extends Model
     protected $fillable = [
         'name',
         'active',
+        'created_by',
+    'updated_by',
     ];
 
     /**

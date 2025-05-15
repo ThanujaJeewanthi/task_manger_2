@@ -9,7 +9,8 @@ class UserRoleDetail extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_role_id', 'page_id', 'page_category_id', 'code', 'active', 'status'];
+    protected $fillable = ['user_role_id', 'page_id', 'page_category_id', 'code', 'active', 'status', 'created_by',
+    'updated_by',];
     // Define relationship with pages (if needed)
     public function page()
     {
