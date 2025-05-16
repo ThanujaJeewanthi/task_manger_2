@@ -46,7 +46,7 @@ Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
 Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
 Route::put('/profile/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
 Route::delete('/profile/delete', [ProfileController::class, 'deleteProfile'])->name('profile.delete');
-Route::get('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
+Route::post('/profile/change-password', [ProfileController::class, 'changePassword'])->name('profile.change-password');
 
 
 // Admin routes

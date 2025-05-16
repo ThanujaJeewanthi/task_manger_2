@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\PageCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Log;
 
 class PageCategoryController extends Controller
 {
@@ -15,7 +17,7 @@ class PageCategoryController extends Controller
      */
     public function index()
     {
-       $pageCategories = PageCategory::paginate(10);
+        $pageCategories = PageCategory::paginate(10);
         return view('page_categories.index', compact('pageCategories'));
     }
 
@@ -37,23 +39,32 @@ class PageCategoryController extends Controller
      */
     public function store(Request $request)
     {
+        $user = Auth::user();
         $request->validate([
-            'name' => 'required|string|max:255',
-
+            'name' => 'required|string|max:255|unique:page_categories',
         ]);
         try {
-             DB::beginTransaction();
+            DB::beginTransaction();
 
-             $pageCategory =new PageCategory();
-             $pageCategory->name = $request->name;
-                $pageCategory->active = $request->has('active');
-                $pageCategory->save();
-                DB::commit();
+            $pageCategory = new PageCategory();
+            $pageCategory->name = $request->name;
+            $pageCategory->active = $request->has('active');
+            $pageCategory->created_by = $user->id;
+            $pageCategory->save();
 
-        return redirect()->route('admin.page-categories.index')
-            ->with('success', 'Page category created successfully.');
-    }
-        catch(\Exception $e){
+            Log::create([
+                'action' => 'create',
+                'user_id' => $user->id,
+                'user_role_id' => $user->user_role_id,
+                'ip_address' => $request->ip(),
+                'description' => "Created page category '{$pageCategory->name}'",
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.page-categories.index')
+                ->with('success', 'Page category created successfully.');
+        } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
                 ->with('error', 'An error occurred while creating the page category: ' . $e->getMessage())
@@ -85,31 +96,40 @@ class PageCategoryController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = Auth::user();
         $pageCategory = PageCategory::findOrFail($id);
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:page_categories,name,' . $id,
+        ]);
 
-        ] );
-try{
-    DB::beginTransaction();
-    $pageCategory->name = $request->name;
-    $pageCategory->active = $request->has('active');
-    $pageCategory->save();
-    DB::commit();
+        try {
+            DB::beginTransaction();
+            $oldName = $pageCategory->name;
 
+            $pageCategory->name = $request->name;
+            $pageCategory->active = $request->has('active');
+            $pageCategory->updated_by = $user->id;
+            $pageCategory->save();
 
+            Log::create([
+                'action' => 'update',
+                'user_id' => $user->id,
+                'user_role_id' => $user->user_role_id,
+                'ip_address' => $request->ip(),
+                'description' => "Updated page category from '{$oldName}' to '{$pageCategory->name}'",
+            ]);
 
-        return redirect()->route('admin.page-categories.index')
-            ->with('success', 'Page category updated successfully.');
+            DB::commit();
+
+            return redirect()->route('admin.page-categories.index')
+                ->with('success', 'Page category updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'An error occurred while updating the page category: ' . $e->getMessage())
+                ->withInput();
+        }
     }
-    catch(\Exception $e){
-        DB::rollBack();
-        return redirect()->back()
-            ->with('error', 'An error occurred while updating the page category: ' . $e->getMessage())
-            ->withInput();
-    }
-    }
-
 
     /**
      * Remove the specified page category from storage.
@@ -121,14 +141,27 @@ try{
      */
     public function destroy($id)
     {
+        $user = Auth::user();
         $pageCategory = PageCategory::findOrFail($id);
 
-        // delete all pages associated with this category
-        $pageCategory->pages()->delete();
+        $categoryName = $pageCategory->name;
+
+        foreach ($pageCategory->pages as $page) {
+    $page->active = false;
+    $page->save();
+}
+
         // delete the page category
+        $pageCategory -> active = false;
+        $pageCategory->save();
 
-
-        $pageCategory->delete();
+        Log::create([
+            'action' => 'delete',
+            'user_id' => $user->id,
+            'user_role_id' => $user->user_role_id,
+            'ip_address' => request()->ip(),
+            'description' => "Deleted page category '{$categoryName}'",
+        ]);
 
         return redirect()->route('admin.page-categories.index')
             ->with('success', 'Page category deleted successfully.');

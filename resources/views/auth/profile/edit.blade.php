@@ -31,17 +31,29 @@
                             <div class="row">
                                 <div class="col-md-4 text-center mb-4">
                                     <div class="profile-picture-container mb-3">
-                                        @if(Auth::user()->profile_picture)
+                                        {{-- @if(Auth::user()->profile_picture)
                                             <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}"
                                                 class="img-fluid rounded-circle"
                                                 style="width: 150px; height: 150px; object-fit: cover;"
                                                 alt="Profile Picture" id="profile-preview">
                                         @else
-                                            <img src="{{ asset('images/default-avatar.png') }}"
+                                            <img src="{{ asset('storage/public/profile_pictures/default_profile_picture.jpg')}}"
                                                 class="img-fluid rounded-circle"
                                                 style="width: 150px; height: 150px; object-fit: cover;"
                                                 alt="Default Profile Picture" id="profile-preview">
-                                        @endif
+                                        @endif --}}
+
+                                         @if(Auth::user()->profile_picture)
+                                        <img src="{{ asset('storage/' . Auth::user()->profile_picture) }}"
+                                             class="img-fluid rounded-circle"
+                                             style="width: 150px; height: 150px; object-fit: cover;"
+                                             alt="Profile Picture">
+                                    @else
+                                        <img src="{{ asset('storage/profile_pictures/default_profile_picture.jpg') }}"
+                                             class="img-fluid rounded-circle"
+                                             style="width: 150px; height: 150px; object-fit: cover;"
+                                             alt="Default Profile Picture">
+                                    @endif
                                     </div>
 
                                     <div class="mb-3">

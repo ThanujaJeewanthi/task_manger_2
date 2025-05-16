@@ -16,14 +16,19 @@
                     <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
                 </svg>
             </button>
-            <a href="#" class="dashboard-link text-small mt-0">
-                <h5> @php
-                    $userRole = Auth::user()->userRole->name ?? 'User';
-                @endphp
-                    {{ ucfirst($userRole) }} Dashboard
-                </h5>
+            @php
+    $userRole = strtolower(Auth::user()->userRole->name ?? 'admin');
+    $dashboardRoute = in_array($userRole, ['laundry', 'rider', 'client'])
+        ? $userRole . '.dashboard'
+        : 'admin.dashboard';
+@endphp
 
-            </a>
+<a href="{{ route($dashboardRoute) }}" class="dashboard-link mt-0">
+    <h5>
+        {{ ucfirst($userRole) }} Dashboard
+    </h5>
+</a>
+
 
         </div>
 
@@ -50,14 +55,14 @@
         {{-- @if (in_array('3', $categorizedPages)) --}}
         @if (array_key_exists(3, $categorizedPages))
             <button class="dropdown-btn">
-                <i class="fas fa-plus-circle me-2 icon-only"></i>
+                <i class="fas fa-key me-2 icon-only"></i>
                 <span class="side-link">Permissions </span>
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-container">
                 {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
                 <a href="{{ route('admin.roles.index') }}">User Roles</a>
-                <a href="{{ route('admin.roles.create') }}">Create User Roles</a>
+                {{-- <a href="{{ route('admin.roles.create') }}">Create User Roles</a> --}}
             </div>
         @endif
 
@@ -65,15 +70,15 @@
         {{-- @if (in_array('2', $categorizedPages)) --}}
         @if (array_key_exists(2, $categorizedPages))
             <button class="dropdown-btn">
-                <i class="fas fa-user-tag"></i>
-                <span class="side-link">Pages</span>
+                <i class="fas fa-address-book me-2 icon-only"></i>
+                <span class="side-link"> Pages</span>
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-container">
                 <a href="{{ route('admin.pages.index') }}">Pages</a>
-                <a href="{{ route('admin.pages.create') }}">Create Pages</a>
+                {{-- <a href="{{ route('admin.pages.create') }}">Create Pages</a> --}}
                 <a href="{{ route('admin.page-categories.index') }}">Page Categories</a>
-                <a href="{{ route('admin.page-categories.create') }}">Create Page Categories</a>
+                {{-- <a href="{{ route('admin.page-categories.create') }}">Create Page Categories</a> --}}
             </div>
         @endif
 
@@ -81,13 +86,13 @@
 
         @if (array_key_exists(4, $categorizedPages))
             <button class="dropdown-btn">
-                <i class="fas fa-plus-circle me-2 icon-only"></i>
+                <i class="fas fa-user-tag me-2 icon-only"></i>
                 <span class="side-link"> Users</span>
                 <i class="fa fa-caret-down"></i>
             </button>
             <div class="dropdown-container">
                 <a href="{{ route('admin.users.index') }}">Users</a>
-                <a href="{{ route('admin.users.create') }}">Create User</a>
+                {{-- <a href="{{ route('admin.users.create') }}">Create User</a> --}}
 
             </div>
         @endif

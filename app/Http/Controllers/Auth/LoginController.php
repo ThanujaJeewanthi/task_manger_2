@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use App\Models\UserRoleDetail;
-use App\Models\PageCategory;
+use Illuminate\Support\Facades\Log as FacadesLog;
+
+
+
+use App\Models\Log;
 use App\Models\Page;
+use App\Models\PageCategory;
 use Illuminate\Http\Request;
+use App\Models\UserRoleDetail;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -23,15 +27,53 @@ class LoginController extends Controller
             'username' => 'required',
             'password' => 'required',
         ]);
-        Log::info('Login attempt', ['username' => $request->username]);
+        FacadesLog::info('Login attempt', ['username' => $request->username]);
+       Log::create([
+    'action' => 'login attempt',
+    'user_id' => null,
+    'user_role_id' => null,
+    'ip_address' => $request->ip(),
+    'description' => 'Login attempt with username: ' . $request->username,
+]);
+
+
 
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-
             $user = Auth::user();
-            Log::info('User authenticated', ['user_id' => $user->id, 'role' => $user->userRole ? $user->userRole->name : 'no role']);
 
             $userRole = $user->userRole;
+            if (!$userRole || $userRole->active != 1) {
+                Auth::logout();
+                FacadesLog::warning('Login denied due to inactive role', [
+                    'user_id' => $user->id,
+                    'role' => $userRole ? $userRole->name : 'no role',
+                    'active' => $userRole ? $userRole->active : 'N/A'
+                ]);
+                Log::create([
+    'action' => 'login denied - inactive role',
+    'user_id' => $user->id,
+    'user_role_id' => $userRole ? $userRole->id : null,
+    'ip_address' => $request->ip(),
+    'description' => $user->username . ' login denied due to inactive role.',
+]);
+
+
+                return back()->withErrors([
+                    'username' => 'Your account role is inactive. Please contact administrator.',
+                ]);
+            }
+
+Log::create([
+    'action' => 'login success',
+    'user_id' => $user->id,
+    'user_role_id' => $user->userRole->id ?? null,
+    'ip_address' => $request->ip(),
+    'description' => $user->username . ' successfully logged in.',
+]);
+
+           FacadesLog::info('User authenticated', ['user_id' => $user->id, 'role' => $user->userRole ? $user->userRole->name : 'no role']);
+
+            $request->session()->regenerate();
             $roleName = strtolower($userRole->name);
 
             // Store user details in session
@@ -47,7 +89,7 @@ class LoginController extends Controller
                 ->get();
 
             // Debug: Check if $userRoleDetails is empty
-            Log::info('User Role Details', ['user_role_details' => $userRoleDetails->toArray()]);
+        FacadesLog::info('User Role Details', ['user_role_details' => $userRoleDetails->toArray()]);
 
             $categorizedPages = [];
             foreach ($userRoleDetails as $detail) {
@@ -65,78 +107,61 @@ class LoginController extends Controller
             }
 
             // Debug: Log the categorized pages array
-            Log::info('Categorized Pages', ['categorized_pages' => $categorizedPages]);
+            FacadesLog::info('Categorized Pages', ['categorized_pages' => $categorizedPages]);
 
             // Store in session
             $request->session()->put('categorized_pages', $categorizedPages);
 
             // Debug: Confirm session storage
-            Log::info('Session Data Stored', ['session_categorized_pages' => $request->session()->get('categorized_pages')]);
+            FacadesLog::info('Session Data Stored', ['session_categorized_pages' => $request->session()->get('categorized_pages')]);
 
-            if ($roleName) {
-                return redirect()->route($roleName . '.dashboard');
-            } else {
-                return redirect()->route('dashboard');
-            }
+          switch ($roleName) {
+    case 'client':
+        return redirect()->route('client.dashboard');
+    case 'laundry':
+        return redirect()->route('laundry.dashboard');
+    case 'rider':
+        return redirect()->route('rider.dashboard');
+    case 'admin':
+        return redirect()->route('admin.dashboard');
+    default:
+        return redirect()->route('dashboard');
+}
+
         }
+        Log::create([
+    'action' => 'login failed',
+    'user_id' => null,
+    'user_role_id' => null,
+    'ip_address' => $request->ip(),
+    'description' => 'Failed login attempt with username: ' . $request->username,
+]);
+
 
         return back()->withErrors([
             'username' => 'The provided credentials do not match our records.',
         ]);
     }
 
-    public function logout(Request $request)
-    {
-        Auth::logout();
+   public function logout(Request $request)
+{
+    $user = Auth::user();
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login.form');
+    if ($user) {
+        Log::create([
+            'action' => 'logout',
+            'user_id' => $user->id,
+            'user_role_id' => $user->userRole->id ?? null,
+            'ip_address' => $request->ip(),
+            'description' => $user->username . ' logged out.',
+        ]);
     }
+
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login.form');
 }
 
-//     protected function authenticated(Request $request, $user)
-// {
-
-//     if (!$user->userRole) {
-//         // No role assigned to user
-//         return;
-//     }
-
-//     $userRole = $user->userRole;
-//     $roleName = strtolower($userRole->name);
-
-//     // Store user details in session
-//     $request->session()->put('user_id', $user->id);
-//     $request->session()->put('user_role_id', $userRole->id);
-//     $request->session()->put('user_role_name', $roleName);
-//     $request->session()->put('user_role', $roleName);
-
-//     // Get accessible pages for this user role
-//     $userRoleDetails = UserRoleDetail::where('user_role_id', $userRole->id)
-//         ->where('status', 'allow')
-//         ->where('active', 1)
-//         ->with(['page', 'pageCategory'])
-//         ->get();
-
-//     // Get page category IDs and store them in session
-//     $pageCategoryIds = $userRoleDetails->pluck('page_category_id')->unique()->toArray();
-//     $request->session()->put('user_accessible_page_category_ids', $pageCategoryIds);
-
-
-
-
-//     // Get page category names and store them in session
-//     $pageCategoryNames = PageCategory::whereIn('id', $pageCategoryIds)->pluck('name')->unique()->toArray();
-//     $request->session()->put('user_accessible_page_category_names', $pageCategoryNames);
-//     // Get page IDs and store them in session
-//     $pageIds = $userRoleDetails->pluck('page_id')->unique()->toArray();
-//     $request->session()->put('user_accessible_page_ids', $pageIds);
-
-
-
-
-
-
-// }}
+}

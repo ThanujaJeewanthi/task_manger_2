@@ -33,7 +33,7 @@
                                              style="width: 150px; height: 150px; object-fit: cover;"
                                              alt="Profile Picture">
                                     @else
-                                        <img src="{{ asset('images/default-avatar.png') }}"
+                                        <img src="{{ asset('storage/profile_pictures/default_profile_picture.jpg') }}"
                                              class="img-fluid rounded-circle"
                                              style="width: 150px; height: 150px; object-fit: cover;"
                                              alt="Default Profile Picture">

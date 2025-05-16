@@ -644,17 +644,17 @@ html {
 
 /* Responsive Grid */
 .row.g-3 .col-md-6 {
-    max-width: 100%;
+    /* max-width: 100%; */
     /* Stacks all cards in one column for very small screens */
 }
 
 /* Content Area */
 /* Base styles for the row */
 .row {
-    display: flex;
-    flex-wrap: nowrap;
+    /* display: flex; */
+    /* flex-wrap: nowrap; */
     /* Prevent wrapping */
-    gap: 1rem;
+    /* gap: 1rem; */
     /* Space between cards */
     overflow-x: auto;
     /* Add horizontal scrolling for overflow */
@@ -671,29 +671,29 @@ html {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: var(--light-contentCard-color);
     box-sizing: border-box;
-    min-width: 230px;
+    /* min-width: 230px; */
 }
 
 /* Responsive adjustments */
 @media (max-width: 1024px) {
     .dcards-card {
-        flex: 0 0 calc(50% - 1rem);
+        /* flex: 0 0 calc(50% - 1rem); */
         /* Two cards per row */
-        max-width: calc(50% - 1rem);
+        /* max-width: calc(50% - 1rem); */
     }
 }
 
 @media (max-width: 768px) {
     .dcards-card {
-        flex: 0 0 calc(100% - 1rem);
+        /* flex: 0 0 calc(100% - 1rem); */
         /* Full-width cards on small screens */
-        max-width: calc(100% - 1rem);
+        /* max-width: calc(100% - 1rem); */
     }
 
     .row {
-        flex-wrap: wrap;
+        /* flex-wrap: wrap; */
         /* Allow wrapping on smaller screens */
-        justify-content: center;
+        /* justify-content: center; */
     }
 }
 

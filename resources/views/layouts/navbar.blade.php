@@ -31,7 +31,14 @@
             @auth
                 <div class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-light" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-user-circle"></i>
+                        {{-- <i class="fas fa-user-circle"></i> --}}
+                        <img src="{{ Auth::user()->profile_picture
+            ? asset('storage/' . Auth::user()->profile_picture)
+            : asset('storage/profile_pictures/default_profile_picture.jpg') }}"
+     class="img-fluid rounded-circle"
+     style="width: 30px; height: 30px; object-fit: cover;"
+     alt="Profile Picture" id="profile-preview">
+
 
                         {{ Auth::user()->username ?? 'Guest' }}
 

@@ -8,80 +8,58 @@ use App\Models\PageCategory;
 use Illuminate\Http\Request;
 use App\Models\UserRoleDetail;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Log;
 use App\Services\RolePermissionService;
 
 class UserRoleController extends Controller
 {
-    /**
-     * The role permission service instance.
-     *
-
-     */
     protected $rolePermissionService;
 
-    /**
-     * Create a new controller instance.
-     *
-     *
-
-     */
-
-
-    /**
-     * Display a listing of the user roles.
-     *
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
     public function index()
     {
         $roles = UserRole::all();
         return response()->view('roles.index', compact('roles'));
     }
 
-    /**
-     * Show the form for creating a new user role.
-     *
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
     public function create()
     {
         $pageCategories = PageCategory::all();
         $pages = Page::all();
 
-        return response()-> view('roles.create' , compact('pageCategories','pages'));
+        return response()->view('roles.create', compact('pageCategories', 'pages'));
     }
 
-    /**
-     * Store a newly created user role in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function store(Request $request)
     {
-        // Validate the request
+        $user = Auth::user();
+
         $request->validate([
             'name' => 'required|string|max:255|unique:user_roles,name',
         ]);
 
         try {
-            // Begin transaction to ensure all or none of the operations are completed
             DB::beginTransaction();
 
-            // Create new role
             $role = new UserRole();
             $role->name = $request->name;
             $role->active = $request->has('is_active');
+            $role->created_by = $user->id;
             $role->save();
 
-
-
+            // Log creation
+            Log::create([
+                'action' => 'create_role',
+                'user_id' => Auth::user()->id,
+                'user_role_id'  => Auth::user()->user_role_id,
+                'ip_address' => $request->ip(),
+                'description' => 'Created role: ' . $role->name,
+            ]);
 
             DB::commit();
 
             return redirect()->route('admin.roles.index')
-                ->with('success', 'Role created successfully ');
-
+                ->with('success', 'Role created successfully');
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -91,80 +69,90 @@ class UserRoleController extends Controller
         }
     }
 
-
-    /**
-     * Show the form for editing the specified user role.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
     public function edit($id)
     {
         $role = UserRole::findOrFail($id);
-        return response()-> view('roles.edit', compact('role'));
+        return response()->view('roles.edit', compact('role'));
     }
 
-    /**
-     * Update the specified user role in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
     public function update(Request $request, $roleId)
-{
-    $role = UserRole::findOrFail($roleId);
+    {
+        $role = UserRole::findOrFail($roleId);
+        $user = Auth::user();
 
-    $request->validate([
-        'name' => 'required|string|max:255|unique:user_roles,name,' . $roleId,
-    ]);
+        $request->validate([
+            'name' => 'required|string|max:255|unique:user_roles,name,' . $roleId,
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $role->name = $request->name;
+            $role->active = $request->has('active');
+            $role->updated_by = $user->id;
+            $role->save();
+
+            // Log update
+            Log::create([
+                'action' => 'update_role',
+                'user_id' =>Auth::user()->id,
+                'user_role_id' => Auth::user()->user_role_id,
+
+                'ip_address' => $request->ip(),
+                'description' => 'Updated role: ' . $role->name,
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('admin.roles.index')
+                ->with('success', 'User role updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return redirect()->back()
+                ->with('error', 'An error occurred: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+   public function destroy($id)
+{
+    $role = UserRole::findOrFail($id);
+    $user = Auth::user();
+
+
+
+    $roleName = $role->name;
 
     try {
-        // Begin transaction
         DB::beginTransaction();
 
-        $role->name = $request->name;
-        $role->active = $request->has('active');
+        // Soft delete the role by setting active = false
+        $role->active = false;
         $role->save();
+
+        // Optionally, soft delete related permissions
+        $role->userRoleDetails()->update(['active' => false]);
+
+        // Log deletion
+        Log::create([
+            'action' => 'delete_role',
+            'user_id' => Auth::user()->id,
+            'user_role_id'  => Auth::user()->user_role_id,
+            'ip_address' => request()->ip(),
+            'description' => 'Deleted role: ' . $roleName,
+        ]);
 
         DB::commit();
 
         return redirect()->route('admin.roles.index')
-            ->with('success', 'User role updated successfully.');
+            ->with('success', 'User role deleted (disabled) successfully.');
     } catch (\Exception $e) {
-        // Rollback transaction on error
         DB::rollBack();
 
-        return redirect()->back()
-            ->with('error', 'An error occurred: ' . $e->getMessage())
-            ->withInput();
+        return redirect()->route('admin.roles.index')
+            ->with('error', 'Error while deleting role: ' . $e->getMessage());
     }
 }
-    /**
-     * Remove the specified user role from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
-    public function destroy($id)
-    {
-        $role = UserRole::findOrFail($id);
-
-        // Check if the role has any users
-        if ($role->users()->count() > 0) {
-            return redirect()->route('admin.roles.index')
-                ->with('error', 'Cannot delete role that has users assigned. Remove users first.');
-        }
-
-        // Delete the role's permissions
-        $role->userRoleDetails()->delete();
-
-
-        $role->delete();
-
-        return redirect()->route('admin.roles.index')
-            ->with('success', 'User role deleted successfully.');
-    }
-
 
 }
