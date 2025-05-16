@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Models\UserRoleDetail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Log;
 
 class PermissionController extends Controller
 {
@@ -17,55 +18,45 @@ class PermissionController extends Controller
         $roles = UserRole::where('active', true)->get();
         $pageCategories = PageCategory::with('pages')->where('active', true)->get();
 
+
+
         return view('permissions.manage', compact('roles', 'pageCategories'));
     }
 
-    public function manage( Request $request, $roleId)
+    public function manage(Request $request, $roleId)
     {
-
-
-        // Get the role and its permissions
-
         $role = UserRole::findOrFail($roleId);
         $pageCategories = PageCategory::with('pages')->where('active', true)->get();
-        $permissions = UserRoleDetail::where('user_role_id', $roleId)->with('page','pageCategory')->get();
+        $permissions = UserRoleDetail::where('user_role_id', $roleId)->with('page', 'pageCategory')->get();
 
 
 
-
-        return view('permissions.manage', compact('role','pageCategories' ,'permissions'));
+        return view('permissions.manage', compact('role', 'pageCategories', 'permissions'));
     }
 
     public function update(Request $request, $roleId)
     {
-        // $role = UserRole::findOrFail($roleId);
         $pageCategoryId = $request->input('page_category_id');
         $permissions = $request->input('permissions', []);
 
-
-        // Get all pages for this category
         $pageCategory = PageCategory::with('pages')->findOrFail($pageCategoryId);
+        $changes = [];
 
         foreach ($pageCategory->pages as $page) {
             $pageId = $page->id;
+            $status = isset($permissions[$pageId]) ? 'allow' : 'disallow';
 
-            // Check if permission detail already exists
             $detail = UserRoleDetail::where('user_role_id', $roleId)
                 ->where('page_id', $pageId)
                 ->first();
 
-            // If permission exists in request, set to allow
-            $status = isset($permissions[$pageId]) ? 'allow' : 'disallow';
-
             if ($detail) {
-                // Update existing
                 $detail->update([
                     'status' => $status,
                     'page_category_id' => $pageCategoryId,
-                    'updated_by'=>Auth::user()->id
+                    'updated_by' => Auth::id()
                 ]);
             } else {
-                // Create new
                 UserRoleDetail::create([
                     'user_role_id' => $roleId,
                     'page_id' => $pageId,
@@ -73,10 +64,21 @@ class PermissionController extends Controller
                     'status' => $status,
                     'code' => $page->code,
                     'active' => true,
-                    'created_by'=>Auth::user()->id
+                    'created_by' => Auth::id()
                 ]);
             }
+
+            $changes[] = "{$page->name} => {$status}";
         }
+
+        // Log action
+        Log::create([
+            'action' => 'update_permissions',
+            'user_id' => Auth::id(),
+            'user_role_id' => Auth::user()->user_role_id ?? null,
+            'ip_address' => request()->ip(),
+            'description' => "Updated permissions for role ID {$roleId}, category {$pageCategory->name}: " . implode(', ', $changes),
+        ]);
 
         return redirect()->back()->with('success', "Permissions for {$pageCategory->name} updated successfully");
     }
@@ -90,40 +92,34 @@ class PermissionController extends Controller
 
         $searchTerm = $request->input('search');
         $roleId = $request->input('role_id');
-
-        // Get the role
         $role = UserRole::findOrFail($roleId);
 
-        // Search for pages matching the search term
         $pages = Page::where('name', 'like', "%{$searchTerm}%")
-            ->with(['pageCategory', 'userRoleDetails' => function($query) use ($roleId) {
+            ->with(['pageCategory', 'userRoleDetails' => function ($query) use ($roleId) {
                 $query->where('user_role_id', $roleId);
             }])
             ->get();
 
-        // Also search in categories to include all pages from matching categories
         $categoryIds = PageCategory::where('name', 'like', "%{$searchTerm}%")
             ->pluck('id')
             ->toArray();
 
         if (!empty($categoryIds)) {
             $categoryPages = Page::whereIn('page_category_id', $categoryIds)
-                ->with(['pageCategory', 'userRoleDetails' => function($query) use ($roleId) {
+                ->with(['pageCategory', 'userRoleDetails' => function ($query) use ($roleId) {
                     $query->where('user_role_id', $roleId);
                 }])
                 ->get();
 
-            // Merge with pages found by name, avoiding duplicates
             $existingIds = $pages->pluck('id')->toArray();
-            $categoryPages = $categoryPages->filter(function($page) use ($existingIds) {
+            $categoryPages = $categoryPages->filter(function ($page) use ($existingIds) {
                 return !in_array($page->id, $existingIds);
             });
 
             $pages = $pages->merge($categoryPages);
         }
 
-        // Format the results
-        $results  = $pages->map(function($page) use ($roleId) {
+        $results = $pages->map(function ($page) use ($roleId) {
             $detail = $page->userRoleDetails->first();
 
             return [

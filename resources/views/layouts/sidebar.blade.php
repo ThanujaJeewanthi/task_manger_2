@@ -16,14 +16,19 @@
                     <rect class="line bottom" width="80" height="10" x="10" y="65" rx="5"></rect>
                 </svg>
             </button>
-            <a href="#" class="dashboard-link  mt-0">
-                <h5> @php
-                    $userRole = Auth::user()->userRole->name ?? 'User';
-                @endphp
-                    {{ ucfirst($userRole) }} Dashboard
-                </h5>
+            @php
+    $userRole = strtolower(Auth::user()->userRole->name ?? 'admin');
+    $dashboardRoute = in_array($userRole, ['laundry', 'rider', 'client'])
+        ? $userRole . '.dashboard'
+        : 'admin.dashboard';
+@endphp
 
-            </a>
+<a href="{{ route($dashboardRoute) }}" class="dashboard-link mt-0">
+    <h5>
+        {{ ucfirst($userRole) }} Dashboard
+    </h5>
+</a>
+
 
         </div>
 
@@ -57,7 +62,7 @@
             <div class="dropdown-container">
                 {{-- <a href="{{route('admin.users.index')}}">Users</a> --}}
                 <a href="{{ route('admin.roles.index') }}">User Roles</a>
-                <a href="{{ route('admin.roles.create') }}">Create User Roles</a>
+                {{-- <a href="{{ route('admin.roles.create') }}">Create User Roles</a> --}}
             </div>
         @endif
 
@@ -71,9 +76,9 @@
             </button>
             <div class="dropdown-container">
                 <a href="{{ route('admin.pages.index') }}">Pages</a>
-                <a href="{{ route('admin.pages.create') }}">Create Pages</a>
+                {{-- <a href="{{ route('admin.pages.create') }}">Create Pages</a> --}}
                 <a href="{{ route('admin.page-categories.index') }}">Page Categories</a>
-                <a href="{{ route('admin.page-categories.create') }}">Create Page Categories</a>
+                {{-- <a href="{{ route('admin.page-categories.create') }}">Create Page Categories</a> --}}
             </div>
         @endif
 
@@ -87,7 +92,7 @@
             </button>
             <div class="dropdown-container">
                 <a href="{{ route('admin.users.index') }}">Users</a>
-                <a href="{{ route('admin.users.create') }}">Create User</a>
+                {{-- <a href="{{ route('admin.users.create') }}">Create User</a> --}}
 
             </div>
         @endif

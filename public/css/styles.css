@@ -675,7 +675,7 @@ html {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     background-color: var(--light-contentCard-color);
     box-sizing: border-box;
-    min-width: 230px;
+    /* min-width: 230px; */
 }
 
 /* Responsive adjustments */
@@ -683,7 +683,7 @@ html {
     .dcards-card {
         flex: 0 0 calc(50% - 1rem);
         /* Two cards per row */
-        max-width: calc(50% - 1rem);
+        /* max-width: calc(50% - 1rem); */
     }
 }
 
@@ -691,7 +691,7 @@ html {
     .dcards-card {
         flex: 0 0 calc(100% - 1rem);
         /* Full-width cards on small screens */
-        max-width: calc(100% - 1rem);
+        /* max-width: calc(100% - 1rem); */
     }
 
     .row {

@@ -45,6 +45,9 @@
             flex-direction: column;
             min-height: 100vh;
         }
+        /* .dcards-card{
+max-width: 900px !important;
+        } */
 
         .d-flex.flex-column.min-vh-100 {
             flex: 1 0 auto;

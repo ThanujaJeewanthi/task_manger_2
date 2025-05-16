@@ -19,7 +19,7 @@
                     </div>
 
                     <div class="card-body">
-                        @if (session('success'))
+                        {{-- @if (session('success'))
                             <div class="alert alert-success">
                                 {{ session('success') }}
                             </div>
@@ -29,7 +29,7 @@
                             <div class="alert alert-danger">
                                 {{ session('error') }}
                             </div>
-                        @endif
+                        @endif --}}
 
                         <div class="table-responsive">
                             <table class="table table-bordered table-striped">

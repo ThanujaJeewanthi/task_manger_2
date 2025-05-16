@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Page;
 use App\Models\PageCategory;
+use App\Models\Log;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
@@ -11,80 +12,67 @@ use Illuminate\Support\Facades\Auth;
 
 class PageController extends Controller
 {
-    /**
-     * Display a listing of the pages.
-     *
-     * @return \Illuminate\Contracts\View\View
-     */
     public function index()
     {
         $pages = Page::with('category')->paginate(10);
         return view('pages.index', compact('pages'));
     }
 
-    /**
-     * Show the form for creating a new page.
-     *
-     * @return \Illuminate\Contracts\View\View
-     */
     public function create()
     {
         $categories = PageCategory::where('active', true)->pluck('name', 'id');
         return view('pages.create', compact('categories'));
     }
 
-    /**
-     * Store a newly created page in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function store(Request $request)
     {
-           $user=Auth::user();
-      $request->validate([
-    'name' => [
-        'required',
-        'string',
-        'max:255',
-        Rule::unique('pages')->where(function ($query) use ($request) {
-            return $query->where('page_category_id', $request->page_category_id);
-        }),
-    ],
-    'code' => [
-        'required',
-        'string',
-        'max:255',
-    ],
-    'page_category_id' => ['required', 'exists:page_categories,id'],
-]);
+        $user = Auth::user();
+        $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('pages')->where(function ($query) use ($request) {
+                    return $query->where('page_category_id', $request->page_category_id);
+                }),
+            ],
+            'code' => [
+                'required',
+                'string',
+                'max:255',
+            ],
+            'page_category_id' => ['required', 'exists:page_categories,id'],
+        ]);
 
- $finalCode = $request->page_category_id . '.' . $request->code;
+        $finalCode = $request->page_category_id . '.' . $request->code;
 
-
-    $exists = Page::where('code', $finalCode)->exists();
-    if ($exists) {
-        return redirect()->back()
-            ->withErrors(['code' => 'The generated page code "' . $finalCode . '" already exists.'])
-            ->withInput();
-    }
+        $exists = Page::where('code', $finalCode)->exists();
+        if ($exists) {
+            return redirect()->back()
+                ->withErrors(['code' => 'The generated page code "' . $finalCode . '" already exists.'])
+                ->withInput();
+        }
 
         try {
             DB::beginTransaction();
             $page = new Page();
             $page->name = $request->name;
             $page->page_category_id = $request->page_category_id;
-            //page code is created using the page category id +.code
             $page->code = $finalCode;
-
-
-            $page->page_category_id = $request->page_category_id;
             $page->active = $request->has('active');
             $page->created_by = $user->id;
             $page->save();
+
+            Log::create([
+                'action' => 'create',
+                'user_id' => $user->id,
+                'user_role_id' => $user->user_role_id ?? null,
+                'ip_address' => $request->ip(),
+                'description' => "Created page: {$page->name} ({$page->code})",
+                'active' => true,
+            ]);
+
             DB::commit();
-
-
 
             return redirect()->route('admin.pages.index')
                 ->with('success', 'Page created successfully.');
@@ -96,12 +84,6 @@ class PageController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified page.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Contracts\View\View
-     */
     public function edit($id)
     {
         $page = Page::findOrFail($id);
@@ -109,48 +91,50 @@ class PageController extends Controller
         return view('pages.edit', compact('page', 'categories'));
     }
 
-    /**
-     * Update the specified page in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function update(Request $request, $id)
     {
-           $user=Auth::user();
+        $user = Auth::user();
         $page = Page::findOrFail($id);
 
- $request->validate([
-    'name' => [
-        'required',
-        'string',
-        'max:255',
-        Rule::unique('pages')->where(function ($query) use ($request) {
-            return $query->where('page_category_id', $request->page_category_id);
-        })->ignore($id),
-    ],
-    'code' => [
-        'required',
-        'string',
-        'max:255',
-        Rule::unique('pages', 'code')->ignore($id),
-    ],
-    'page_category_id' => 'required|exists:page_categories,id',
-]);
+        $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('pages')->where(function ($query) use ($request) {
+                    return $query->where('page_category_id', $request->page_category_id);
+                })->ignore($id),
+            ],
+            'code' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('pages', 'code')->ignore($id),
+            ],
+            'page_category_id' => 'required|exists:page_categories,id',
+        ]);
+
         try {
             DB::beginTransaction();
+            $oldData = $page->toArray();
+
             $page->name = $request->name;
             $page->code = $request->code;
             $page->page_category_id = $request->page_category_id;
             $page->active = $request->has('active');
             $page->updated_by = $user->id;
             $page->save();
+
+            Log::create([
+                'action' => 'update',
+                'user_id' => $user->id,
+                'user_role_id' => $user->user_role_id ?? null,
+                'ip_address' => $request->ip(),
+                'description' => "Updated page ID {$page->id}. Old: " . json_encode($oldData),
+                'active' => true,
+            ]);
+
             DB::commit();
-
-
 
             return redirect()->route('admin.pages.index')
                 ->with('success', 'Page updated successfully.');
@@ -162,29 +146,33 @@ class PageController extends Controller
         }
     }
 
-    /**
-     * Remove the specified page from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function destroy($id)
     {
+        $user = Auth::user();
         $page = Page::findOrFail($id);
 
-        // Check if there are any user role details linking to this page
-        if ($page->userRoleDetails()->count() > 0) {
-            return redirect()->route('admin.pages.index')
-                ->with('error', 'Cannot delete page that is used in permissions. Remove permissions first.');
-        }
+      $page->active=false;
+      $page->save();
 
-        $page->delete();
+        $pageName = $page->name;
+        $pageCode = $page->code;
+        $pageId = $page->id;
+
+
+
+        Log::create([
+            'action' => 'delete',
+            'user_id' => $user->id,
+            'user_role_id' => $user->user_role_id ?? null,
+            'ip_address' => request()->ip(),
+            'description' => "Deleted page: {$pageName} ({$pageCode}) with ID {$pageId}",
+            'active' => true,
+        ]);
 
         return redirect()->route('admin.pages.index')
             ->with('success', 'Page deleted successfully.');
     }
+
     public function search(Request $request)
     {
         $query = $request->get('q');

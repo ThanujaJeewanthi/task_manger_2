@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserRole;
+use App\Models\Log; // Import Log model
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -19,9 +20,7 @@ class RegisterController extends Controller
      */
     public function showRegistrationForm()
     {
-        // Get all active user roles for the dropdown
         $userRoles = UserRole::where('active', true)->get();
-
         return view('auth.register', compact('userRoles'));
     }
 
@@ -33,7 +32,6 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
-        // Validate the incoming request data
         $validator = Validator::make($request->all(), [
             'username' => ['required', 'string', 'max:255', 'unique:users'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
@@ -48,14 +46,9 @@ class RegisterController extends Controller
                 ->withInput($request->except('password'));
         }
 
-
-        // Determine the user type based on the selected role
-
         $userRole = UserRole::findOrFail($request->user_role_id);
-
         $userType = in_array($userRole->name, ['client', 'laundry', 'rider']) ? 'user' : 'admin';
 
-        // Create the user
         $user = User::create([
             'username' => $request->username,
             'email' => $request->email,
@@ -66,7 +59,16 @@ class RegisterController extends Controller
             'remember_token' => Str::random(10),
         ]);
 
-        // Redirect to login page with success message
+        // ✅ Log to logs table
+        Log::create([
+            'action' => 'user_registered',
+            'user_id' => $user->id,
+            'user_role_id' => $user->user_role_id,
+            'ip_address' => $request->ip(),
+            'description' => 'New user registered with role: ' . $userRole->name,
+            'active' => true,
+        ]);
+
         return redirect()->route('login')
             ->with('success', 'Registration successful! Please log in.');
     }
