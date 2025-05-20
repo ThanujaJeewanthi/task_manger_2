@@ -136,20 +136,20 @@
             <a href="#">Link 2</a>
             <a href="#">Link 3</a>
         </div> --}}
-
+ @if (array_key_exists(5, $categorizedPages))
         <button class="dropdown-btn">
 
             <i class="fas fa-plus-circle me-2 icon-only"></i>
-            <span class="side-link"> Link page 1</span>
+            <span class="side-link">Records</span>
 
             <i class="fa fa-caret-down"></i>
         </button>
         <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
+            <a href="{{route('logs.index')}}">View Records</a>
+            {{-- <a href="#">Link 2</a>
+            <a href="#">Link 3</a> --}}
         </div>
-
+@endif
 
 
 
@@ -178,7 +178,8 @@
             <a href="#">Link 1</a>
             <a href="#">Link 2</a>
             <a href="#">Link 3</a>
-        </div> <button class="dropdown-btn">
+        </div>
+         <button class="dropdown-btn">
             <i class="fa fa-caret-down"></i>
             <span class="side-link"> Last Link page</span>
         </button>
@@ -187,6 +188,36 @@
             <a href="#"><i class=" icon-spacing"></i>Link 2</a>
             <a href="#"><i class=" icon-spacing"></i>Link 3</a>
         </div>
+         <button class="dropdown-btn">
+            <i class="fa fa-caret-down"></i>
+            <span class="side-link"> Last Link page</span>
+        </button>
+        <div class="dropdown-container">
+            <a href="#"><i class=" icon-spacing"></i>Link 1</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 2</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 3</a>
+        </div>
+
+         <button class="dropdown-btn">
+            <i class="fa fa-caret-down"></i>
+            <span class="side-link"> Last Link page</span>
+        </button>
+        <div class="dropdown-container">
+            <a href="#"><i class=" icon-spacing"></i>Link 1</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 2</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 3</a>
+        </div>
+
+         <button class="dropdown-btn">
+            <i class="fa fa-caret-down"></i>
+            <span class="side-link"> Last Link page</span>
+        </button>
+        <div class="dropdown-container">
+            <a href="#"><i class=" icon-spacing"></i>Link 1</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 2</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 3</a>
+        </div>
+
 
 
     </nav>

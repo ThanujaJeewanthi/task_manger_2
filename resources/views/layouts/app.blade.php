@@ -29,7 +29,7 @@
     <link href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet">
     {{-- AddPack css --}}
-
+<link href="{{ asset('css/modern-compact-ui.css') }}" rel="stylesheet">
     @yield('styles')
     <style>
         /* Main layout structure */
@@ -71,36 +71,28 @@ max-width: 900px !important;
             width: 250px;
             background-color: #282c30;
             transition: all 0.3s ease;
+
         }
 
-        /* Toggle button for all screen sizes */
-        /* .toggle-sidebar-btn {
-         position: absolute;
-         top: 1rem;
-         left: 100%;
-         width: 2.5rem;
-         height: 2.5rem;
-         background: #282c30;
-         border: none;
-         border-radius: 0 4px 4px 0;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         cursor: pointer;
-         z-index: 1000;
-         transition: left 0.3s ease;
-     } */
 
         /* Sidebar menu scrolling */
         .sidebar-menu {
             /* Enable scrolling */
             overflow-y: auto;
-            max-height: calc(100vh - 56px);
-            /* Hide scrollbar for Firefox */
-            scrollbar-width: none;
-            /* Firefox */
-            /* Hide scrollbar for IE/Edge */
-            -ms-overflow-style: none;
+            height:100%;
+            width: 249px;
+
+
+        }
+
+
+
+
+        .sidebar-menu {
+            /* Enable scrolling */
+            overflow-y: auto;
+            /* max-height: calc(100vh - 56px); */
+
         }
 
         /* Hide scrollbar for Chrome, Safari, and Opera */
@@ -110,15 +102,17 @@ max-width: 900px !important;
             background: transparent !important;
             display: none !important;
         }
+        .sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background-color: var(--light-border-color);
+}
 
-        /* Optional: Prevent scrollbar "peeking" in macOS */
-        .sidebar-menu {
-            -webkit-overflow-scrolling: touch;
-            /* Smooth scrolling on iOS */
+         .sidebar-menu {
+
             padding-right: 1px;
-            /* Prevents occasional scrollbar peek */
+
             margin-right: -1px;
-            /* Compensates for padding */
+
+
         }
 
         /* Collapsed sidebar styling - desktop */
@@ -174,6 +168,18 @@ max-width: 900px !important;
             color: #fff !important;
             opacity: 1 !important;
         }
+.sidebar-wrapper {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    height: 100%;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    overflow-y: hidden;
+
+
+}
+
 
         /* Mobile Sidebar Styles - Fixed Version */
         @media (max-width: 576px) {
@@ -289,6 +295,7 @@ max-width: 900px !important;
                 display: flex !important;
                 width: 100% !important;
             }
+
         }
     </style>
 </head>

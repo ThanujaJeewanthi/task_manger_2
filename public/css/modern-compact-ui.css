@@ -1,0 +1,298 @@
+:root {
+  --font-primary: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  --font-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Compact size variables */
+  /* --font-size-xs: 0.7rem;
+  --font-size-sm: 0.8rem;
+  --font-size-base: 0.875rem;
+  --font-size-md: 0.95rem;
+  --font-size-lg: 1rem;
+*/
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+
+  /* Colors */
+  --border-color: #dee2e6;
+  --header-bg: #f8f9fa;
+  --hover-bg: #f3f4f6;
+}
+
+/* Global Typography */
+body {
+  font-family: var(--font-primary);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+}
+
+/* Headings */
+/* h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  font-family: var(--font-primary);
+  font-weight: 600;
+  line-height: 1.2;
+} */
+
+/* h1, .h1 { font-size: 1.5rem; }
+h2, .h2 { font-size: 1.3rem; }
+h3, .h3 { font-size: 1.15rem; }
+h4, .h4 { font-size: 1.05rem; }
+h5, .h5 { font-size: 0.95rem; }
+h6, .h6 { font-size: 0.85rem; } */
+
+/* Card Styling */
+.card {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin-bottom: var(--spacing-md);
+}
+
+.card-header {
+  background-color: var(--header-bg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.card-body {
+
+  padding: var(--spacing-md);
+}
+
+/* .d-component-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+} */
+
+/* Table Styling */
+.table {
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.table th {
+  font-weight: 600;
+  background-color: var(--header-bg);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  vertical-align: middle;
+}
+
+/* More compact rows */
+.table-sm th,
+.table-sm td {
+  padding: 0.15rem 0.3rem;
+  height: 1.5rem;
+}
+
+.table-responsive {
+  margin-bottom: var(--spacing-md);
+  max-height: 500px;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox: hide scrollbar */
+}
+
+/* Firefox: show thin scrollbar on hover */
+.table-responsive:hover {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 150, 150, 0.5) transparent;
+}
+
+/* WebKit browsers (Chrome, Safari, Edge) */
+.table-responsive::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+/* On hover: show slim scrollbar */
+.table-responsive:hover::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background-color: rgba(150, 150, 150, 0.5);
+  border-radius: 10px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+/* Form Controls */
+.form-control {
+  font-size: var(--font-size-sm);
+  height: calc(1.5em + 0.5rem + 2px);
+  padding: 0.25rem 0.5rem;
+}
+
+.form-group {
+  margin-bottom: var(--spacing-sm);
+}
+
+label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  margin-bottom: var(--spacing-xs);
+}
+ .table td, .table th {
+        padding-top: 0.4rem !important;
+        padding-bottom: 0.4rem !important;
+        font-size: 14px;
+    }
+
+    /* Optional: shrink the button size too */
+    .table .btn-sm {
+        padding: 0.15rem 0.4rem;
+        font-size: 12px;
+    }
+
+/* Buttons */
+.btn {
+  font-size: var(--font-size-sm);
+  padding: 0.25rem 0.6rem;
+}
+
+.btn-sm {
+  padding: 0.15rem 0.4rem;
+  font-size: var(--font-size-xs);
+}
+
+/* Badges */
+.badge {
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  padding: 0.2em 0.5em;
+}
+
+/* Pagination */
+.pagination {
+  font-size: var(--font-size-sm);
+}
+
+.page-link {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Alert Messages */
+.alert {
+  padding: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+/* Modal Styling */
+.modal-header {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.modal-body {
+  padding: var(--spacing-md);
+  font-size: var(--font-size-sm);
+}
+
+.modal-footer {
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.modal-title {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+}
+
+/* Additional Spacing Utilities */
+.p-compact {
+  padding: var(--spacing-sm) !important;
+}
+
+.m-compact {
+  margin: var(--spacing-sm) !important;
+}
+
+/* Sidebar optimizations */
+/* .sidebar-menu a,
+.sidebar-menu button,
+.dropdown-btn {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+} */
+
+/* Custom improvements */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+/* Fix for filters section */
+@media (max-width: 768px) {
+  .form-group {
+    margin-bottom: 0.4rem;
+  }
+
+  .form-group button {
+    margin-top: 0.25rem;
+  }
+}
+
+/* Improve mobile responsiveness */
+@media (max-width: 576px) {
+  .d-component-title {
+    font-size: var(--font-size-base);
+  }
+
+  .card-header {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+
+  .card-body {
+    padding: var(--spacing-sm);
+  }
+}
+
+/* Utility classes for text sizes */
+.text-xs { font-size: var(--font-size-xs) !important; }
+.text-sm { font-size: var(--font-size-sm) !important; }
+.text-md { font-size: var(--font-size-md) !important; }
+.text-lg { font-size: var(--font-size-lg) !important; }
+
+
+
+
+/* Fix width of actions column */
+th[width="80"],
+td[width="80"] {
+  width: 60px !important;
+  max-width: 60px !important;
+}
+
+th[width="50"],
+td[width="50"] {
+  width: 40px !important;
+  max-width: 40px !important;
+}
+
+th[width="30"],
+td[width="30"] {
+  width: 25px !important;
+  max-width: 25px !important;
+}
+
+/* Improve pagination appearance */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-item.active .page-link {
+  font-weight: bold;
+}

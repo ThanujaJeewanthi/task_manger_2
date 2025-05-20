@@ -101,6 +101,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('/users/{userId}', [UserController::class, 'delete'])->name('users.delete');
 });
 
+Route::middleware(['auth'])->group(function () {
+
+Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index')->middleware('role.permission:5.1');
+    Route::get('/logs/{id}', [App\Http\Controllers\LogController::class, 'show'])->name('logs.show');
+    Route::post('/logs/clear', [App\Http\Controllers\LogController::class, 'clear'])->name('logs.clear');
+});
 
 Route::fallback(function () {
     return 'Fallback';

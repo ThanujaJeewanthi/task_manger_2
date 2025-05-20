@@ -125,14 +125,17 @@ class PageController extends Controller
             $page->updated_by = $user->id;
             $page->save();
 
-            Log::create([
-                'action' => 'update',
-                'user_id' => $user->id,
-                'user_role_id' => $user->user_role_id ?? null,
-                'ip_address' => $request->ip(),
-                'description' => "Updated page ID {$page->id}. Old: " . json_encode($oldData),
-                'active' => true,
-            ]);
+           $changes = array_diff_assoc($page->toArray(), $oldData);
+
+Log::create([
+    'action' => 'update',
+    'user_id' => $user->id,
+    'user_role_id' => $user->user_role_id ?? null,
+    'ip_address' => $request->ip(),
+    'description' => "Updated page ID: {$page->id}. Changed fields: " . json_encode($changes),
+    'active' => true,
+]);
+
 
             DB::commit();
 
