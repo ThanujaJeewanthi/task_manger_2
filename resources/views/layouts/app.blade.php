@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spin App - @yield('title', 'SpinApp Laundry Management System')</title>
+    <title>Task Manager - @yield('title', 'Task Management System')</title>
     <!-- Google Fonts Import -->
     <!-- 1. Google Font -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />

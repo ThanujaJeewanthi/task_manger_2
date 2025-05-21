@@ -79,6 +79,7 @@
                             </div>
                         </div>
 
+
                         <div class="form-group row mb-3">
                             <label for="user_role_id" class="col-md-4 col-form-label text-md-right">{{ __('User Role') }}</label>
 
@@ -99,6 +100,29 @@
                                 @enderror
                             </div>
                         </div>
+
+                        <div class="form-group row mb-3">
+    <label for="company_id" class="col-md-4 col-form-label text-md-right">{{ __('Company') }}</label>
+
+    <div class="col-md-6">
+        <select id="company_id" class="form-control @error('company_id') is-invalid @enderror" name="company_id" required>
+            <option value="">Select Company</option>
+            @foreach($companies as $company)
+                <option value="{{ $company->id }}" {{ old('company_id') == $company->id ? 'selected' : '' }}>
+                    {{ $company->name }}
+                </option>
+            @endforeach
+        </select>
+
+        @error('company_id')
+            <span class="invalid-feedback" role="alert">
+                <strong>{{ $message }}</strong>
+            </span>
+        @enderror
+    </div>
+</div>
+
+
 
                         <div class="form-group row mb-0">
                             <div class="col-md-6 offset-md-4">

@@ -16,11 +16,11 @@ class PageCategoriesTableSeeder extends Seeder
     {
         $categories = [
             ['id' => 1, 'name' => 'Dashboard', 'active' => true],
-            ['id' => 2, 'name' => 'Management', 'active' => true],
-            ['id' => 3, 'name' => 'Client', 'active' => true],
-            ['id' => 4, 'name' => 'Rider', 'active' => true],
-            ['id' => 5, 'name' => 'Laundry', 'active' => true],
-            ['id' => 6, 'name' => 'Order', 'active' => true],
+            ['id' => 2, 'name' => 'Pages', 'active' => true],
+            ['id' => 3, 'name' => 'Permissions', 'active' => true],
+            ['id' => 4, 'name' => 'Users', 'active' => true],
+             ['id' => 5, 'name' => 'Records', 'active' => true],
+
 
         ];
 

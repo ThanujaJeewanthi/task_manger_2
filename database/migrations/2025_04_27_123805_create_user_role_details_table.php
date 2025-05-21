@@ -19,6 +19,7 @@ return new class extends Migration
             $table->foreignId('page_category_id')->constrained('page_categories')->onDelete('cascade');
             $table->boolean('active')->default(true);
             $table->timestamps();
+
         });
         Schema::table('user_role_details', function (Blueprint $table) {
             $table->enum('status', ['allow', 'disallow'])->default('disallow');

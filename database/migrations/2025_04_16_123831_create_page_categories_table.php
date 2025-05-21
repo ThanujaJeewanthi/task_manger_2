@@ -11,18 +11,18 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('special_privileges', function (Blueprint $table) {
+        Schema::create('page_categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code')->unique();
-            $table->foreignId('user_role_id')->constrained('user_roles')->onDelete('cascade');
             $table->boolean('active')->default(true);
             $table->timestamps();
+
         });
     }
 
     public function down()
     {
-        Schema::dropIfExists('special_privileges');
+        Schema::dropIfExists('page_categories');
     }
-};
+}
+;

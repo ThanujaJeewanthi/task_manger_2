@@ -82,6 +82,22 @@
                                 @enderror
                             </div>
 
+                            <div class="form-group mb-4">
+    <label for="company_id">Company</label>
+    <select class="form-control @error('company_id') is-invalid @enderror" id="company_id" name="company_id" required>
+        <option value="">Select a company</option>
+        @foreach($companies as $company)
+            <option value="{{ $company->id }}" {{ (old('company_id') ?? $user->company_id) == $company->id ? 'selected' : '' }}>
+                {{ $company->name }}
+            </option>
+        @endforeach
+    </select>
+    @error('company_id')
+        <span class="invalid-feedback">{{ $message }}</span>
+    @enderror
+</div>
+
+
                             <!-- User Status Toggle -->
                             <div class="d-com-flex justify-content-start mb-4">
                                 <label class="d-label-text me-2">Active</label>

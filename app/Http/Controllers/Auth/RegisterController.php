@@ -32,13 +32,19 @@ class RegisterController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'phone_number' => ['required', 'string', 'max:20'],
-            'user_role_id' => ['required', 'exists:user_roles,id'],
-        ]);
+        $isFirstUser = User::count() === 0;
+
+$rules = [
+    'username' => ['required', 'string', 'max:255', 'unique:users'],
+    'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+    'password' => ['required', 'string', 'min:8', 'confirmed'],
+    'phone_number' => ['required', 'string', 'max:20'],
+    'user_role_id' => ['required', 'exists:user_roles,id'],
+    'company_id' => ['required', 'exists:companies,id'],
+];
+
+
+$validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
             return redirect()->back()
@@ -55,14 +61,16 @@ class RegisterController extends Controller
             'password' => Hash::make($request->password),
             'phone_number' => $request->phone_number,
             'user_role_id' => $request->user_role_id,
+            'company_id'=>$request->company_id,
             'type' => $userType,
             'remember_token' => Str::random(10),
         ]);
 
-        // ✅ Log to logs table
+
         Log::create([
             'action' => 'user_registered',
             'user_id' => $user->id,
+
             'user_role_id' => $user->user_role_id,
             'ip_address' => $request->ip(),
             'description' => 'New user registered with role: ' . $userRole->name,

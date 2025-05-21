@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\UserRole;
 use App\Models\Log;
+use App\Models\User;
+use App\Models\Company;
+use App\Models\UserRole;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -22,8 +23,9 @@ class UserController extends Controller
         $query = User::with('userRole');
         $users = $query->paginate(15);
         $roles = UserRole::withCount('users')->get();
+        $companies = Company::where('active', true)->get();
 
-        return view('users.index', compact('users', 'roles'));
+        return view('users.index', compact('users', 'roles' ,'companies'));
     }
 
     /**
@@ -32,7 +34,9 @@ class UserController extends Controller
     public function create()
     {
         $roles = UserRole::where('active', true)->get();
-        return view('users.create', compact('roles'));
+        $companies = Company::where('active', true)->get();
+
+        return view('users.create', compact('roles','companies'));
     }
 
     /**
@@ -49,6 +53,7 @@ class UserController extends Controller
             'phone_number' => ['required', 'string', 'max:15'],
             'role_id' => ['required', 'exists:user_roles,id'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'company_id'=>['required', 'exists:companies,id'],
         ]);
 
         if ($validator->fails()) {
@@ -67,6 +72,7 @@ class UserController extends Controller
         $user->phone_number = $request->phone_number;
         $user->password = Hash::make($password);
         $user->user_role_id = $request->role_id;
+         $user->company_id = $request->company_id;
         $user->active = $request->has('active');
         $user->created_by = $loggedInUser->id;
         $user->save();
@@ -102,7 +108,8 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $roles = UserRole::where('active', true)->get();
-        return view('users.edit', compact('user', 'roles'));
+         $companies = Company::where('active', true)->get();
+        return view('users.edit', compact('user', 'roles' ,'companies'));
     }
 
     /**
@@ -118,7 +125,7 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
             'name' => ['required', 'string', 'max:255'],
             'phone_number' => ['required', 'string', 'max:20'],
-            // 'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'company_id'=>['required', 'exists:companies,id'],
             'role_id' => ['required', 'exists:user_roles,id'],
         ]);
 
@@ -134,6 +141,7 @@ class UserController extends Controller
         $user->name = $request->name;
         $user->phone_number = $request->phone_number;
         $user->user_role_id = $request->role_id;
+        $user->company_id = $request->company_id;
         $user->active = $request->has('active');
         $user->updated_by = $loggedInUser->id;
         $user->save();

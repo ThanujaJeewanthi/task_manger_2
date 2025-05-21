@@ -20,6 +20,7 @@ class User extends Authenticatable
         'password',
         'phone_number',
         'user_role_id',
+        'company_id',
         'active',
          'created_by',
     'updated_by',
@@ -38,6 +39,9 @@ class User extends Authenticatable
     public function userRole()
     {
         return $this->belongsTo(UserRole::class, 'user_role_id');
+    }
+    public function company(){
+         return $this->belongsTo(Company::class, 'company_id');
     }
 
     public function roleName()

@@ -19,10 +19,15 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('phone_number');
+            $table->foreignId('company_id')->nullable()->constrained('companies','id')->nullOnDelete();
+            $table->string('profile_picture')->nullable();
             $table->foreignId('user_role_id')->constrained('user_roles')->onDelete('cascade');
             $table->rememberToken();
             $table->boolean('active')->default(true);
             $table->timestamps();
+             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+
         });
     }
 

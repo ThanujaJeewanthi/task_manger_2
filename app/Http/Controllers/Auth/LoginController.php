@@ -115,18 +115,9 @@ Log::create([
             // Debug: Confirm session storage
             FacadesLog::info('Session Data Stored', ['session_categorized_pages' => $request->session()->get('categorized_pages')]);
 
-          switch ($roleName) {
-    case 'client':
-        return redirect()->route('client.dashboard');
-    case 'laundry':
-        return redirect()->route('laundry.dashboard');
-    case 'rider':
-        return redirect()->route('rider.dashboard');
-    case 'admin':
-        return redirect()->route('admin.dashboard');
-    default:
+
         return redirect()->route('dashboard');
-}
+
 
         }
         Log::create([
