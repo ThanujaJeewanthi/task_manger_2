@@ -96,6 +96,47 @@
 
             </div>
         @endif
+       @if (array_key_exists(5, $categorizedPages))
+    <a href="{{ route('companies.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Companies</span>
+    </a>
+@endif
+
+
+        @if (array_key_exists(6, $categorizedPages))
+    <a href="{{ route('employees.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Employees</span>
+    </a>
+@endif
+ @if (array_key_exists(7, $categorizedPages))
+    <a href="{{ route('clients.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Clients</span>
+    </a>
+@endif
+ @if (array_key_exists(8, $categorizedPages))
+    <a href="{{ route('suppliers.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Suppliers</span>
+    </a>
+@endif
+ @if (array_key_exists(9, $categorizedPages))
+    <a href="{{ route('equipments.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Equipments</span>
+    </a>
+@endif
+
+
+ @if (array_key_exists(10, $categorizedPages))
+    <a href="{{ route('items.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Items</span>
+    </a>
+@endif
+
 
 
         {{-- <button class="dropdown-btn">

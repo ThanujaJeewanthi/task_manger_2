@@ -17,9 +17,10 @@ class CreateEmployees extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('job_title')->nullable();
-            $table->string('name')->constrained('users','name')->cascadeOnDelete();
+            $table->string('name');
             $table->string('department')->nullable();
-
+            $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
+            $table->string('employee_code');
             $table->string('phone', 20)->nullable();
             $table->text('notes')->nullable();
             $table->boolean('active')->default(true);
