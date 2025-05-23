@@ -11,8 +11,8 @@ class EquipmentController extends Controller
     public function index()
     {
         $companyId = Auth::user()->company_id;
+        // Get equipment where company_id is equal to the current user's company_id and paginate
         $equipments = Equipment::where('company_id', $companyId)
-            ->where('active', true)
             ->paginate(10);
 
         return view('equipments.index', compact('equipments'));
@@ -30,79 +30,71 @@ class EquipmentController extends Controller
             'model' => 'nullable|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'status' => 'required|in:available,in_use,maintenance,retired',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
-        Equipment::create([
-            'company_id' => Auth::user()->company_id,
+        $equipmentData = [
             'name' => $request->name,
             'model' => $request->model,
             'serial_number' => $request->serial_number,
             'status' => $request->status,
             'notes' => $request->notes,
-            'active' => $request->has('is_active'),
+            'company_id' => Auth::user()->company_id,
             'created_by' => Auth::id()
-        ]);
+        ];
+
+        Equipment::create($equipmentData);
 
         return redirect()->route('equipments.index')->with('success', 'Equipment created successfully.');
     }
 
     public function show(Equipment $equipment)
     {
-        // Check if equipment belongs to current user's company
-        if ($equipment->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
         return view('equipments.show', compact('equipment'));
     }
 
     public function edit(Equipment $equipment)
     {
-        // Check if equipment belongs to current user's company
-        if ($equipment->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
         return view('equipments.edit', compact('equipment'));
     }
 
     public function update(Request $request, Equipment $equipment)
     {
-        // Check if equipment belongs to current user's company
-        if ($equipment->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
         $request->validate([
             'name' => 'required|string|max:255',
             'model' => 'nullable|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'status' => 'required|in:available,in_use,maintenance,retired',
-            'notes' => 'nullable|string'
+            'notes' => 'nullable|string',
         ]);
 
-        $equipment->update([
+        // Update equipment
+        $equipmentData = [
             'name' => $request->name,
             'model' => $request->model,
             'serial_number' => $request->serial_number,
             'status' => $request->status,
             'notes' => $request->notes,
-            'active' => $request->has('is_active'),
+            'company_id' => Auth::user()->company_id,
             'updated_by' => Auth::id()
-        ]);
+        ];
+
+        // Handle active status
+        if ($request->has('active')) {
+            $equipmentData['active'] = true;
+        } else {
+            $equipmentData['active'] = false;
+        }
+
+        $equipment->update($equipmentData);
 
         return redirect()->route('equipments.index')->with('success', 'Equipment updated successfully.');
     }
 
     public function destroy(Equipment $equipment)
     {
-        // Check if equipment belongs to current user's company
-        if ($equipment->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
         $equipment->update(['active' => false, 'updated_by' => Auth::id()]);
+
         return redirect()->route('equipments.index')->with('success', 'Equipment deleted successfully.');
     }
 }

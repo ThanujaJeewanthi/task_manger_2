@@ -25,6 +25,7 @@ class Supplier extends Model
         'active',
         'created_by',
         'updated_by',
+        'description',
     ];
 
     /**

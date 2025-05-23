@@ -11,98 +11,94 @@ class SupplierController extends Controller
     public function index()
     {
         $companyId = Auth::user()->company_id;
+        // Get suppliers where company_id is equal to the current user's company_id and paginate
         $suppliers = Supplier::where('company_id', $companyId)
-            ->where('active', true)
             ->paginate(10);
 
-        return view( 'suppliers.index', compact('suppliers'));
+        return view('suppliers.index', compact('suppliers'));
     }
 
     public function create()
     {
-        return view( 'suppliers.create');
+        return view('suppliers.create');
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'contact_person' => 'nullable|string|max:255',
-            'email' => 'nullable|email',
+            'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string'
+            'address' => 'nullable|string',
         ]);
 
-        Supplier::create([
-            'company_id' => Auth::user()->company_id,
+        $supplierData = [
             'name' => $request->name,
+            'description' => $request->description,
             'contact_person' => $request->contact_person,
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $request->address,
-            'active' => $request->has('is_active'),
+            'company_id' => Auth::user()->company_id,
             'created_by' => Auth::id()
-        ]);
+        ];
 
-        return redirect()->route( 'suppliers.index')->with('success', 'Supplier created successfully.');
+        Supplier::create($supplierData);
+
+        return redirect()->route('suppliers.index')->with('success', 'Supplier created successfully.');
     }
 
     public function show(Supplier $supplier)
     {
-        // Check if supplier belongs to current user's company
-        if ($supplier->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
-        return view( 'suppliers.show', compact('supplier'));
+        return view('suppliers.show', compact('supplier'));
     }
 
     public function edit(Supplier $supplier)
     {
-        // Check if supplier belongs to current user's company
-        if ($supplier->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
-        return view( 'suppliers.edit', compact('supplier'));
+        return view('suppliers.edit', compact('supplier'));
     }
 
     public function update(Request $request, Supplier $supplier)
     {
-        // Check if supplier belongs to current user's company
-        if ($supplier->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'contact_person' => 'nullable|string|max:255',
-            'email' => 'nullable|email',
+            'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string'
+            'address' => 'nullable|string',
         ]);
 
-        $supplier->update([
+        // Update supplier
+        $supplierData = [
             'name' => $request->name,
+            'description' => $request->description,
             'contact_person' => $request->contact_person,
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $request->address,
-            'active' => $request->has('is_active'),
+            'company_id' => Auth::user()->company_id,
             'updated_by' => Auth::id()
-        ]);
+        ];
 
-        return redirect()->route( 'suppliers.index')->with('success', 'Supplier updated successfully.');
+        // Handle active status
+        if ($request->has('active')) {
+            $supplierData['active'] = true;
+        } else {
+            $supplierData['active'] = false;
+        }
+
+        $supplier->update($supplierData);
+
+        return redirect()->route('suppliers.index')->with('success', 'Supplier updated successfully.');
     }
 
     public function destroy(Supplier $supplier)
     {
-        // Check if supplier belongs to current user's company
-        if ($supplier->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
         $supplier->update(['active' => false, 'updated_by' => Auth::id()]);
-        return redirect()->route( 'suppliers.index')->with('success', 'Supplier deleted successfully.');
+
+        return redirect()->route('suppliers.index')->with('success', 'Supplier deleted successfully.');
     }
 }

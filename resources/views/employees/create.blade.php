@@ -24,20 +24,7 @@
                     <form action="{{ route('employees.store') }}" method="POST">
                         @csrf
                         <div class="d-component-container">
-                            <div class="form-group mb-4">
-                                <label for="user_id" class="form-label">User <span class="text-danger">*</span></label>
-                                <select name="user_id" id="user_id" class="form-control @error('user_id') is-invalid @enderror" required>
-                                    <option value="">Select User</option>
-                                    @foreach($users as $user)
-                                        <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>
-                                            {{ $user->name }} ({{ $user->email }})
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('user_id')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+
                             <div class="form-group mb-4">
                                 <label for="employee_code" class="form-label">Employee Code <span class="text-danger">*</span></label>
                                 <input type="text" name="employee_code" id="employee_code" class="form-control @error('employee_code') is-invalid @enderror" value="{{ old('employee_code') }}" required>
@@ -45,10 +32,27 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
+                            {{-- username--}}
+                            <div class="form-group mb-4">
+                                <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                                <input type="text" name="username" id="username" class="form-control @error('username') is-invalid @enderror" value="{{ old('username') }}" required>
+                                @error('username')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            {{-- name --}}  
                             <div class="form-group mb-4">
                                 <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
                                 <input type="text" name="name" id="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required>
                                 @error('name')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            {{-- email --}}
+                            <div class="form-group mb-4">
+                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" name="email" id="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" >
+                                @error('email')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
@@ -73,6 +77,22 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
+                            {{-- password --}}
+                            <div class="form-group mb-4">
+                                <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password" id="password" class="form-control @error('password') is-invalid @enderror" required>
+                                @error('password')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
+                            {{-- confirm password --}}
+                            <div class="form-group mb-4">
+                                <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror" required>
+                                @error('password_confirmation')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                @enderror
+                            </div>
                             <div class="form-group mb-4">
                                 <label for="notes" class="form-label">Notes</label>
                                 <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="3">{{ old('notes') }}</textarea>
@@ -80,11 +100,11 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
-                            <!-- Active Status Toggle -->
-                            <div class="d-com-flex justify-content-start mb-4">
+                            {{-- active --}}
+                             <div class="d-com-flex justify-content-start mb-4">
                                 <label class="d-label-text me-2">Active</label>
                                 <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                    <input class="form-check-input d-section-toggle" type="checkbox" name="active" {{ old('active', true) ? 'checked' : '' }}>
+                                    <input type="checkbox" class="form-check-input d-section-toggle" name="is_active" checked />
                                     <span class="d-slider">
                                         <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
                                         <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>

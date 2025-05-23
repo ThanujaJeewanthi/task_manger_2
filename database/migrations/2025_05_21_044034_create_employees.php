@@ -16,8 +16,11 @@ class CreateEmployees extends Migration
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('user_role_id')->nullable()->constrained('user_roles')->nullOnDelete();
             $table->string('job_title')->nullable();
             $table->string('name');
+            $table->string('email')->nullable();
+            $table->string('username')->nullable();
             $table->string('department')->nullable();
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('employee_code');

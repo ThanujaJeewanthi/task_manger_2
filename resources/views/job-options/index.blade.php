@@ -10,7 +10,7 @@
                             <div class="d-component-title">
                                 <span>Job Options</span>
                             </div>
-                            <a href="{{ route( 'job-options.create') }}" class="btn btn-primary">
+                            <a href="{{ route('job-options.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Job Option
                             </a>
                         </div>
@@ -23,8 +23,8 @@
                                     <tr>
                                         <th>ID</th>
                                         <th>Name</th>
+                                        <th>Type</th>
                                         <th>Description</th>
-                                        <th>Option Type</th>
                                         <th>Required</th>
                                         <th>Status</th>
                                         <th>Created At</th>
@@ -32,45 +32,31 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($jobOptions as $jobOption)
+                                    @foreach ($jobOptions as $option)
                                         <tr>
-                                            <td>{{ $jobOption->id }}</td>
-                                            <td>{{ $jobOption->name }}</td>
-                                            <td>{{ Str::limit($jobOption->description, 50) ?? 'N/A' }}</td>
+                                            <td>{{ $option->id }}</td>
+                                            <td>{{ $option->name }}</td>
+                                            <td>{{ ucfirst($option->option_type) }}</td>
+                                            <td>{{ Str::limit($option->description, 50) }}</td>
                                             <td>
-                                                @php
-                                                    $typeColors = [
-                                                        'text' => 'primary',
-                                                        'number' => 'info',
-                                                        'date' => 'warning',
-                                                        'select' => 'success',
-                                                        'checkbox' => 'secondary',
-                                                        'file' => 'danger'
-                                                    ];
-                                                @endphp
-                                                <span class="badge bg-{{ $typeColors[$jobOption->option_type] ?? 'primary' }}">
-                                                    {{ ucfirst($jobOption->option_type) }}
+                                                <span class="badge {{ $option->required ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ $option->required ? 'Yes' : 'No' }}
                                                 </span>
                                             </td>
                                             <td>
-                                                <span class="badge {{ $jobOption->required ? 'bg-danger' : 'bg-secondary' }}">
-                                                    {{ $jobOption->required ? 'Required' : 'Optional' }}
+                                                <span class="badge {{ $option->active ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ $option->active ? 'Active' : 'Inactive' }}
                                                 </span>
                                             </td>
+                                            <td>{{ $option->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                <span class="badge {{ $jobOption->active ? 'bg-success' : 'bg-danger' }}">
-                                                    {{ $jobOption->active ? 'Active' : 'Inactive' }}
-                                                </span>
-                                            </td>
-                                            <td>{{ $jobOption->created_at->format('Y-m-d H:i') }}</td>
-                                            <td>
-                                                <a href="{{ route( 'job-options.show', $jobOption) }}" class="btn btn-sm btn-primary">
+                                                <a href="{{ route('job-options.show', $option->id) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i> View
                                                 </a>
-                                                <a href="{{ route( 'job-options.edit', $jobOption) }}" class="btn btn-sm btn-info">
+                                                <a href="{{ route('job-options.edit', $option->id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
-                                                <form action="{{ route( 'job-options.destroy', $jobOption) }}" method="POST" class="d-inline">
+                                                <form action="{{ route('job-options.destroy', $option->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this job option?')">
@@ -79,16 +65,19 @@
                                                 </form>
                                             </td>
                                         </tr>
-                                    @empty
+                                    @endforeach
+
+                                    @if ($jobOptions->isEmpty())
                                         <tr>
                                             <td colspan="8" class="text-center">No job options found.</td>
                                         </tr>
-                                    @endforelse
+                                    @endif
                                 </tbody>
                             </table>
+                            <div>
+                                {{ $jobOptions->links() }}
+                            </div>
                         </div>
-
-                        {{ $jobOptions->links() }}
                     </div>
                 </div>
             </div>

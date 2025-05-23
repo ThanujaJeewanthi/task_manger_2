@@ -2,73 +2,70 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card shadow-sm">
-                <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
                     <div class="d-component-title">
                         <span>Employee Details</span>
                     </div>
-                    <a href="{{ route('employees.index') }}" class="btn btn-secondary btn-sm">
-                        <i class="fas fa-arrow-left"></i> Back to List
-                    </a>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6 mb-2">
-                            <span class="employee-details-label">Employee Code:</span>
-                            <div class="employee-details-value">{{ $employee->employee_code }}</div>
+                    <div class="d-component-container">
+
+                        <div class="mb-4">
+                            <label class="d-label-text">Employee Code</label>
+                            <p>{{ $employee->employee_code }}</p>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <span class="employee-details-label">Name:</span>
-                            <div class="employee-details-value">{{ $employee->name }}</div>
+
+                        <div class="mb-4">
+                            <label class="d-label-text">Name</label>
+                            <p>{{ $employee->name }}</p>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <span class="employee-details-label">User Email:</span>
-                            <div class="employee-details-value">{{ $employee->user->email ?? 'N/A' }}</div>
+
+                        <div class="mb-4">
+                            <label class="d-label-text">Job Title</label>
+                            <p>{{ $employee->job_title ?? 'N/A' }}</p>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <span class="employee-details-label">Job Title:</span>
-                            <div class="employee-details-value">{{ $employee->job_title ?? 'N/A' }}</div>
+
+                        <div class="mb-4">
+                            <label class="d-label-text">Department</label>
+                            <p>{{ $employee->department ?? 'N/A' }}</p>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <span class="employee-details-label">Department:</span>
-                            <div class="employee-details-value">{{ $employee->department ?? 'N/A' }}</div>
+
+                        <div class="mb-4">
+                            <label class="d-label-text">Phone</label>
+                            <p>{{ $employee->phone ?? 'N/A' }}</p>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <span class="employee-details-label">Phone:</span>
-                            <div class="employee-details-value">{{ $employee->phone ?? 'N/A' }}</div>
+
+                        <div class="mb-4">
+                            <label class="d-label-text">Status</label>
+                            <span class="badge {{ $employee->active ? 'bg-success' : 'bg-danger' }}">
+                                {{ $employee->active ? 'Active' : 'Inactive' }}
+                            </span>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <span class="employee-details-label">Status:</span>
-                            <div>
-                                <span class="badge {{ $employee->active ? 'bg-success' : 'bg-danger' }}">
-                                    {{ $employee->active ? 'Active' : 'Inactive' }}
-                                </span>
-                            </div>
+
+                        <div class="mb-4">
+                            <label class="d-label-text">Created At</label>
+                            <p>{{ $employee->created_at?->format('Y-m-d H:i') ?? 'N/A' }}</p>
                         </div>
-                        <div class="col-md-6 mb-2">
-                            <span class="employee-details-label">Created At:</span>
-                            <div class="employee-details-value">{{ $employee->created_at->format('Y-m-d H:i') }}</div>
-                        </div>
+
                         @if($employee->notes)
-                        <div class="col-12 mt-3">
-                            <span class="employee-details-label">Notes:</span>
-                            <div class="employee-details-value">{{ $employee->notes }}</div>
+                        <div class="mb-4">
+                            <label class="d-label-text">Notes</label>
+                            <p>{{ $employee->notes }}</p>
                         </div>
                         @endif
-                    </div>
-                    <div class="mt-4">
-                        <a href="{{ route('employees.edit', $employee) }}" class="btn btn-info">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this employee?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
-                        </form>
+
+                        <div class="mt-4">
+                            <a href="{{ route('employees.edit', $employee) }}" class="btn btn-info">Edit Employee</a>
+                            <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this employee?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger ms-2">Delete Employee</button>
+                            </form>
+                            <a href="{{ route('employees.index') }}" class="btn btn-secondary ms-2">Back to Employees</a>
+                        </div>
                     </div>
                 </div>
             </div>

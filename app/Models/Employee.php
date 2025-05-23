@@ -4,70 +4,93 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Employee extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'user_id',
         'job_title',
         'name',
         'department',
+        'company_id',
+        'email',
+        'username',	
+        'user_role_id',
+        'employee_code',
         'phone',
         'notes',
         'active',
         'created_by',
-        'updated_by',
+        'updated_by'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'active' => 'boolean',
     ];
 
     /**
-     * Get the user associated with this employee.
+     * Get the user that owns the employee.
      */
-    public function user(): BelongsTo
+    public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class  , 'user_id');
     }
 
     /**
-     * Get the user who created this employee record.
+     * Get the company that owns the employee.
      */
-    public function creator(): BelongsTo
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Get the user who created this employee.
+     */
+    public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
     /**
-     * Get the user who last updated this employee record.
+     * Get the user who last updated this employee.
      */
-    public function updater(): BelongsTo
+    public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
 
     /**
-     * Get the jobs assigned to this employee.
+     * Scope a query to only include active employees.
      */
-    public function jobs(): BelongsToMany
+    public function scopeActive($query)
     {
-        return $this->belongsToMany(Job::class, 'job_employees')
-            ->withPivot('task_id', 'custom_task', 'start_date', 'end_date', 'duration_in_days', 'status', 'notes')
-            ->withTimestamps();
+        return $query->where('active', true);
+    }
+
+    /**
+     * Scope a query to filter by company.
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where('company_id', $companyId);
+    }
+
+    /**
+     * Get the full name attribute (alias for name for consistency).
+     */
+    public function getFullNameAttribute()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Check if employee can login (both user and employee must be active).
+     */
+    public function canLogin()
+    {
+        return $this->active && $this->user->active;
     }
 }

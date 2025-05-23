@@ -130,54 +130,27 @@
 @endif
 
 
- @if (array_key_exists(10, $categorizedPages))
+@if (array_key_exists(10, $categorizedPages))
     <a href="{{ route('items.index') }}" class="dropdown-btn">
         <i class="fas fa-user-tag me-2 icon-only"></i>
         <span class="side-link">Items</span>
     </a>
 @endif
+@if (array_key_exists(11, $categorizedPages))
+     <button class="dropdown-btn">
 
-
-
-        {{-- <button class="dropdown-btn">
-    <i class="fas fa-motorcycle me-2 icon-only"></i>
-    <span class="side-link"> Jobs</span>
-
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    <a href="#">Link 1</a>
-    <a href="#">Link 2</a>
-    <a href="#">Link 3</a>
-</div>
-
-
-
-<button class="dropdown-btn">
-    <i class="fas fa-plus-circle me-2 icon-only"></i>
-    <span class="side-link">Jobs</span>
-
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    <a href="#">Link 1</a>
-    <a href="#">Link 2</a>
-    <a href="#">Link 3</a>
-</div>
-
-
-        <button class="dropdown-btn">
             <i class="fas fa-plus-circle me-2 icon-only"></i>
-            <span class="side-link">Permission Management</span>
+            <span class="side-link">Jobs</span>
 
             <i class="fa fa-caret-down"></i>
         </button>
         <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
-        </div> --}}
- @if (array_key_exists(5, $categorizedPages))
+            <a href="{{route('job-types.index')}}">Job Types</a>
+            <a href="{{route('job-options.index')}}">Job Options</a>
+        </div>
+@endif
+
+@if (array_key_exists(5, $categorizedPages))
         <button class="dropdown-btn">
 
             <i class="fas fa-plus-circle me-2 icon-only"></i>

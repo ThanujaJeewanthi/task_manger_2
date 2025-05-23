@@ -10,7 +10,7 @@
                             <div class="d-component-title">
                                 <span>Job Types</span>
                             </div>
-                            <a href="{{ route( 'job-types.create') }}" class="btn btn-primary">
+                            <a href="{{ route('job-types.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Job Type
                             </a>
                         </div>
@@ -25,30 +25,24 @@
                                         <th>Name</th>
                                         <th>Description</th>
                                         <th>Color</th>
-                                        <th>Job Options</th>
+                                        <th>Options Count</th>
                                         <th>Status</th>
                                         <th>Created At</th>
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse ($jobTypes as $jobType)
+                                    @foreach ($jobTypes as $jobType)
                                         <tr>
                                             <td>{{ $jobType->id }}</td>
                                             <td>{{ $jobType->name }}</td>
-                                            <td>{{ Str::limit($jobType->description, 50) ?? 'N/A' }}</td>
+                                            <td>{{ Str::limit($jobType->description, 50) }}</td>
                                             <td>
                                                 @if($jobType->color)
-                                                    <span class="badge" style="background-color: {{ $jobType->color }}; color: white;">
-                                                        {{ $jobType->color }}
-                                                    </span>
-                                                @else
-                                                    <span class="text-muted">No Color</span>
+                                                    <span class="badge" style="background-color: {{ $jobType->color }}">&nbsp;&nbsp;&nbsp;&nbsp;</span>
                                                 @endif
                                             </td>
-                                            <td>
-                                                <span class="badge bg-info">{{ $jobType->jobOptions->count() }} Options</span>
-                                            </td>
+                                            <td>{{ $jobType->jobOptions->count() }}</td>
                                             <td>
                                                 <span class="badge {{ $jobType->active ? 'bg-success' : 'bg-danger' }}">
                                                     {{ $jobType->active ? 'Active' : 'Inactive' }}
@@ -56,13 +50,13 @@
                                             </td>
                                             <td>{{ $jobType->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                <a href="{{ route( 'job-types.show', $jobType) }}" class="btn btn-sm btn-primary">
+                                                <a href="{{ route('job-types.show', $jobType->id) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i> View
                                                 </a>
-                                                <a href="{{ route( 'job-types.edit', $jobType) }}" class="btn btn-sm btn-info">
+                                                <a href="{{ route('job-types.edit', $jobType->id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
-                                                <form action="{{ route( 'job-types.destroy', $jobType) }}" method="POST" class="d-inline">
+                                                <form action="{{ route('job-types.destroy', $jobType->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this job type?')">
@@ -71,16 +65,19 @@
                                                 </form>
                                             </td>
                                         </tr>
-                                    @empty
+                                    @endforeach
+
+                                    @if ($jobTypes->isEmpty())
                                         <tr>
                                             <td colspan="8" class="text-center">No job types found.</td>
                                         </tr>
-                                    @endforelse
+                                    @endif
                                 </tbody>
                             </table>
+                            <div>
+                                {{ $jobTypes->links() }}
+                            </div>
                         </div>
-
-                        {{ $jobTypes->links() }}
                     </div>
                 </div>
             </div>

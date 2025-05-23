@@ -17,6 +17,7 @@ class CreateSuppliersTable extends Migration
             $table->id();
             $table->foreignId('company_id')->constrained('companies')->cascadeOnDelete();
             $table->string('name');
+            $table->string('description')->nullable();
             $table->string('contact_person')->nullable();
             $table->string('email')->nullable();
             $table->string('phone', 20)->nullable();

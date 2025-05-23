@@ -8,10 +8,10 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-component-title">
-                            <span>Employees</span>
+                            <span>Equipment</span>
                         </div>
-                        <a href="{{ route('employees.create') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add New Employee
+                        <a href="{{ route('equipments.create') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add New Equipment
                         </a>
                     </div>
                 </div>
@@ -21,43 +21,48 @@
                             <thead>
                                 <tr>
                                     <th>ID</th>
-                                    <th>Employee Code</th>
                                     <th>Name</th>
-
-                                    <th>Job Title</th>
-                                    <th>Department</th>
-                                    <th>Phone</th>
+                                    <th>Model</th>
+                                    <th>Serial Number</th>
                                     <th>Status</th>
                                     <th>Notes</th>
+                                    <th>Active</th>
                                     <th>Created At</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse ($employees as $employee)
+                                @forelse ($equipments as $equipment)
                                     <tr>
-                                        <td>{{ $employee->id }}</td>
-                                        <td>{{ $employee->employee_code }}</td>
-                                        <td>{{ $employee->name }}</td>
-
-                                        <td>{{ $employee->job_title ?? 'N/A' }}</td>
-                                        <td>{{ $employee->department ?? 'N/A' }}</td>
-                                        <td>{{ $employee->phone ?? 'N/A' }}</td>
+                                        <td>{{ $equipment->id }}</td>
+                                        <td>{{ $equipment->name }}</td>
+                                        <td>{{ $equipment->model ?? 'N/A' }}</td>
+                                        <td>{{ $equipment->serial_number ?? 'N/A' }}</td>
                                         <td>
-                                            <span class="badge {{ $employee->active ? 'bg-success' : 'bg-danger' }}">
-                                                {{ $employee->active ? 'Active' : 'Inactive' }}
+                                            <span class="badge 
+                                                @if($equipment->status == 'available') bg-success
+                                                @elseif($equipment->status == 'in_use') bg-primary
+                                                @elseif($equipment->status == 'maintenance') bg-warning
+                                                @else bg-secondary
+                                                @endif">
+                                                {{ ucfirst(str_replace('_', ' ', $equipment->status)) }}
                                             </span>
                                         </td>
-                                        <td>{{ $employee->notes ?? 'N/A' }}</td>
-                                        <td>{{ $employee->created_at->format('Y-m-d H:i') }}</td>
+                                        <td>{{ $equipment->notes ?? 'N/A' }}</td>
                                         <td>
-                                            <a href="{{ route('employees.show', $employee) }}" class="btn btn-sm btn-primary">
+                                            <span class="badge {{ $equipment->active ? 'bg-success' : 'bg-danger' }}">
+                                                {{ $equipment->active ? 'Active' : 'Inactive' }}
+                                            </span>
+                                        </td>
+                                        <td>{{ $equipment->created_at->format('Y-m-d H:i') }}</td>
+                                        <td>
+                                            <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-eye"></i> View
                                             </a>
-                                            <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-info">
+                                            <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-sm btn-info">
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>
-                                            <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('equipments.destroy', $equipment) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
@@ -68,13 +73,13 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center">No employees found.</td>
+                                        <td colspan="9" class="text-center">No equipment found.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
-                    {{ $employees->links() }}
+                    {{ $equipments->links() }}
                 </div>
             </div>
         </div>

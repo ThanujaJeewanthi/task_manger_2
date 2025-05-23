@@ -48,9 +48,9 @@
                                             </td>
                                             <td>{{ $client->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                <a href="{{ route( 'clients.show', $client) }}" class="btn btn-sm btn-primary">
+                                                {{-- <a href="{{ route( 'clients.show', $client) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-eye"></i> View
-                                                </a>
+                                                </a> --}}
                                                 <a href="{{ route( 'clients.edit', $client) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
