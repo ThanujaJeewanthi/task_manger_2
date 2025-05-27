@@ -16,7 +16,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="table-responsive table-compact">
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
@@ -39,7 +39,7 @@
                                         <td>{{ $equipment->model ?? 'N/A' }}</td>
                                         <td>{{ $equipment->serial_number ?? 'N/A' }}</td>
                                         <td>
-                                            <span class="badge 
+                                            <span class="badge
                                                 @if($equipment->status == 'available') bg-success
                                                 @elseif($equipment->status == 'in_use') bg-primary
                                                 @elseif($equipment->status == 'maintenance') bg-warning
@@ -56,9 +56,9 @@
                                         </td>
                                         <td>{{ $equipment->created_at->format('Y-m-d H:i') }}</td>
                                         <td>
-                                            <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-sm btn-primary">
+                                            {{-- <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-sm btn-primary">
                                                 <i class="fas fa-eye"></i> View
-                                            </a>
+                                            </a> --}}
                                             <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-sm btn-info">
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>

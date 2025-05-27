@@ -31,8 +31,7 @@ class JobTypeController extends Controller
             'color' => 'nullable|string|max:20',
             'job_options' => 'array',
             'job_options.*' => 'exists:job_options,id',
-            'sort_orders' => 'array',
-            'sort_orders.*' => 'integer|min:0'
+
         ]);
 
         $jobType = JobType::create([
@@ -47,7 +46,7 @@ class JobTypeController extends Controller
         if ($request->has('job_options')) {
             foreach ($request->job_options as $index => $optionId) {
                 $jobType->jobOptions()->attach($optionId, [
-                    'sort_order' => $request->sort_orders[$index] ?? 0,
+                    // 'sort_order' => $request->sort_orders[$index] ?? 0,
                     'created_by' => Auth::id()
                 ]);
             }
@@ -56,11 +55,11 @@ class JobTypeController extends Controller
         return redirect()->route( 'job-types.index')->with('success', 'Job Type created successfully.');
     }
 
-    public function show(JobType $jobType)
-    {
-        $jobType->load('jobOptions');
-        return view( 'job-types.show', compact('jobType'));
-    }
+    // public function show(JobType $jobType)
+    // {
+    //     $jobType->load('jobOptions');
+    //     return view( 'job-types.show', compact('jobType'));
+    // }
 
     public function edit(JobType $jobType)
     {
@@ -77,8 +76,7 @@ class JobTypeController extends Controller
             'color' => 'nullable|string|max:20',
             'job_options' => 'array',
             'job_options.*' => 'exists:job_options,id',
-            'sort_orders' => 'array',
-            'sort_orders.*' => 'integer|min:0'
+
         ]);
 
         $jobType->update([
@@ -94,7 +92,7 @@ class JobTypeController extends Controller
         if ($request->has('job_options')) {
             foreach ($request->job_options as $index => $optionId) {
                 $syncData[$optionId] = [
-                    'sort_order' => $request->sort_orders[$index] ?? 0,
+                    // 'sort_order' => $request->sort_orders[$index] ?? 0,
                     'updated_by' => Auth::id()
                 ];
             }

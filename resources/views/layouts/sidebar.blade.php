@@ -145,8 +145,10 @@
             <i class="fa fa-caret-down"></i>
         </button>
         <div class="dropdown-container">
+              <a href="{{route('jobs.index')}}">Jobs</a>
             <a href="{{route('job-types.index')}}">Job Types</a>
             <a href="{{route('job-options.index')}}">Job Options</a>
+
         </div>
 @endif
 

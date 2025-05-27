@@ -13,11 +13,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
     /**
-     * Show the registration form with user roles.
+     * Show the registration form with user roles and companies.
      *
      * @return \Illuminate\View\View
      */
@@ -25,7 +26,8 @@ class RegisterController extends Controller
     {
         $companies = Company::where('active', true)->get();
         $userRoles = UserRole::where('active', true)->get();
-        return view('auth.register', compact('userRoles', 'companies'));
+        $currentUser = Auth::user();
+        return view('auth.register', compact('userRoles', 'companies', 'currentUser'));
     }
 
     /**
@@ -37,16 +39,22 @@ class RegisterController extends Controller
     public function register(Request $request)
     {
         $isFirstUser = User::count() === 0;
+        $currentUser = Auth::user();
+        $isSuperAdmin = $currentUser && strtolower(UserRole::find($currentUser->user_role_id)->name) === 'super admin';
 
         $rules = [
             'username' => ['required', 'string', 'max:255', 'unique:users'],
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable','string', 'email', 'max:255', 'unique:users'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'phone_number' => ['required', 'string', 'max:20'],
             'user_role_id' => ['required', 'exists:user_roles,id'],
-            'company_id' => ['required', 'exists:companies,id'],
         ];
+
+        // Add company_id validation only for Super Admin
+        if ($isSuperAdmin) {
+            $rules['company_id'] = ['required', 'exists:companies,id'];
+        }
 
         // Additional validation for employee role
         $userRole = UserRole::find($request->user_role_id);
@@ -68,7 +76,14 @@ class RegisterController extends Controller
             DB::beginTransaction();
 
             $userRole = UserRole::findOrFail($request->user_role_id);
-            $userType = in_array(strtolower($userRole->name), ['client', 'laundry', 'rider', 'employee']) ? 'user' : 'admin';
+
+            // Determine company_id based on user role
+            $companyId = $isSuperAdmin ? $request->company_id : ($currentUser ? $currentUser->company_id : null);
+
+            // If no company_id is set (e.g., first user or no current user), use a default or throw error
+            if (!$companyId && !$isFirstUser) {
+                throw new \Exception('Company ID is required.');
+            }
 
             // Create user
             $user = User::create([
@@ -78,8 +93,7 @@ class RegisterController extends Controller
                 'password' => Hash::make($request->password),
                 'phone_number' => $request->phone_number,
                 'user_role_id' => $request->user_role_id,
-                'company_id' => $request->company_id,
-                'type' => $userType,
+                'company_id' => $companyId,
                 'remember_token' => Str::random(10),
                 'active' => true,
             ]);
@@ -92,7 +106,7 @@ class RegisterController extends Controller
                     'employee_code' => $request->employee_code,
                     'job_title' => $request->job_title,
                     'department' => $request->department,
-                    'company_id' => $request->company_id,
+                    'company_id' => $companyId,
                     'user_role_id' => $request->user_role_id,
                     'phone' => $request->phone_number,
                     'active' => true,
@@ -113,8 +127,7 @@ class RegisterController extends Controller
 
             DB::commit();
 
-            return redirect()->route('login')
-                ->with('success', 'Registration successful! Please log in.');
+            return back()->with('success', 'Registration successful!');
 
         } catch (\Exception $e) {
             DB::rollBack();

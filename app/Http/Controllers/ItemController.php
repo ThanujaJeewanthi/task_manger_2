@@ -48,10 +48,10 @@ class ItemController extends Controller
         return redirect()->route('items.index')->with('success', 'Item created successfully.');
     }
 
-    public function show(Item $item)
-    {
-        return view('items.show', compact('item'));
-    }
+    // public function show(Item $item)
+    // {
+    //     return view('items.show', compact('item'));
+    // }
 
     public function edit(Item $item)
     {

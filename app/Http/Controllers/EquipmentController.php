@@ -48,10 +48,10 @@ class EquipmentController extends Controller
         return redirect()->route('equipments.index')->with('success', 'Equipment created successfully.');
     }
 
-    public function show(Equipment $equipment)
-    {
-        return view('equipments.show', compact('equipment'));
-    }
+    // public function show(Equipment $equipment)
+    // {
+    //     return view('equipments.show', compact('equipment'));
+    // }
 
     public function edit(Equipment $equipment)
     {

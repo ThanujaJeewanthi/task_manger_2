@@ -29,7 +29,7 @@
                             </div>
                         @endif
 
-                        <div class="table-responsive">
+                        <div class="table-responsive table-compact">
                             <table class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
@@ -70,11 +70,11 @@
                                             </td>
                                             <td>{{ $item->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                <a href="{{ route('items.show', $item->id) }}"
+                                                {{-- <a href="{{ route('items.show', $item->id) }}"
                                                     class="btn btn-sm btn-secondary">
                                                     <i class="fas fa-eye"></i> View
-                                                </a>
-                                                
+                                                </a> --}}
+
                                                 <a href="{{ route('items.edit', $item->id) }}"
                                                     class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i> Edit

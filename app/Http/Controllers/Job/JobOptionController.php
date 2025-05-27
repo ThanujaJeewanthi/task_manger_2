@@ -26,15 +26,14 @@ class JobOptionController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'option_type' => 'required|in:text,number,date,select,checkbox,file',
-            'options_json' => 'nullable|json',
-            'required' => 'boolean'
+
         ]);
 
         JobOption::create([
             'name' => $request->name,
             'description' => $request->description,
             'option_type' => $request->option_type,
-            'options_json' => $request->options_json,
+            // 'options_json' => $request->options_json,
             'required' => $request->has('required'),
             'active' => $request->has('is_active'),
             'created_by' => Auth::id()
@@ -43,10 +42,10 @@ class JobOptionController extends Controller
         return redirect()->route( 'job-options.index')->with('success', 'Job Option created successfully.');
     }
 
-    public function show(JobOption $jobOption)
-    {
-        return view( 'job-options.show', compact('jobOption'));
-    }
+    // public function show(JobOption $jobOption)
+    // {
+    //     return view( 'job-options.show', compact('jobOption'));
+    // }
 
     public function edit(JobOption $jobOption)
     {
@@ -59,15 +58,15 @@ class JobOptionController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'option_type' => 'required|in:text,number,date,select,checkbox,file',
-            'options_json' => 'nullable|json',
-            'required' => 'boolean'
+            // 'options_json' => 'nullable|json',
+            // 'required' => 'boolean'
         ]);
 
         $jobOption->update([
             'name' => $request->name,
             'description' => $request->description,
             'option_type' => $request->option_type,
-            'options_json' => $request->options_json,
+            // 'options_json' => $request->options_json,
             'required' => $request->has('required'),
             'active' => $request->has('is_active'),
             'updated_by' => Auth::id()
@@ -79,6 +78,6 @@ class JobOptionController extends Controller
     public function destroy(JobOption $jobOption)
     {
         $jobOption->update(['active' => false, 'updated_by' => Auth::id()]);
-        return redirect()->route( 'job-options.index')->with('success', 'Job Option deleted successfully.');
+        return redirect()->route( 'job-options.index')->with('success', 'Job Option updated successfully.');
     }
 }

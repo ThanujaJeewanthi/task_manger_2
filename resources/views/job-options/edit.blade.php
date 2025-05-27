@@ -16,7 +16,7 @@
 
                             <div class="form-group mb-3">
                                 <label for="name">Name</label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                <input type="text" class="form-control @error('name') is-invalid @enderror"
                                     id="name" name="name" value="{{ old('name', $jobOption->name) }}" required>
                                 @error('name')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -25,7 +25,7 @@
 
                             <div class="form-group mb-3">
                                 <label for="description">Description</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" 
+                                <textarea class="form-control @error('description') is-invalid @enderror"
                                     id="description" name="description" rows="3">{{ old('description', $jobOption->description) }}</textarea>
                                 @error('description')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -34,7 +34,7 @@
 
                             <div class="form-group mb-3">
                                 <label for="option_type">Option Type</label>
-                                <select class="form-control @error('option_type') is-invalid @enderror" 
+                                <select class="form-control @error('option_type') is-invalid @enderror"
                                     id="option_type" name="option_type" required>
                                     <option value="">Select Option Type</option>
                                     <option value="text" {{ old('option_type', $jobOption->option_type) == 'text' ? 'selected' : '' }}>Text</option>
@@ -49,21 +49,21 @@
                                 @enderror
                             </div>
 
-                            <div class="form-group mb-3" id="options_json_container" style="{{ $jobOption->option_type !== 'select' ? 'display: none;' : '' }}">
+                            {{-- <div class="form-group mb-3" id="options_json_container" style="{{ $jobOption->option_type !== 'select' ? 'display: none;' : '' }}">
                                 <label for="options_json">Options (JSON)</label>
-                                <textarea class="form-control @error('options_json') is-invalid @enderror" 
+                                <textarea class="form-control @error('options_json') is-invalid @enderror"
                                     id="options_json" name="options_json" rows="3">{{ old('options_json', $jobOption->options_json) }}</textarea>
                                 <small class="form-text text-muted">For select type, provide JSON array of options. Example: ["Option 1", "Option 2"]</small>
                                 @error('options_json')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
-                            </div>
+                            </div> --}}
 
                             <div class="form-group mb-3">
                                 <div class="d-com-flex justify-content-start mb-4">
                                     <label class="custom-control-label" for="required">Required</label>
                                     <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                        <input type="checkbox" class="custom-control-input" 
+                                        <input type="checkbox" class="custom-control-input"
                                             id="required" name="required" {{ $jobOption->required ? 'checked' : '' }}>
                                         <span class="d-slider">
                                             <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
@@ -77,7 +77,7 @@
                                 <div class="d-com-flex justify-content-start mb-4">
                                     <label class="custom-control-label" for="is_active">Active</label>
                                     <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                        <input type="checkbox" class="custom-control-input" 
+                                        <input type="checkbox" class="custom-control-input"
                                             id="is_active" name="is_active" {{ $jobOption->active ? 'checked' : '' }}>
                                         <span class="d-slider">
                                             <span class="d-icon active"><i class="fa-solid fa-check"></i></span>

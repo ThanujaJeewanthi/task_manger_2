@@ -106,6 +106,11 @@ class Job extends Model
         return $this->belongsTo(User::class, 'tasks_added_by');
     }
 
+    public function tasks()
+{
+    return $this->hasMany(Task::class);
+}
+
     /**
      * Get the user who added employees to this job.
      */

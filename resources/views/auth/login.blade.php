@@ -72,7 +72,8 @@
                             </div>
                         </div>
                         <div class="form-group row mb-3">
-                        <button type="submit" class="btn btn-primary " style="margin-left:295px; width: 90px;">
+
+                        <button type="submit" class="btn btn-primary mx-auto d-block" style="width:90px;" >
                             {{ __('Login') }}
                         </button>
                         </div>
@@ -86,7 +87,8 @@
             </a>
         </div>
     </div>
-
+{{-- view register button if there are no users in the users table --}}
+@if (DB::table('users')->count() == 0)
     <div class="form-group  mt-3" style="margin-left: 10px;">
         <div class="col-md-8 offset-md-4">
             <a href="{{ route('register.form') }}" class="btn btn-link ps-0">
@@ -94,6 +96,7 @@
             </a>
         </div>
     </div>
+@endif
 </div>
 
                     </form>

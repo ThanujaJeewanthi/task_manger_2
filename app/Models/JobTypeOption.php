@@ -18,7 +18,7 @@ class JobTypeOption extends Model
     protected $fillable = [
         'job_type_id',
         'job_option_id',
-        'sort_order',
+
         'created_by',
         'updated_by',
     ];

@@ -54,10 +54,10 @@ class JobType extends Model
     /**
      * Get the options associated with this job type.
      */
-    public function options(): BelongsToMany
+    public function jobOptions(): BelongsToMany
     {
         return $this->belongsToMany(JobOption::class, 'job_type_options')
-            ->withPivot('sort_order')
+            // ->withPivot('sort_order')
             ->withTimestamps();
     }
 

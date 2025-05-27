@@ -60,7 +60,7 @@ class JobOption extends Model
     public function jobTypes(): BelongsToMany
     {
         return $this->belongsToMany(JobType::class, 'job_type_options')
-            ->withPivot('sort_order')
+            // ->withPivot('sort_order')
             ->withTimestamps();
     }
 }

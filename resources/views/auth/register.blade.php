@@ -3,7 +3,7 @@
 @section('title', 'Register')
 
 @section('content')
-<div class="container" style="margin-top: 50px;">
+<div class="container" >
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card mt-4">
@@ -114,6 +114,8 @@
                             </div>
                         </div>
 
+
+@if($currentUser && strtolower($userRoles->find($currentUser->user_role_id)->name) === 'super admin')
                         <div class="form-group row mb-3">
                             <label for="company_id" class="col-md-4 col-form-label text-md-right">{{ __('Company') }}</label>
 
@@ -134,57 +136,7 @@
                                 @enderror
                             </div>
                         </div>
-
-                        <!-- Employee-specific fields (initially hidden) -->
-                        <div id="employeeFields" style="display: none;">
-                            <div class="alert alert-info">
-                                <strong>Employee Information</strong>
-                                <p class="mb-0">Please provide additional information for employee registration.</p>
-                            </div>
-
-                            <div class="form-group row mb-3">
-                                <label for="employee_code" class="col-md-4 col-form-label text-md-right">{{ __('Employee Code') }}</label>
-
-                                <div class="col-md-6">
-                                    <input id="employee_code" type="text" class="form-control @error('employee_code') is-invalid @enderror" name="employee_code" value="{{ old('employee_code') }}" placeholder="e.g., EMP001">
-
-                                    @error('employee_code')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                    <small class="form-text text-muted">Unique identifier for the employee</small>
-                                </div>
-                            </div>
-
-                            <div class="form-group row mb-3">
-                                <label for="job_title" class="col-md-4 col-form-label text-md-right">{{ __('Job Title') }}</label>
-
-                                <div class="col-md-6">
-                                    <input id="job_title" type="text" class="form-control @error('job_title') is-invalid @enderror" name="job_title" value="{{ old('job_title') }}" placeholder="e.g., Software Developer">
-
-                                    @error('job_title')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="form-group row mb-3">
-                                <label for="department" class="col-md-4 col-form-label text-md-right">{{ __('Department') }}</label>
-
-                                <div class="col-md-6">
-                                    <input id="department" type="text" class="form-control @error('department') is-invalid @enderror" name="department" value="{{ old('department') }}" placeholder="e.g., IT Department">
-
-                                    @error('department')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
+                        @endif
 
                         <div class="form-group row mb-0">
                             <div class="col-md-6 offset-md-4">

@@ -17,7 +17,7 @@
                     </div>
 
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <div class="table-responsive table-compact">
                             <table class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
@@ -50,9 +50,9 @@
                                             </td>
                                             <td>{{ $option->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                <a href="{{ route('job-options.show', $option->id) }}" class="btn btn-sm btn-info">
+                                                {{-- <a href="{{ route('job-options.show', $option->id) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i> View
-                                                </a>
+                                                </a> --}}
                                                 <a href="{{ route('job-options.edit', $option->id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>

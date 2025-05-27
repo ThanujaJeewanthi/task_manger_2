@@ -31,7 +31,7 @@
                             </div>
                         @endif --}}
 
-                        <div class="table-responsive">
+                        <div class="table-responsive table-compact">
                             <table class="table table-bordered table-striped">
                                 <thead>
                                     <tr>

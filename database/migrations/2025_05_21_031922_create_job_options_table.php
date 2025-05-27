@@ -33,7 +33,7 @@ class CreateJobOptionsTable extends Migration
             $table->id();
             $table->foreignId('job_type_id')->constrained('job_types')->cascadeOnDelete();
             $table->foreignId('job_option_id')->constrained('job_options')->cascadeOnDelete();
-            $table->integer('sort_order')->default(0);
+            // $table->integer('sort_order')->default(0);
             $table->timestamps();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
