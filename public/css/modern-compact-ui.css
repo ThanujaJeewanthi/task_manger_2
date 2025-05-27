@@ -276,6 +276,17 @@ width:auto;
     padding: 0.5rem 0.75rem;
     font-size: 0.688rem;
 }
+.table-bordered th{
+     background: var(--bg-secondary)!important;
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600!important;
+    font-size: 0.75rem!important;
+    text-transform: uppercase!important;
+    letter-spacing: 0.05em!important;
+    color: var(--text-secondary)!important;
+    padding: 0.75rem 0.875rem!important;
+    vertical-align: middle!important;
+}
 
 .table-compact td {
     padding: 0.15rem 0.45rem;
@@ -286,6 +297,13 @@ width:auto;
      padding: 0.15rem 0.45rem;
     font-size: 0.75rem;
     line-height: 0.9;
+}
+.table-striped  td{
+      padding: 0rem 0.5rem!important;
+    vertical-align: middle!important;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.813rem!important;
+    line-height: 0.8!important;
 }
 
 
