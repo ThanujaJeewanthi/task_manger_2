@@ -8,7 +8,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-component-title">
-                            <span>Create Task for Job: {{ $job->job_number }}</span>
+                            <span>Edit Task: {{ $task->task }} for Job: {{ $job->job_number }}</span>
                         </div>
                         <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Back to Job
@@ -28,14 +28,15 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('jobs.tasks.store', $job) }}" method="POST" id="task-create-form">
+                    <form action="{{ route('jobs.tasks.update', [$job, $task]) }}" method="POST" id="task-edit-form">
                         @csrf
+                        @method('PUT')
 
                         <div class="d-component-container">
                             <!-- Task Name -->
                             <div class="form-group mb-4">
                                 <label for="task">Task Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control @error('task') is-invalid @enderror" id="task" name="task" value="{{ old('task') }}" required>
+                                <input type="text" class="form-control @error('task') is-invalid @enderror" id="task" name="task" value="{{ old('task', $task->task) }}" required>
                                 @error('task')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -44,7 +45,7 @@
                             <!-- Description -->
                             <div class="form-group mb-4">
                                 <label for="description">Description</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="4">{{ old('description') }}</textarea>
+                                <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="4">{{ old('description', $task->description) }}</textarea>
                                 @error('description')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -55,7 +56,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="start_date">Start Date</label>
-                                        <input type="date" class="form-control @error('start_date') is-invalid @enderror" id="start_date" name="start_date" value="{{ old('start_date') }}">
+                                        <input type="date" class="form-control @error('start_date') is-invalid @enderror" id="start_date" name="start_date" value="{{ old('start_date', $job->jobEmployees->where('task_id', $task->id)->first()->start_date ? $job->jobEmployees->where('task_id', $task->id)->first()->start_date->format('Y-m-d') : '') }}">
                                         @error('start_date')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
@@ -66,7 +67,7 @@
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="end_date">End Date</label>
-                                        <input type="date" class="form-control @error('end_date') is-invalid @enderror" id="end_date" name="end_date" value="{{ old('end_date') }}">
+                                        <input type="date" class="form-control @error('end_date') is-invalid @enderror" id="end_date" name="end_date" value="{{ old('end_date', $job->jobEmployees->where('task_id', $task->id)->first()->end_date ? $job->jobEmployees->where('task_id', $task->id)->first()->end_date->format('Y-m-d') : '') }}">
                                         @error('end_date')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
@@ -78,9 +79,9 @@
                             <div class="form-group mb-4">
                                 <label for="status">Status <span class="text-danger">*</span></label>
                                 <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
-                                    <option value="pending" {{ old('status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="in_progress" {{ old('status') == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                    <option value="completed" {{ old('status') == 'completed' ? 'selected' : '' }}>Completed</option>
+                                    <option value="pending" {{ old('status', $task->status) == 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="in_progress" {{ old('status', $task->status) == 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                                    <option value="completed" {{ old('status', $task->status) == 'completed' ? 'selected' : '' }}>Completed</option>
                                 </select>
                                 @error('status')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -92,7 +93,7 @@
                                 <label for="employee_ids">Assign Employees <span class="text-danger">*</span></label>
                                 <select class="form-control @error('employee_ids') is-invalid @enderror" id="employee_ids" name="employee_ids[]" multiple required>
                                     @foreach($employees as $employee)
-                                        <option value="{{ $employee->id }}" {{ in_array($employee->id, old('employee_ids', [])) ? 'selected' : '' }}>
+                                        <option value="{{ $employee->id }}" {{ in_array($employee->id, old('employee_ids', $job->jobEmployees->where('task_id', $task->id)->pluck('employee_id')->toArray())) ? 'selected' : '' }}>
                                             {{ $employee->name ?? 'N/A' }}
                                         </option>
                                     @endforeach
@@ -106,7 +107,7 @@
                             <!-- Notes -->
                             <div class="form-group mb-4">
                                 <label for="notes">Notes</label>
-                                <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
+                                <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes', $job->jobEmployees->where('task_id', $task->id)->first()->notes) }}</textarea>
                                 @error('notes')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -116,7 +117,7 @@
                             <div class="d-com-flex justify-content-start mb-4">
                                 <label class="d-label-text me-2">Active</label>
                                 <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                    <input type="checkbox" class="form-check-input d-section-toggle" name="is_active" {{ old('is_active', true) ? 'checked' : '' }} />
+                                    <input type="checkbox" class="form-check-input d-section-toggle" name="is_active" {{ old('is_active', $task->active) ? 'checked' : '' }} />
                                     <span class="d-slider">
                                         <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
                                         <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
@@ -126,7 +127,7 @@
 
                             <!-- Submit Button -->
                             <div class="form-group mt-4">
-                                <button type="submit" class="btn btn-primary">Create Task</button>
+                                <button type="submit" class="btn btn-primary">Update Task</button>
                                 <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary ms-2">Cancel</a>
                             </div>
                         </div>
@@ -138,6 +139,8 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script>
 $(document).ready(function() {
     $('#employee_ids').select2({

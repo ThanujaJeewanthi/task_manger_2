@@ -30,6 +30,7 @@ class Job extends Model
         'start_date',
         'due_date',
         'completed_date',
+
         'tasks_added_by',
         'employees_added_by',
         'active',
@@ -45,6 +46,7 @@ class Job extends Model
     protected $casts = [
         'photos' => 'array',
         'start_date' => 'date',
+
         'due_date' => 'date',
         'completed_date' => 'date',
         'active' => 'boolean',
@@ -128,4 +130,9 @@ class Job extends Model
             ->withPivot('task_id', 'custom_task', 'start_date', 'end_date', 'duration_in_days', 'status', 'notes')
             ->withTimestamps();
     }
+   public function jobEmployees()
+    {
+        return $this->hasMany(JobEmployee::class);
+    }
+
 }

@@ -8,7 +8,7 @@
         <div class="col-md-8">
             <div class="card mt-4">
                 <div class="card-header bg-dark text-white text-center">
-                    <h4 class="mb-0">Login to Spin App</h4>
+                    <h4 class="mb-0">Login to Task Manager</h4>
                 </div>
                 <div class="card-body">
                     {{-- @if ($errors->any())

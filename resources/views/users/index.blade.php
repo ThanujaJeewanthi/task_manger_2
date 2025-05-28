@@ -30,7 +30,7 @@
                     @endif --}}
 
                         <div class="table-responsive table-compact">
-                            <table class="table table-bordered table-striped">
+                            <table class="table table-bordered ">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
@@ -122,10 +122,10 @@
                                 <tbody>
                                     @foreach ($roles as $role)
                                         <tr>
-                                            <td>{{ $role->name }}</td>
-                                            <td>{{ $role->users->where('active', true)->count() }}</td>
-                                            <td>{{ $role->users->where('active', false)->count() }}</td>
-                                            <td>{{ $role->users->count() }}</td>
+                                            <td style="padding: 0.5rem">{{ $role->name }}</td>
+                                            <td style="padding: 0.5rem">{{ $role->users->where('active', true)->count() }}</td>
+                                            <td style="padding: 0.5rem">{{ $role->users->where('active', false)->count() }}</td>
+                                            <td style="padding: 0.5rem">{{ $role->users->count() }}</td>
 
                                         </tr>
                                     @endforeach
@@ -144,3 +144,18 @@
         </div>
     </div>
 @endsection
+
+
+@push('scripts')
+    <script>
+       .td {
+         text-align: center !important;
+            padding: 0.5rem !important;
+            text-align: center !important;
+              vertical-align: middle !important;
+       }
+
+
+
+    </script>
+@endpush

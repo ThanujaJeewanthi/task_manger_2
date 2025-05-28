@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('task');
             $table->text('description')->nullable();
+            $table->foreignId('job_id');
                       $table->timestamps();
             $table->boolean('active')->default(true);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

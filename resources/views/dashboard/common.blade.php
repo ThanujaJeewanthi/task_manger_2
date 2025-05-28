@@ -4,9 +4,9 @@
 
 @section('content')
 <div class="container-fluid ">
-    <div class="dcards-card shadow mb-4 ">
-        <div class="dcards-card-body">
-            <h1 class="h2 mb-4">Welcome to Spin App</h1>
+    <div class="card shadow mb-4 ">
+        <div class="card-body">
+            <h2 class="h2 mb-4">Welcome to Task Manager</h2>
 
             <div class="row " style="overflow-x:unset;">
                 <div class="col-md-6 col-lg-4 col-sm-12 mb-4">

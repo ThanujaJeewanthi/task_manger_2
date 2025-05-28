@@ -31,7 +31,7 @@ class CreateEmployees extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
 
-            $table->unique('user_id');
+
         });
     }
 

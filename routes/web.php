@@ -200,14 +200,22 @@ Route::prefix('suppliers')->name('suppliers.')->middleware(['auth'])->group(func
 });
 
 //tasks
-Route::prefix('jobs/{job}/tasks')->name('jobs.tasks.')->middleware(['auth'])->group(function () {
-    Route::get('/', [JobController::class, 'index'])->name('index')->middleware('role.permission:12.1');
-    Route::get('/create', [JobController::class, 'create'])->name('create')->middleware('role.permission:12.2');
-    Route::post('/', [JobController::class, 'store'])->name('store')->middleware('role.permission:12.2');
-    Route::get('/{task}/edit', [JobController::class, 'edit'])->name('edit')->middleware('role.permission:12.3');
-    Route::put('/{task}', [JobController::class, 'update'])->name('update')->middleware('role.permission:12.3');
-    Route::delete('/{task}', [JobController::class, 'destroy'])->name('destroy')->middleware('role.permission:12.3');
+Route::prefix('jobs')->name('jobs.tasks.')->middleware(['auth'])->group(function () {
+    Route::get('/{job}/tasks/', [JobController::class, 'index'])->name('index')->middleware('role.permission:11.11');
+    Route::get('/{job}/tasks/create', [JobController::class, 'createTask'])->name('create')->middleware('role.permission:11.12');
+    Route::post('/{job}/tasks', [JobController::class, 'storeTask'])->name('store')->middleware('role.permission:11.12');
+    Route::get('/{job}/tasks/{task}/edit', [JobController::class, 'editTask'])->name('edit')->middleware('role.permission:11.13');
+    Route::put('/{job}/tasks/{task}', [JobController::class, 'updateTask'])->name('update')->middleware('role.permission:11.13');
+    Route::delete('/{job}/tasks/{task}', [JobController::class, 'destroyTask'])->name('destroy')->middleware('role.permission:11.13');
+
 });
+
+//items for jobs
+Route::prefix('jobs')->name('jobs.items.')->middleware(['auth'])->group(function () {
+    Route::get('/{job}/items/create', [JobController::class, 'createJobItem'])->name('create')->middleware('role.permission:11.14');
+    Route::post('/{job}/items', [JobController::class, 'storeJobItem'])->name('store')->middleware('role.permission:11.14');
+});
+
 
 Route::get('/jobs/job-types/{jobTypeId}/options', [JobController::class, 'getJobTypeOptions'])
     ->name('jobs.job-type-options');

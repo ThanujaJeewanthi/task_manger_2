@@ -84,7 +84,7 @@
                         </form>
 
                         <div class="table-responsive table-compact" >
-                            <table class="table table-bordered table-striped">
+                            <table class="table table-bordered ">
                                 <thead>
                                     <tr >
                                         {{-- <th width="30">

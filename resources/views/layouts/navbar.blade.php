@@ -9,12 +9,12 @@
 
         @auth
         <!-- Search bar -->
-        <div class="search-bar d-flex align-items-center mx-3" style="flex-grow: 1; max-width: 500px;">
+        <div class="search-bar d-flex align-items-center mx-3" style="flex-grow: 1; ">
             <div class="input-group">
-                <span class="input-group-text bg-dark text-light border-0">
+                {{-- <span class="input-group-text bg-dark text-light ">
                     <i class="fas fa-search"></i>
-                </span>
-                <input type="text" class="form-control bg-dark text-light border-0" placeholder="Search..." />
+                </span> --}}
+                <input type="text" class="form-control bg-dark text-light " placeholder="Search..." />
             </div>
         </div>
         @endauth
