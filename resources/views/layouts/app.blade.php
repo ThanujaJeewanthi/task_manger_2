@@ -1,19 +1,24 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spin App - @yield('title', 'SpinApp Laundry Management System')</title>
+    <title>Task Manager - @yield('title', 'Task Management System')</title>
     <!-- Google Fonts Import -->
     <!-- 1. Google Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" />
+    {{-- <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet" /> --}}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- 2. Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 
     <!-- 3. Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+
+<link href="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.css" rel="stylesheet">
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
     <!-- 4. jQuery (if you really need it) -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
@@ -23,13 +28,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous">
     </script>
 
+
     {{-- AddPack css --}}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="{{ asset('assets/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/css/styles.css') }}" rel="stylesheet">
     {{-- AddPack css --}}
-
+<link href="{{ asset('css/modern-compact-ui.css') }}" rel="stylesheet">
     @yield('styles')
     <style>
         /* Main layout structure */
@@ -71,36 +77,28 @@ max-width: 900px !important;
             width: 250px;
             background-color: #282c30;
             transition: all 0.3s ease;
+
         }
 
-        /* Toggle button for all screen sizes */
-        /* .toggle-sidebar-btn {
-         position: absolute;
-         top: 1rem;
-         left: 100%;
-         width: 2.5rem;
-         height: 2.5rem;
-         background: #282c30;
-         border: none;
-         border-radius: 0 4px 4px 0;
-         display: flex;
-         align-items: center;
-         justify-content: center;
-         cursor: pointer;
-         z-index: 1000;
-         transition: left 0.3s ease;
-     } */
 
         /* Sidebar menu scrolling */
         .sidebar-menu {
             /* Enable scrolling */
             overflow-y: auto;
-            max-height: calc(100vh - 56px);
-            /* Hide scrollbar for Firefox */
-            scrollbar-width: none;
-            /* Firefox */
-            /* Hide scrollbar for IE/Edge */
-            -ms-overflow-style: none;
+            height:100%;
+            /* width: 249px; */
+
+
+        }
+
+
+
+
+        .sidebar-menu {
+            /* Enable scrolling */
+            overflow-y: auto;
+            /* max-height: calc(100vh - 56px); */
+
         }
 
         /* Hide scrollbar for Chrome, Safari, and Opera */
@@ -110,16 +108,30 @@ max-width: 900px !important;
             background: transparent !important;
             display: none !important;
         }
+        .sidebar-menu::-webkit-scrollbar-thumb:hover {
+    background-color: var(--light-border-color);
+}
 
-        /* Optional: Prevent scrollbar "peeking" in macOS */
-        .sidebar-menu {
-            -webkit-overflow-scrolling: touch;
-            /* Smooth scrolling on iOS */
+         .sidebar-menu {
+
             padding-right: 1px;
-            /* Prevents occasional scrollbar peek */
+
             margin-right: -1px;
-            /* Compensates for padding */
+
+
         }
+        .sidebar-menu  .dropdown-btn>.fa-caret-down {
+            transition: transform 0.3s ease;
+            /* align to right side */
+            margin-left: auto;
+        }
+
+         .sidebar.collapsed .sidebar-menu{
+            width: 60px;
+         }
+         .sidebar.collapsed .sidebar-menu .dropdown-btn i{
+            margin-left: 8px;
+         }
 
         /* Collapsed sidebar styling - desktop */
         .sidebar.collapsed {
@@ -174,122 +186,129 @@ max-width: 900px !important;
             color: #fff !important;
             opacity: 1 !important;
         }
+.sidebar-wrapper {
+    position: relative;
+    display: flex;
+    flex-shrink: 0;
+    height: 100%;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    overflow-y: hidden;
+
+
+}
+
 
         /* Mobile Sidebar Styles - Fixed Version */
-        @media (max-width: 576px) {
+       @media (max-width: 576px) {
+    /* Make main content take full width */
+    .main-content {
+        width: 100% !important;
+        margin-left: 0 !important;
+        padding-left: 70px !important;
+        transition: padding-left 0.3s ease !important;
+    }
 
-            /* Make main content take full width */
-            .main-content {
-                width: 100% !important;
-                margin-left: 0 !important;
-                padding-left: 70px !important;
-                /* Space for collapsed sidebar */
-                transition: padding-left 0.3s ease !important;
-            }
+    /* Fixed sidebar positioning */
+    .sidebar-wrapper {
+        position: fixed !important;
+        top: 56px !important;
+        left: 0 !important;
+        bottom: 0 !important;
+        height: calc(100vh - 56px) !important;
+        z-index: 1050 !important;
+        width: 60px !important;
+        transition: width 0.3s ease !important;
+        overflow: visible !important;
+    }
 
-            /* Fixed sidebar positioning */
-            .sidebar-wrapper {
-                position: fixed !important;
-                top: 56px !important;
-                /* Match navbar height */
-                left: 0 !important;
-                bottom: 0 !important;
-                height: calc(100vh - 56px) !important;
-                z-index: 1050 !important;
-                width: 60px !important;
-                /* Collapsed width */
-                transition: width 0.3s ease !important;
-                overflow: visible !important;
-            }
+    /* Sidebar styling */
+    .sidebar {
+        width: 60px !important;
+        height: 100% !important;
+        background-color: #282c30 !important;
+        transition: width 0.3s ease !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
 
-            /* Sidebar styling */
-            .sidebar {
-                width: 60px !important;
-                /* Collapsed width */
-                height: 100% !important;
-                background-color: #282c30 !important;
-                transition: width 0.3s ease !important;
-                overflow-x: hidden !important;
-                overflow-y: auto !important;
-            }
+    /* Expanded sidebar */
+    .sidebar-wrapper.expanded {
+        width: 250px !important;
+    }
 
+    .sidebar-wrapper.expanded .sidebar {
+        width: 250px !important;
+    }
 
+    /* Hide text in collapsed mode but show icons */
+    .sidebar-wrapper:not(.expanded) .side-link,
+    .sidebar-wrapper:not(.expanded) .sidebar-header h5,
+    .sidebar-wrapper:not(.expanded) .dropdown-btn .fa-caret-down {
+        display: none !important;
+    }
 
-            /* Expanded sidebar */
-            .sidebar-wrapper.expanded {
-                width: 250px !important;
-                /* Expanded width */
-            }
+    /* Show only icons in collapsed mode */
+    .sidebar-wrapper:not(.expanded) .sidebar-menu > * {
+        display: flex !important;
+        justify-content: center !important;
+        padding: 10px 0 !important;
+    }
 
-            .sidebar-wrapper.expanded .sidebar {
-                width: 250px !important;
-            }
+    .sidebar-wrapper:not(.expanded) .sidebar-menu a i,
+    .sidebar-wrapper:not(.expanded) .sidebar-menu button i {
+        display: inline-block !important;
+        margin: 0 !important;
+        /* font-size: 1rem !important; */
+    }
 
-            /* Hide text in collapsed mode */
-            .sidebar-wrapper:not(.expanded) .side-link,
-            .sidebar-wrapper:not(.expanded) .sidebar-header h5,
-            .sidebar-wrapper:not(.expanded) .dropdown-btn .fa-caret-down {
-                display: none !important;
-            }
+    /* Hide all other elements except icons */
+    .sidebar-wrapper:not(.expanded) .sidebar-menu > * > *:not(i) {
+        display: none !important;
+    }
 
-            /* Center icons in collapsed mode */
-            .sidebar-wrapper:not(.expanded) .icon-only,
-            .sidebar-wrapper:not(.expanded) i.fas,
-            .sidebar-wrapper:not(.expanded) i.fa {
-                margin-left: -150px !important;
-                /* display: flex !important; */
-                /* justify-content: center !important; */
-                /* width: 100% !important; */
-            }
+    /* Properly position the toggle button */
+    #sidebar-toggle {
+        position: fixed !important;
+        top: 62px !important;
+        left: 3px !important;
+        width: 40px !important;
+        height: 40px !important;
+        background: transparent !important;
+        border: none !important;
+        color: white !important;
+        z-index: 1060 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
 
-            /* Button alignment in collapsed mode */
-            .sidebar-wrapper:not(.expanded) .dropdown-btn {
-                text-align: center !important;
-                padding: 10px 0 !important;
-            }
+    /* Overlay for clicking outside to close */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 56px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+    }
 
-            /* Properly position the toggle button */
-            #sidebar-toggle {
-                position: fixed !important;
-                top: 62px !important;
-                left: 3px !important;
-                width: 40px !important;
-                height: 40px !important;
-                background: transparent !important;
-                border: none !important;
-                color: white !important;
-                z-index: 1060 !important;
-                display: flex !important;
-                align-items: center !important;
-                justify-content: center !important;
-            }
+    .sidebar-overlay.active {
+        display: block;
+    }
 
-            /* Overlay for clicking outside to close */
-            .sidebar-overlay {
-                display: none;
-                position: fixed;
-                top: 56px;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 1040;
-            }
+    /* Dropdown container adjustments */
+    .sidebar-wrapper:not(.expanded) .dropdown-container {
+        display: none !important;
+    }
 
-            .sidebar-overlay.active {
-                display: block;
-            }
-
-            /* Dropdown container adjustments */
-            .sidebar-wrapper:not(.expanded) .dropdown-container {
-                display: none !important;
-            }
-
-            .sidebar-wrapper.expanded .dropdown-container.show {
-                display: flex !important;
-                width: 100% !important;
-            }
-        }
+    .sidebar-wrapper.expanded .dropdown-container.show {
+        display: flex !important;
+        width: 100% !important;
+    }
+}
     </style>
 </head>
 
@@ -481,3 +500,5 @@ max-width: 900px !important;
 </body>
 
 </html>
+
+

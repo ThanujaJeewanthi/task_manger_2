@@ -21,6 +21,9 @@ class CreateLogsTable extends Migration
         $table->text('description')->nullable();
         $table->boolean('active')->default(true);
         $table->timestamps();
+         $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
+
 
          });
 }

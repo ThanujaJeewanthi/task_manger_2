@@ -96,60 +96,76 @@
 
             </div>
         @endif
+       @if (array_key_exists(5, $categorizedPages))
+    <a href="{{ route('companies.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Companies</span>
+    </a>
+@endif
 
 
-        {{-- <button class="dropdown-btn">
-    <i class="fas fa-motorcycle me-2 icon-only"></i>
-    <span class="side-link"> Jobs</span>
+        @if (array_key_exists(6, $categorizedPages))
+    <a href="{{ route('employees.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Employees</span>
+    </a>
+@endif
+ @if (array_key_exists(7, $categorizedPages))
+    <a href="{{ route('clients.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Clients</span>
+    </a>
+@endif
+ @if (array_key_exists(8, $categorizedPages))
+    <a href="{{ route('suppliers.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Suppliers</span>
+    </a>
+@endif
+ @if (array_key_exists(9, $categorizedPages))
+    <a href="{{ route('equipments.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Equipments</span>
+    </a>
+@endif
 
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    <a href="#">Link 1</a>
-    <a href="#">Link 2</a>
-    <a href="#">Link 3</a>
-</div>
 
+@if (array_key_exists(10, $categorizedPages))
+    <a href="{{ route('items.index') }}" class="dropdown-btn">
+        <i class="fas fa-user-tag me-2 icon-only"></i>
+        <span class="side-link">Items</span>
+    </a>
+@endif
+@if (array_key_exists(11, $categorizedPages))
+     <button class="dropdown-btn">
 
-
-<button class="dropdown-btn">
-    <i class="fas fa-plus-circle me-2 icon-only"></i>
-    <span class="side-link">Jobs</span>
-
-    <i class="fa fa-caret-down"></i>
-</button>
-<div class="dropdown-container">
-    <a href="#">Link 1</a>
-    <a href="#">Link 2</a>
-    <a href="#">Link 3</a>
-</div>
-
-
-        <button class="dropdown-btn">
             <i class="fas fa-plus-circle me-2 icon-only"></i>
-            <span class="side-link">Permission Management</span>
+            <span class="side-link">Jobs</span>
 
             <i class="fa fa-caret-down"></i>
         </button>
         <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
-        </div> --}}
+              <a href="{{route('jobs.index')}}">Jobs</a>
+            <a href="{{route('job-types.index')}}">Job Types</a>
+            <a href="{{route('job-options.index')}}">Job Options</a>
 
-        <button class="dropdown-btn">
-
-            <i class="fas fa-plus-circle me-2 icon-only"></i>
-            <span class="side-link"> Link page 1</span>
-
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
         </div>
+@endif
 
+@if (array_key_exists(5, $categorizedPages))
+        <button class="dropdown-btn">
+
+            <i class="fas fa-plus-circle me-2 icon-only"></i>
+            <span class="side-link">Records</span>
+
+            <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-container">
+            <a href="{{route('logs.index')}}">View Records</a>
+            {{-- <a href="#">Link 2</a>
+            <a href="#">Link 3</a> --}}
+        </div>
+@endif
 
 
 
@@ -178,7 +194,8 @@
             <a href="#">Link 1</a>
             <a href="#">Link 2</a>
             <a href="#">Link 3</a>
-        </div> <button class="dropdown-btn">
+        </div>
+         <button class="dropdown-btn">
             <i class="fa fa-caret-down"></i>
             <span class="side-link"> Last Link page</span>
         </button>
@@ -187,6 +204,36 @@
             <a href="#"><i class=" icon-spacing"></i>Link 2</a>
             <a href="#"><i class=" icon-spacing"></i>Link 3</a>
         </div>
+         <button class="dropdown-btn">
+            <i class="fa fa-caret-down"></i>
+            <span class="side-link"> Last Link page</span>
+        </button>
+        <div class="dropdown-container">
+            <a href="#"><i class=" icon-spacing"></i>Link 1</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 2</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 3</a>
+        </div>
+
+         <button class="dropdown-btn">
+            <i class="fa fa-caret-down"></i>
+            <span class="side-link"> Last Link page</span>
+        </button>
+        <div class="dropdown-container">
+            <a href="#"><i class=" icon-spacing"></i>Link 1</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 2</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 3</a>
+        </div>
+
+         <button class="dropdown-btn">
+            <i class="fa fa-caret-down"></i>
+            <span class="side-link"> Last Link page</span>
+        </button>
+        <div class="dropdown-container">
+            <a href="#"><i class=" icon-spacing"></i>Link 1</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 2</a>
+            <a href="#"><i class=" icon-spacing"></i>Link 3</a>
+        </div>
+
 
 
     </nav>

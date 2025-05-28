@@ -280,10 +280,10 @@ html {
 }
 
 /* Add an active class to the active dropdown button */
-.active {
+/* .active {
     background-color: var(--light-dark-active-color);
     color: var(--light-primary-color);
-}
+} */
 
 /* Dropdown container (hidden by default). Optional: add a lighter background color and some left padding to change the design of the dropdown content */
 .dropdown-container {

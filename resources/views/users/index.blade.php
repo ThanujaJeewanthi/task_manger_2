@@ -29,7 +29,7 @@
                         </div>
                     @endif --}}
 
-                        <div class="table-responsive">
+                        <div class="table-responsive table-compact">
                             <table class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
@@ -107,8 +107,8 @@
                         </div>
                     </div>
 
-                    <div class="card-body">
-                        <div class="table-responsive">
+                    <div class="card-body " style="overflow-x: auto">
+                        {{-- <div class="table-responsive table-compact"> --}}
                             <table class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
@@ -137,7 +137,7 @@
                                     @endif
                                 </tbody>
                             </table>
-                        </div>
+                        {{-- </div> --}}
                     </div>
                 </div>
             </div>

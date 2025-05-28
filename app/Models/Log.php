@@ -19,20 +19,28 @@ class Log extends Model
         'description',
         'active',
     ];
+    protected $casts = [
+        'active' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
     /**
-     * Get the user who performed the action.
+     * Get the user associated with the log.
      */
     public function user()
     {
-        return $this->belongsTo(User::class)->withDefault();
+        return $this->belongsTo(User::class);
     }
 
     /**
-     * Get the user role of the user who performed the action.
+     * Get the user role associated with the log.
      */
     public function userRole()
     {
-        return $this->belongsTo(UserRole::class, 'user_role_id')->withDefault();
+        return $this->belongsTo(UserRole::class);
     }
+
+
+
 }
