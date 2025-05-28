@@ -74,7 +74,7 @@ h6 { font-size: 0.875rem; }
 
 .navbar .form-control {
     background: rgba(255, 255, 255, 0.1) !important;
-    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border: none!important;
     color: #ffffff !important;
     font-size: 0.875rem;
     padding: 0.5rem 0.75rem;
@@ -83,7 +83,9 @@ h6 { font-size: 0.875rem; }
 .navbar .form-control::placeholder {
     color: rgba(255, 255, 255, 0.6);
 }
-
+.navbar .search-bar .input-group {
+    border: none!important;
+}
 .navbar .input-group-text {
     background: rgba(255, 255, 255, 0.1) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -102,7 +104,7 @@ box-shadow: var(--shadow-md);
 width:auto;
 
 }
-.navbar .nav-item .dropdown-menu a {
+.navbar .nav-item .dropdown-menu  {
     color: #ffffff !important;
     padding: 0.5rem 1rem;
     text-decoration: none;
@@ -251,7 +253,7 @@ width:auto;
     text-transform: uppercase!important;
     letter-spacing: 0.05em!important;
     color: var(--text-secondary)!important;
-    padding: 0.75rem 0.875rem!important;
+    padding: 0.55rem 0.575rem!important;
     vertical-align: middle!important;
 }
 
@@ -259,9 +261,19 @@ width:auto;
     padding: 0rem 0.5rem!important;
     vertical-align: middle!important;
     border-bottom: 1px solid var(--border-light);
-    font-size: 0.813rem!important;
+    font-size: 0.713rem!important;
     line-height: 0.8!important;
+
 }
+td > a.btn,
+td > form.d-inline {
+    margin-right: 0px;
+}
+
+td > form.d-inline:last-child {
+    margin-right: 0;
+}
+
 
 .table tbody tr {
     transition: all 0.15s ease;
@@ -273,7 +285,7 @@ width:auto;
 }
 
 .table-compact th {
-    padding: 0.5rem 0.75rem;
+    padding: 0.45rem 0.65rem;
     font-size: 0.688rem;
 }
 .table-bordered th{
@@ -284,7 +296,7 @@ width:auto;
     text-transform: uppercase!important;
     letter-spacing: 0.05em!important;
     color: var(--text-secondary)!important;
-    padding: 0.75rem 0.875rem!important;
+    padding: 0.65rem 0.675rem!important;
     vertical-align: middle!important;
 }
 
@@ -299,7 +311,7 @@ width:auto;
     line-height: 0.9;
 }
 .table-striped  td{
-      padding: 0rem 0.5rem!important;
+      padding: 0.3rem 0.5rem!important;
     vertical-align: middle!important;
     border-bottom: 1px solid var(--border-light);
     font-size: 0.813rem!important;
@@ -534,6 +546,10 @@ textarea.form-control {
     padding: 1.25rem !important;
     transition: all 0.2s ease!important;
     box-shadow: var(--shadow-sm)!important;
+}
+
+.dcards-card-body{
+min-width: 220px;
 }
 
 .dcards-card:hover {

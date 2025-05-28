@@ -699,7 +699,7 @@ html {
 
 /* Card body styles */
 .dcards-card-body {
-    padding: 1.5rem;
+    /* padding: 1.5rem; */
 }
 
 /* Title styles */
@@ -824,14 +824,14 @@ table {
     margin-bottom: 10px;
 }
 
-th,
+/* th,
 td {
     border: 1px solid #eaeaea;
     text-align: left;
     padding: 12px;
     font-size: 0.95rem;
     color: #333;
-}
+} */
 
 th {
     background-color: #f9f9f9;

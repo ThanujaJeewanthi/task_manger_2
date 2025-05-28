@@ -149,6 +149,7 @@
             <a href="{{route('job-types.index')}}">Job Types</a>
             <a href="{{route('job-options.index')}}">Job Options</a>
 
+
         </div>
 @endif
 
