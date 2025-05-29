@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card" style="width:600px;">
                     <div class="card-header">
                         <div class="d-component-title">
                             <span>Create New User</span>

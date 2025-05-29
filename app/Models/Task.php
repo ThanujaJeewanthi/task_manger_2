@@ -21,6 +21,7 @@ class Task extends Model
         'description',
         'job_id',
         'active',
+        'status',
         'created_by',
         'updated_by',
         'created_at',
@@ -58,5 +59,9 @@ class Task extends Model
     public function jobEmployees(): HasMany
     {
         return $this->hasMany(JobEmployee::class);
+    }
+    public function job()
+    {
+        return $this->belongsTo(Job::class);
     }
 }

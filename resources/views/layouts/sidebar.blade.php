@@ -17,15 +17,13 @@
                 </svg>
             </button>
             @php
-    $userRole = strtolower(Auth::user()->userRole->name ?? 'admin');
-    $dashboardRoute = in_array($userRole, ['laundry', 'rider', 'client'])
-        ? $userRole . '.dashboard'
-        : 'admin.dashboard';
+    $userRole = strtolower(str_replace(' ', '', Auth::user()->userRole->name ?? 'admin'));
+    $dashboardRoute = "{$userRole}.dashboard";
 @endphp
 
 <a href="{{ route($dashboardRoute) }}" class="dashboard-link mt-0">
     <h5>
-        {{ ucfirst($userRole) }} Dashboard
+        {{ Auth::user()->userRole->name ?? 'Admin' }} Dashboard
     </h5>
 </a>
 

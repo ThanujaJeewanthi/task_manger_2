@@ -8,34 +8,66 @@ use App\Http\Controllers\PageController;
 
 
 
-use App\Http\Controllers\UserRoleController;
-
 use App\Http\Controllers\UserController;
+
+use App\Http\Controllers\Job\JobController;
+use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\PermissionController;
+use App\Http\Controllers\Job\JobTypeController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\PageCategoryController;
-use App\Http\Controllers\Dashboard\ClientController;
-use App\Http\Controllers\Dashboard\AdminDashboardController;
-use App\Http\Controllers\Dashboard\RiderDashboardController;
-use App\Http\Controllers\Dashboard\ClientDashboardController;
-use App\Http\Controllers\Dashboard\CommonDashboardController;
-use App\Http\Controllers\Dashboard\LaundryDashboardController;
-use App\Http\Controllers\Job\JobController;
-use App\Http\Controllers\Job\JobTypeController;
 use App\Http\Controllers\Job\JobOptionController;
+
+use App\Http\Controllers\AdminDashboardController;
+
+use App\Http\Controllers\EmployeeDashboardController;
+use App\Http\Controllers\SuperAdminDashboardController;
+use App\Http\Controllers\Dashboard\CommonDashboardController;
 
 // Authentication routes
 //Auth::routes();
 
 // Default route
-Route::get('/', [CommonDashboardController::class, 'index'])->name('home');
+// Route::get('/', [CommonDashboardController::class, 'index'])->name('home');
 
 // Dashboard route
-Route::get('/dashboard', [CommonDashboardController::class, 'index'])->name('dashboard')->middleware('role.permission:1.1');
-Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard')->middleware('role.permission:1.2');
-Route::get('/client/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard')->middleware('role.permission:1.3');
-Route::get('/rider/dashboard', [RiderDashboardController::class, 'index'])->name('rider.dashboard')->middleware('role.permission:1.4');
-Route::get('/laundry/dashboard', [LaundryDashboardController::class, 'index'])->name('laundry.dashboard')->middleware('role.permission:1.5');
+Route::get('/', [CommonDashboardController::class, 'index'])
+    ->name('dashboard')
+    ->middleware('role.permission:1.1');
+
+Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])
+    ->name('superadmin.dashboard')
+    ->middleware('role.permission:1.2');
+
+// Company Admin Dashboard
+Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
+    ->name('admin.dashboard')
+    ->middleware('role.permission:1.3');
+
+// Employee Dashboard
+Route::get('/employee/dashboard', [EmployeeDashboardController::class, 'index'])
+    ->name('employee.dashboard')
+    ->middleware('role.permission:1.4');
+
+
+
+// Additional API routes for dashboard functionality
+Route::get('/super-admin/dashboard/chart-data', [SuperAdminDashboardController::class, 'getChartData'])
+    ->name('super-admin.dashboard.chart-data')
+    ->middleware('role.permission:1.2');
+
+Route::get('/admin/dashboard/quick-stats', [AdminDashboardController::class, 'getQuickStats'])
+    ->name('admin.dashboard.quick-stats')
+    ->middleware('role.permission:1.3');
+
+// Employee task and job status update routes
+Route::post('/employee/tasks/{task}/status', [EmployeeDashboardController::class, 'updateTaskStatus'])
+    ->name('employee.tasks.update-status')
+    ->middleware('role.permission:1.4');
+
+Route::post('/employee/jobs/{job}/status', [EmployeeDashboardController::class, 'updateJobStatus'])
+    ->name('employee.jobs.update-status')
+    ->middleware('role.permission:1.4');
 
 // group Authentication routes
 
@@ -220,7 +252,10 @@ Route::prefix('jobs')->name('jobs.items.')->middleware(['auth'])->group(function
 Route::get('/jobs/job-types/{jobTypeId}/options', [JobController::class, 'getJobTypeOptions'])
     ->name('jobs.job-type-options');
 
-
+Route::get('jobs/{job}/copy', [JobController::class, 'copy'])->name('jobs.copy');
+Route::post('jobs/{job}/copy', [JobController::class, 'storeCopy'])->name('jobs.copy.store');
+Route::get('jobs/{job}/extend-task', [JobController::class, 'extendTask'])->name('jobs.extend-task');
+Route::post('jobs/{job}/extend-task', [JobController::class, 'storeExtendTask'])->name('jobs.extend-task.store');
 
 // Route::fallback(function () {
 //     return 'Fallback';

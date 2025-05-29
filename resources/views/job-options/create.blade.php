@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card" style="width:600px;">
                     <div class="card-header">
                         <div class="d-component-title">
                             <span>Create New Job Option</span>
@@ -17,7 +17,7 @@
 
                             <div class="form-group mb-3">
                                 <label for="name">Name</label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror" 
+                                <input type="text" class="form-control @error('name') is-invalid @enderror"
                                     id="name" name="name" value="{{ old('name') }}" required>
                                 @error('name')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -26,7 +26,7 @@
 
                             <div class="form-group mb-3">
                                 <label for="description">Description</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" 
+                                <textarea class="form-control @error('description') is-invalid @enderror"
                                     id="description" name="description" rows="3">{{ old('description') }}</textarea>
                                 @error('description')
                                     <span class="invalid-feedback">{{ $message }}</span>
@@ -35,7 +35,7 @@
 
                             <div class="form-group mb-3">
                                 <label for="option_type">Option Type</label>
-                                <select class="form-control @error('option_type') is-invalid @enderror" 
+                                <select class="form-control @error('option_type') is-invalid @enderror"
                                     id="option_type" name="option_type" required>
                                     <option value="">Select Option Type</option>
                                     <option value="text" {{ old('option_type') == 'text' ? 'selected' : '' }}>Text</option>
@@ -52,7 +52,7 @@
 
                             <div class="form-group mb-3" id="options_json_container" style="display: none;">
                                 <label for="options_json">Options (JSON)</label>
-                                <textarea class="form-control @error('options_json') is-invalid @enderror" 
+                                <textarea class="form-control @error('options_json') is-invalid @enderror"
                                     id="options_json" name="options_json" rows="3">{{ old('options_json') }}</textarea>
                                 <small class="form-text text-muted">For select type, provide JSON array of options. Example: ["Option 1", "Option 2"]</small>
                                 @error('options_json')
@@ -64,7 +64,7 @@
                                 <div class="d-com-flex justify-content-start mb-4">
                                     <label class="d-label-text me-2">Required</label>
                                     <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                        <input type="checkbox" class="form-check-input d-section-toggle" 
+                                        <input type="checkbox" class="form-check-input d-section-toggle"
                                             id="required" name="required" />
                                         <span class="d-slider">
                                             <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
@@ -78,7 +78,7 @@
                                 <div class="d-com-flex justify-content-start mb-4">
                                     <label class="d-label-text me-2">Active</label>
                                     <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                        <input type="checkbox" class="form-check-input d-section-toggle" 
+                                        <input type="checkbox" class="form-check-input d-section-toggle"
                                             id="is_active" name="is_active" checked />
                                         <span class="d-slider">
                                             <span class="d-icon active"><i class="fa-solid fa-check"></i></span>

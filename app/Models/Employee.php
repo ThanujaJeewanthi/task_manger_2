@@ -16,7 +16,7 @@ class Employee extends Model
         'department',
         'company_id',
         'email',
-        'username',	
+        'username',
         'user_role_id',
         'employee_code',
         'phone',
@@ -92,5 +92,9 @@ class Employee extends Model
     public function canLogin()
     {
         return $this->active && $this->user->active;
+    }
+    public function jobEmployees()
+    {
+        return $this->hasMany(JobEmployee::class);
     }
 }

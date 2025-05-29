@@ -4,7 +4,7 @@
     <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
-                <div class="card">
+                <div class="card" style="width:600px;">
                     <div class="card-header">
                         <div class="d-component-title">
                             <span>Create New Item</span>
@@ -60,7 +60,7 @@
                                         <span class="input-group-text">$</span>
                                     </div>
                                     <input type="number" class="form-control @error('unit_price') is-invalid @enderror"
-                                        id="unit_price" name="unit_price" value="{{ old('unit_price') }}" 
+                                        id="unit_price" name="unit_price" value="{{ old('unit_price') }}"
                                         step="0.01" min="0" placeholder="0.00">
                                 </div>
                                 <small class="form-text text-muted">Price per unit (optional)</small>
