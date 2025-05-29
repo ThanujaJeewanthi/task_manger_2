@@ -96,7 +96,7 @@
         </div>
 
         <!-- Role User Summary Card -->
-        <div class="row mt-4">
+        <div class="row mt-0 mb-3">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">
