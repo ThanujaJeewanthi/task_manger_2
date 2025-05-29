@@ -18,28 +18,76 @@ use Illuminate\Validation\Rule;
 
 class JobController extends Controller
 {
-    public function index()
-    {
-        $companyId = Auth::user()->company_id;
-        $jobs = Job::with(['jobType', 'client', 'equipment'])
-            ->where('company_id', $companyId)
-            ->where('active', true)
-            ->paginate(10);
+   public function index(Request $request)
+{
+    $companyId = Auth::user()->company_id;
 
-        return view('jobs.index', compact('jobs'));
+    // Initialize query
+    $query = Job::with(['jobType', 'client', 'equipment'])
+        ->where('company_id', $companyId)
+        ->where('active', true);
+
+    // Handle sorting
+    $sortBy = $request->input('sort_by', 'priority'); // Default to priority
+    $sortOrder = $request->input('sort_order', 'asc'); // Default to ascending
+
+    // Validate sort_by to prevent SQL injection
+    $allowedSorts = ['job_number', 'priority', 'start_date', 'due_date'];
+    if (!in_array($sortBy, $allowedSorts)) {
+        $sortBy = 'priority';
     }
 
-    public function create()
+    // Apply sorting
+    if ($sortBy === 'priority') {
+        $query->orderBy('priority', $sortOrder)
+              ->orderBy('start_date', 'asc'); // Secondary sort by start_date
+    } else {
+        $query->orderBy($sortBy, $sortOrder);
+    }
+
+    // Handle filters
+    if ($request->filled('job_type_id')) {
+        $query->where('job_type_id', $request->input('job_type_id'));
+    }
+
+    if ($request->filled('client_id')) {
+        $query->where('client_id', $request->input('client_id'));
+    }
+
+    if ($request->filled('equipment_id')) {
+        $query->where('equipment_id', $request->input('equipment_id'));
+    }
+
+    if ($request->filled('job_number')) {
+        $query->where('job_number', 'like', '%' . $request->input('job_number') . '%');
+    }
+
+    // Fetch filter options
+    $jobTypes = JobType::all();
+    $clients = Client::where('company_id', $companyId)->get();
+    $equipments = Equipment::where('company_id', $companyId)->get();
+
+    // Paginate results
+    $jobs = $query->paginate(12);
+
+    return view('jobs.index', compact('jobs', 'jobTypes', 'clients', 'equipments', 'sortBy', 'sortOrder'));
+}
+
+   public function create()
     {
         $companyId = Auth::user()->company_id;
+        // return $companyId;
         $jobTypes = JobType::with(['jobOptions'])->where('active', true)->get();
+
         $clients = Client::where('company_id', $companyId)->where('active', true)->get();
         $equipments = Equipment::where('company_id', $companyId)->where('active', true)->get();
+
         $employees = Employee::where('company_id', $companyId)->where('active', true)->get();
 
         return view('jobs.create', compact('jobTypes', 'clients', 'equipments', 'employees'));
     }
 
+    // Add this new method to handle AJAX requests for job type options
     public function getJobTypeOptions($jobTypeId)
     {
         $jobType = JobType::with(['jobOptions'])->find($jobTypeId);
@@ -57,92 +105,177 @@ class JobController extends Controller
                     'option_type' => $option->option_type,
                     'required' => $option->required,
                     'options_json' => $option->options_json,
+
                 ];
             })
         ]);
     }
 
     public function store(Request $request)
-    {
-        // Get job type and its options for validation
-        $jobType = null;
-        if ($request->has('job_type_id') && $request->job_type_id) {
-            $jobType = JobType::with('jobOptions')->find($request->job_type_id);
+{
+    // Build validation rules dynamically
+    $rules = [
+        'job_number' => 'required|string|max:50|unique:jobs',
+        'job_type_id' => 'required|exists:job_types,id',
+        'client_id' => 'nullable|exists:clients,id',
+        'equipment_id' => 'nullable|exists:equipments,id',
+        'description' => 'nullable|string',
+        'references' => 'nullable|string',
+        'priority' => 'required|in:1,2,3,4',
+        'start_date' => 'nullable|date',
+        'due_date' => 'nullable|date|after_or_equal:start_date',
+        'photos' => 'nullable|array',
+        'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+    ];
+
+    // Add validation for job options if job_type_id is present
+    if ($request->has('job_type_id') && $request->job_type_id) {
+        $jobType = JobType::with('jobOptions')->find($request->job_type_id);
+        if ($jobType) {
+            foreach ($jobType->jobOptions as $option) {
+                $fieldName = 'job_option_' . $option->id;
+
+                if ($option->required) {
+                    $rules[$fieldName] = 'required';
+                }
+
+                // Add specific validation based on option type
+                switch ($option->option_type) {
+                    case 'number':
+                        $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'numeric';
+                        break;
+                    case 'date':
+                        $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'date';
+                        break;
+                    case 'file':
+                        $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'file|max:2048';
+                        break;
+                    case 'checkbox':
+                        $rules[$fieldName] = 'nullable|boolean';
+                        break;
+                    case 'select':
+                        // For equipment and client dropdowns
+                        if ($option->id == 1) { // Equipment option
+                            $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'exists:equipments,id';
+                        } elseif ($option->id == 2) { // Client option
+                            $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'exists:clients,id';
+                        } else {
+                            $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'string|max:255';
+                        }
+                        break;
+                    default:
+                        $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'string|max:255';
+                }
+            }
         }
-
-        // Build validation rules dynamically
-        $rules = $this->getValidationRules($jobType);
-        $request->validate($rules);
-
-        // Prepare job data
-        $jobData = $this->prepareJobData($request);
-
-        // Handle job option values
-        $jobOptionValues = $this->processJobOptionValues($request, $jobType);
-        if (!empty($jobOptionValues)) {
-            $jobData['job_option_values'] = $jobOptionValues;
-        }
-
-        // Create the job
-        $job = Job::create($jobData);
-
-        return redirect()->route('jobs.index')->with('success', 'Job created successfully.');
     }
+
+    $request->validate($rules);
+
+    $data = $request->all();
+    $data['company_id'] = Auth::user()->company_id;
+    $data['status'] = 'draft';
+    $data['active'] = $request->has('is_active');
+    $data['created_by'] = Auth::id();
+
+    // Handle photo uploads
+    if ($request->hasFile('photos')) {
+        $photos = [];
+        foreach ($request->file('photos') as $photo) {
+            $photos[] = $photo->store('job_photos', 'public');
+        }
+        $data['photos'] = json_encode($photos);
+    }
+
+    // Handle job option values and map special ones to main fields
+    $jobOptionValues = [];
+    foreach ($request->all() as $key => $value) {
+        if (strpos($key, 'job_option_') === 0) {
+            $optionId = str_replace('job_option_', '', $key);
+
+            // Map specific job options to main database fields
+            if ($optionId == 1) { // Equipment option
+                $data['equipment_id'] = $value;
+            } elseif ($optionId == 2) { // Client option
+                $data['client_id'] = $value;
+            } else {
+                // Handle file uploads for file type options
+                if ($request->hasFile($key)) {
+                    $jobOptionValues[$optionId] = $request->file($key)->store('job_option_files', 'public');
+                } else {
+                    $jobOptionValues[$optionId] = $value;
+                }
+            }
+        }
+    }
+
+    if (!empty($jobOptionValues)) {
+        $data['job_option_values'] = json_encode($jobOptionValues);
+    }
+
+    Job::create($data);
+
+    return redirect()->route('jobs.index')->with('success', 'Job created successfully.');
+}
 
     public function show(Job $job)
     {
-        // Check authorization
-        $this->authorizeJobAccess($job);
+        // Check if job belongs to current user's company
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403);
+        }
 
         $job->load(['jobType.jobOptions', 'client', 'equipment', 'jobEmployees.employee', 'jobEmployees.task']);
         $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
+        // tasks of that job
         $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
 
-        // Decode job option values for display
-        $jobOptionValues = $job->job_option_values ? json_decode($job->job_option_values, true) : [];
-
-        return view('jobs.show', compact('job', 'employees', 'tasks', 'jobOptionValues'));
+        return view('jobs.show', compact('job', 'employees', 'tasks'));
     }
 
     public function edit(Job $job)
     {
-        $this->authorizeJobAccess($job);
+        // Check if job belongs to current user's company
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403);
+        }
 
         $companyId = Auth::user()->company_id;
         $jobTypes = JobType::with('jobOptions')->where('active', true)->get();
         $clients = Client::where('company_id', $companyId)->where('active', true)->get();
         $equipments = Equipment::where('company_id', $companyId)->where('active', true)->get();
 
-        // Decode job option values for editing
-        $jobOptionValues = $job->job_option_values ? json_decode($job->job_option_values, true) : [];
-
-        return view('jobs.edit', compact('job', 'jobTypes', 'clients', 'equipments', 'jobOptionValues'));
+        return view('jobs.edit', compact('job', 'jobTypes', 'clients', 'equipments'));
     }
 
     public function update(Request $request, Job $job)
     {
-        $this->authorizeJobAccess($job);
-
-        // Get job type and its options for validation
-        $jobType = null;
-        if ($request->has('job_type_id') && $request->job_type_id) {
-            $jobType = JobType::with('jobOptions')->find($request->job_type_id);
+        // Check if job belongs to current user's company
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403);
         }
 
-        // Build validation rules (excluding unique job_number for current job)
-        $rules = $this->getValidationRules($jobType, $job->id);
-        $request->validate($rules);
+        $request->validate([
+            'job_number' => 'required|string|max:50|unique:jobs,job_number,' . $job->id,
+            'job_type_id' => 'required|exists:job_types,id',
+            'client_id' => 'nullable|exists:clients,id',
+            'equipment_id' => 'nullable|exists:equipments,id',
+            'description' => 'nullable|string',
+            'references' => 'nullable|string',
+            'status' => 'required|in:draft,pending,in_progress,on_hold,completed,cancelled',
+            'priority' => 'required|in:1,2,3,4',
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date|after_or_equal:start_date',
+            'completed_date' => 'nullable|date',
+            'photos' => 'nullable|array',
+            'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
 
-        // Prepare job data
-        $jobData = $this->prepareJobData($request, true);
+        $data = $request->all();
+        $data['active'] = $request->has('is_active');
+        $data['updated_by'] = Auth::id();
 
-        // Handle job option values
-        $jobOptionValues = $this->processJobOptionValues($request, $jobType);
-        if (!empty($jobOptionValues)) {
-            $jobData['job_option_values'] = $jobOptionValues;
-        }
-
-        // Handle photo updates
+        // Handle photo uploads
         if ($request->hasFile('photos')) {
             // Delete old photos
             if ($job->photos) {
@@ -156,253 +289,24 @@ class JobController extends Controller
             foreach ($request->file('photos') as $photo) {
                 $photos[] = $photo->store('job_photos', 'public');
             }
-            $jobData['photos'] = json_encode($photos);
+            $data['photos'] = json_encode($photos);
         }
 
-        $job->update($jobData);
+        $job->update($data);
 
         return redirect()->route('jobs.index')->with('success', 'Job updated successfully.');
     }
 
     public function destroy(Job $job)
     {
-        $this->authorizeJobAccess($job);
+        // Check if job belongs to current user's company
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403);
+        }
 
         $job->update(['active' => false, 'updated_by' => Auth::id()]);
         return redirect()->route('jobs.index')->with('success', 'Job deleted successfully.');
     }
-
-    /**
-     * Get validation rules based on job type and its options
-     */
-    private function getValidationRules($jobType = null, $jobId = null)
-    {
-        $rules = [
-            'job_number' => 'required|string|max:50|unique:jobs' . ($jobId ? ',job_number,' . $jobId : ''),
-            'job_type_id' => 'required|exists:job_types,id',
-            'client_id' => 'nullable|exists:clients,id',
-            'equipment_id' => 'nullable|exists:equipments,id',
-            'description' => 'nullable|string',
-            'references' => 'nullable|string',
-            'priority' => 'required|in:1,2,3,4',
-            'start_date' => 'nullable|date',
-            'due_date' => 'nullable|date|after_or_equal:start_date',
-            'photos' => 'nullable|array',
-            'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
-        ];
-
-        // Add update-specific rules
-        if ($jobId) {
-            $rules['status'] = 'required|in:draft,pending,in_progress,on_hold,completed,cancelled';
-            $rules['completed_date'] = 'nullable|date';
-        }
-
-        // Add job option validation rules
-        if ($jobType && $jobType->jobOptions) {
-            foreach ($jobType->jobOptions as $option) {
-                $fieldName = 'job_option_' . $option->id;
-                $rules[$fieldName] = $this->getOptionValidationRule($option);
-            }
-        }
-
-        return $rules;
-    }
-
-    /**
-     * Get validation rule for a specific job option
-     */
-    private function getOptionValidationRule($option)
-    {
-        $baseRule = $option->required ? 'required' : 'nullable';
-
-        switch ($option->option_type) {
-            case 'number':
-                return $baseRule . '|numeric';
-            case 'date':
-                return $baseRule . '|date';
-            case 'file':
-                return $baseRule . '|file|max:2048';
-            case 'checkbox':
-                return 'nullable|boolean';
-            case 'select':
-                // For equipment and client, validate against their respective tables
-                if ($this->isEquipmentOption($option)) {
-                    return $baseRule . '|exists:equipments,id';
-                } elseif ($this->isClientOption($option)) {
-                    return $baseRule . '|exists:clients,id';
-                } else {
-                    return $baseRule . '|string|max:255';
-                }
-            default:
-                return $baseRule . '|string|max:255';
-        }
-    }
-
-    /**
-     * Check if option is equipment option (you can implement your own logic)
-     */
-    private function isEquipmentOption($option)
-    {
-        return strtolower($option->name) === 'equipment' || $option->id == 1;
-    }
-
-    /**
-     * Check if option is client option (you can implement your own logic)
-     */
-    private function isClientOption($option)
-    {
-        return strtolower($option->name) === 'client' || $option->id == 2;
-    }
-
-    /**
-     * Prepare job data for creation/update
-     */
-    private function prepareJobData(Request $request, $isUpdate = false)
-    {
-        $data = [
-            'job_number' => $request->job_number,
-            'job_type_id' => $request->job_type_id,
-            'client_id' => $request->client_id,
-            'equipment_id' => $request->equipment_id,
-            'description' => $request->description,
-            'references' => $request->references,
-            'priority' => $request->priority,
-            'start_date' => $request->start_date,
-            'due_date' => $request->due_date,
-            'active' => $request->has('is_active'),
-        ];
-
-        if ($isUpdate) {
-            $data['status'] = $request->status;
-            $data['completed_date'] = $request->completed_date;
-            $data['updated_by'] = Auth::id();
-        } else {
-            $data['company_id'] = Auth::user()->company_id;
-            $data['status'] = 'draft';
-            $data['created_by'] = Auth::id();
-        }
-
-        // Handle photo uploads for creation
-        if (!$isUpdate && $request->hasFile('photos')) {
-            $photos = [];
-            foreach ($request->file('photos') as $photo) {
-                $photos[] = $photo->store('job_photos', 'public');
-            }
-            $data['photos'] = json_encode($photos);
-        }
-
-        return $data;
-    }
-
-    /**
-     * Process job option values from request
-     */
-    private function processJobOptionValues(Request $request, $jobType = null)
-    {
-        if (!$jobType || !$jobType->jobOptions) {
-            return [];
-        }
-
-        $jobOptionValues = [];
-
-        foreach ($jobType->jobOptions as $option) {
-            $fieldName = 'job_option_' . $option->id;
-
-            if ($request->has($fieldName)) {
-                $value = $request->input($fieldName);
-
-                // Handle special cases for equipment and client options
-                if ($this->isEquipmentOption($option)) {
-                    // Don't store in job_option_values, it's already in equipment_id
-                    continue;
-                } elseif ($this->isClientOption($option)) {
-                    // Don't store in job_option_values, it's already in client_id
-                    continue;
-                }
-
-                // Handle file uploads
-                if ($option->option_type === 'file' && $request->hasFile($fieldName)) {
-                    $jobOptionValues[$option->id] = $request->file($fieldName)->store('job_option_files', 'public');
-                } elseif ($option->option_type === 'checkbox') {
-                    $jobOptionValues[$option->id] = $request->has($fieldName) ? true : false;
-                } else {
-                    $jobOptionValues[$option->id] = $value;
-                }
-            } elseif ($option->option_type === 'checkbox') {
-                // Ensure checkbox values are properly handled when unchecked
-                $jobOptionValues[$option->id] = false;
-            }
-        }
-
-        return $jobOptionValues;
-    }
-
-    /**
-     * Authorize job access for current user's company
-     */
-    private function authorizeJobAccess(Job $job)
-    {
-        if ($job->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-    }
-
-    /**
-     * Get job option value by option ID
-     */
-    public function getJobOptionValue(Job $job, $optionId)
-    {
-        if (!$job->job_option_values) {
-            return null;
-        }
-
-        $values = json_decode($job->job_option_values, true);
-        return $values[$optionId] ?? null;
-    }
-
-    /**
-     * Get all job option values with option details
-     */
-    public function getJobOptionValuesWithDetails(Job $job)
-    {
-        if (!$job->job_option_values || !$job->jobType) {
-            return collect();
-        }
-
-        $values = json_decode($job->job_option_values, true);
-        $job->load('jobType.jobOptions');
-
-        return $job->jobType->jobOptions->map(function ($option) use ($values) {
-            return [
-                'option' => $option,
-                'value' => $values[$option->id] ?? null,
-                'formatted_value' => $this->formatOptionValue($option, $values[$option->id] ?? null)
-            ];
-        });
-    }
-
-    /**
-     * Format option value for display
-     */
-    private function formatOptionValue($option, $value)
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        switch ($option->option_type) {
-            case 'checkbox':
-                return $value ? 'Yes' : 'No';
-            case 'date':
-                return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : null;
-            case 'file':
-                return $value ? basename($value) : null;
-            default:
-                return $value;
-        }
-    }
-
-
 
  public function createTask(Job $job)
     {
@@ -538,7 +442,7 @@ class JobController extends Controller
         $items = Item::where('company_id', Auth::user()->company_id)
                      ->where('active', true)
                      ->get();
-        return view('jobs.items.create', compact('job', 'items'));
+        return view('items.create', compact('job', 'items'));
     }
 
     public function storeJobItem(Request $request, Job $job)
@@ -561,5 +465,165 @@ class JobController extends Controller
         ]);
 
         return redirect()->route('jobs.show', $job)->with('success', 'Item added to job successfully.');
+    }
+
+     public function copy(Job $job)
+    {
+
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403);
+        }
+
+        $companyId = Auth::user()->company_id;
+        $jobTypes = JobType::with('jobOptions')->where('active', true)->get();
+        $clients = Client::where('company_id', $companyId)->where('active', true)->get();
+        $equipments = Equipment::where('company_id', $companyId)->where('active', true)->get();
+
+        // Decode job option values for editing
+        $jobOptionValues = $job->job_option_values ? json_decode($job->job_option_values, true) : [];
+
+        return view('jobs.copy', compact('job', 'jobTypes', 'clients', 'equipments', 'jobOptionValues'));
+    }
+
+    public function storeCopy(Request $request, Job $job)
+    {
+
+
+        // Get job type and its options for validation
+        $jobType = null;
+        if ($request->has('job_type_id') && $request->job_type_id) {
+            $jobType = JobType::with('jobOptions')->find($request->job_type_id);
+        }
+
+        // Build validation rules
+        $rules = $this->getValidationRules($jobType);
+        $request->validate($rules);
+
+        // Prepare job data
+        $jobData = $this->prepareJobData($request);
+
+        // Handle job option values
+        $jobOptionValues = $this->processJobOptionValues($request, $jobType);
+        if (!empty($jobOptionValues)) {
+            $jobData['job_option_values'] = $jobOptionValues;
+        }
+
+        // Copy photos from original job
+        if ($job->photos) {
+            $jobData['photos'] = $job->photos; // Copy JSON-encoded photos
+        }
+
+        // Create the new job
+        $newJob = Job::create($jobData);
+
+        // Copy tasks from original job
+        $tasks = Task::where('job_id', $job->id)->where('active', true)->get();
+        foreach ($tasks as $task) {
+            $newTask = $task->replicate();
+            $newTask->job_id = $newJob->id;
+            $newTask->created_by = Auth::id();
+            $newTask->save();
+
+            // Copy job employees for the task
+            $jobEmployees = $job->jobEmployees()->where('task_id', $task->id)->get();
+            foreach ($jobEmployees as $jobEmployee) {
+                $newJob->jobEmployees()->create([
+                    'employee_id' => $jobEmployee->employee_id,
+                    'task_id' => $newTask->id,
+                    'start_date' => $jobEmployee->start_date,
+                    'end_date' => $jobEmployee->end_date,
+                    'duration_in_days' => $jobEmployee->duration_in_days,
+                    'status' => $jobEmployee->status,
+                    'notes' => $jobEmployee->notes,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ]);
+            }
+        }
+
+        return redirect()->route('jobs.index')->with('success', 'Job copied successfully as a new job.');
+    }
+
+    public function extendTask(Job $job)
+    {
+
+
+        $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
+        return view('tasks.extend-task', compact('job', 'tasks'));
+    }
+
+    public function storeExtendTask(Request $request, Job $job)
+    {
+
+
+        $request->validate([
+            'task_id' => 'required|exists:tasks,id',
+            'new_end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        // Find the task and its job employees
+        $task = Task::where('job_id', $job->id)->findOrFail($request->task_id);
+        $jobEmployees = $job->jobEmployees()->where('task_id', $task->id)->get();
+
+        // Calculate new duration
+        $newEndDate = \Carbon\Carbon::parse($request->new_end_date);
+        $startDate = $jobEmployees->first()->start_date ? \Carbon\Carbon::parse($jobEmployees->first()->start_date) : null;
+        $durationInDays = $startDate ? $startDate->diffInDays($newEndDate) + 1 : null;
+
+        // Get job type for validation
+        $jobType = JobType::with('jobOptions')->find($job->job_type_id);
+
+        // Create new job with updated due date
+        $jobData = [
+            'job_number' => $job->job_number . '-EXT-' . time(), // Unique job number
+            'job_type_id' => $job->job_type_id,
+            'client_id' => $job->client_id,
+            'equipment_id' => $job->equipment_id,
+            'description' => $job->description,
+            'references' => $job->references,
+            'priority' => $job->priority,
+            'start_date' => $job->start_date,
+            'due_date' => $newEndDate->format('Y-m-d'),
+            'active' => true,
+            'status' => $job->status,
+            'company_id' => Auth::user()->company_id,
+            'created_by' => Auth::id(),
+            'photos' => $job->photos,
+            'job_option_values' => $job->job_option_values,
+        ];
+
+        $newJob = Job::create($jobData);
+
+        // Copy all tasks, updating the selected task's duration
+        $tasks = Task::where('job_id', $job->id)->where('active', true)->get();
+        foreach ($tasks as $existingTask) {
+            $newTask = $existingTask->replicate();
+            $newTask->job_id = $newJob->id;
+            $newTask->created_by = Auth::id();
+
+            if ($existingTask->id == $request->task_id) {
+                $newTask->end_date = $newEndDate->format('Y-m-d');
+            }
+
+            $newTask->save();
+
+            // Copy job employees, updating duration for the selected task
+            $existingJobEmployees = $job->jobEmployees()->where('task_id', $existingTask->id)->get();
+            foreach ($existingJobEmployees as $jobEmployee) {
+                $newJob->jobEmployees()->create([
+                    'employee_id' => $jobEmployee->employee_id,
+                    'task_id' => $newTask->id,
+                    'start_date' => $jobEmployee->start_date,
+                    'end_date' => ($existingTask->id == $request->task_id) ? $newEndDate->format('Y-m-d') : $jobEmployee->end_date,
+                    'duration_in_days' => ($existingTask->id == $request->task_id) ? $durationInDays : $jobEmployee->duration_in_days,
+                    'status' => $jobEmployee->status,
+                    'notes' => $jobEmployee->notes,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ]);
+            }
+        }
+
+        return redirect()->route('jobs.index')->with('success', 'New job created with extended task duration.');
     }
 }

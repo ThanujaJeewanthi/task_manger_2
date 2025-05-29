@@ -28,6 +28,40 @@
     --radius-lg: 0.75rem;
 }
 
+html,body{
+    height: 100%!important;
+   margin-bottom: 20px!important;
+    overflow: hidden!important;
+}
+
+.navbar{
+    z-index: 1030 !important;
+}
+footer{
+    z-index: 1010 !important;
+    position: fixed !important;
+    bottom: 0;
+
+
+
+    left: 0;
+    right: 0;
+    height: 25px;
+    background-color: #212529 !important;
+    flex-shrink: 0;
+}
+.sidebar{z-index: 1000 !important;}
+.main-content{
+    z-index: 999 !important;
+    position: relative !important;
+    padding: 0.5rem 1rem;
+    min-height: calc(100vh - 56px - 25px);
+    /* Adjusted for navbar height and footer height */
+    overflow-y: auto;
+
+}
+
+
 /* Enhanced Typography */
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -55,11 +89,13 @@ h6 { font-size: 0.875rem; }
 
 /* Modern Navbar Styles */
 .navbar {
-    background: linear-gradient(135deg, #1b3764 0%, #212833 100%) !important;
-    border-bottom: 1px solid rgba(58, 62, 77, 0.1);
+    background: linear-gradient(125deg, #1b3764 0%, #212833  90%) !important;
+ box-shadow :#0891b2;
+    /* border-bottom: 1px solid rgba(58, 62, 77, 0.1); */
     /* backdrop-filter: blur(10px); */
     min-height: 56px;
     padding: 0.5rem 0;
+
 }
 
 .navbar-brand {
@@ -192,19 +228,10 @@ width:auto;
    }
 
 
-    /* /* .sidebar-wrapper:not(.expanded) .sidebar .sidebar-menu a i,
-    .sidebar-wrapper:not(.expanded) .sidebar .sidebar-menu .dropdown-btn i {
-        display: inline-block!important;
-        /* width: 24px;
-        height: 24px;
-        font-size: 1.25rem; */
-        /* text-align: center; */
-
-    /* .sidebar-wrapper:not(.expanded) .sidebar .sidebar-menu .dropdown-btn i {
-
-
-   }  */
 }
+
+
+
 
 /* Modern Card Styles */
 .card {
@@ -330,8 +357,8 @@ td > form.d-inline:last-child {
 }
 
 .form-control {
-    font-size: 0.813rem;
-    padding: 0.625rem 0.875rem;
+    font-size: 0.713rem;
+    padding: 0.525rem 0.775rem;
     border: 1.5px solid var(--border-color);
     border-radius: var(--radius-md);
     transition: all 0.2s ease;
@@ -351,7 +378,7 @@ td > form.d-inline:last-child {
 
 textarea.form-control {
     resize: vertical;
-    min-height: 2.5rem;
+    min-height: 1rem;
 }
 
 /* Modern Button Styles */
@@ -589,7 +616,7 @@ min-width: 220px;
 
     .form-control {
         font-size: 0.75rem;
-        padding: 0.5rem 0.75rem;
+        padding: 0.4rem 0.65rem;
     }
 }
 

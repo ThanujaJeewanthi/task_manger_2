@@ -11,6 +11,14 @@
                             <span>Job Details: {{ $job->job_number }}</span>
                         </div>
                         <div>
+
+                                <a href="{{ route('jobs.copy', $job) }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-copy"></i> Copy Job
+                                </a>
+                                <a href="{{ route('jobs.extend-task', $job) }}" class="btn btn-warning btn-sm">
+                                    <i class="fas fa-clock"></i> Extend Task
+                                </a>
+
                             <a href="{{ route('jobs.edit', $job) }}" class="btn btn-info btn-sm">
                                 <i class="fas fa-edit"></i> Edit Job
                             </a>
@@ -60,10 +68,10 @@
                                     </span>
                                 </p>
                                 <p><strong>Priority:</strong>
-                                      @php
-                                                    $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
-                                                    $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
-                                                @endphp
+                                    @php
+                                        $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
+                                        $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
+                                    @endphp
                                     <span class="badge bg-{{ $priorityColors[$job->priority] }}">
                                         {{ $priorityLabels[$job->priority] }}
                                     </span>
@@ -79,28 +87,6 @@
                             <p><strong>References:</strong> {{ $job->references }}</p>
                         @endif
                     </div>
-
-                    <!-- Job Options -->
-                    @if($job->jobType->jobOptions->count() > 0)
-                        <div class="d-component-container mb-4">
-
-                            <div class="row">
-                                @foreach($job->jobType->jobOptions as $option)
-                                    @php
-                                        $jobOption = $job->jobOptions ? $job->jobOptions->where('id', $option->id)->first() : null;
-                                        $value = $jobOption ? ($jobOption->value ?? 'N/A') : 'N/A';
-                                        if (is_array($value)) {
-                                            $value = implode(', ', $value);
-                                        }
-                                    @endphp
-
-                                    <div class="col-md-4">
-                                        <p><strong>{{ $option->name }}:</strong> {!! $value !!}</p>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
 
                     <!-- Photos -->
                     @if($job->photos)

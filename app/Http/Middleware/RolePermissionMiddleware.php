@@ -53,8 +53,8 @@ class RolePermissionMiddleware
         }
 
 
-        // Redirect to dashboard with error
-        return redirect()->route('home')
+        // Return back with error
+        return redirect()->back()
             ->with('error', 'You do not have permission to access this page.');
     }
 }

@@ -330,7 +330,7 @@ max-width: 900px !important;
             @endauth
 
             <!-- Main Content -->
-            <main class="main-content flex-grow-1 p-4">
+            <main class="main-content flex-grow-1 p-4 mb-3">
                 @if (session('success'))
                     <div class="alert alert-success mb-4" role="alert">
                         {{ session('success') }}
@@ -347,7 +347,7 @@ max-width: 900px !important;
         </div>
 
         <!-- Footer -->
-        @include('layouts.footer')
+        {{-- @include('layouts.footer') --}}
     </div>
 
     <!-- Scripts -->

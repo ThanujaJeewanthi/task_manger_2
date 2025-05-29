@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('task');
             $table->text('description')->nullable();
             $table->foreignId('job_id');
-                      $table->timestamps();
+             $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
             $table->boolean('active')->default(true);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
