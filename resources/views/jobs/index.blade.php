@@ -1,4 +1,4 @@
-```html
+
 @extends('layouts.app')
 
 @section('content')
@@ -89,9 +89,9 @@
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>Job Number</th>
+                                        <th style="width: 10px;">Job Number</th>
                                         <th>Job Type</th>
-                                        <th>Client</th>
+                                        <th style="width: 40px;">Client</th>
                                         <th>Equipment</th>
                                         <th>Status</th>
                                         <th>Priority</th>

@@ -23,23 +23,27 @@ class SuperAdminDashboardController extends Controller
     {
         // System-wide statistics
         $stats = [
-            'total_companies' => Company::count(),
-            'active_companies' => Company::where('active', true)->count(),
-            'total_users' => User::count(),
-            'active_users' => User::where('active', true)->count(),
-            'total_jobs' => Job::count(),
-            'active_jobs' => Job::where('active', true)->count(),
-            'completed_jobs' => Job::where('status', 'completed')->count(),
-            'pending_jobs' => Job::where('status', 'pending')->count(),
-            'in_progress_jobs' => Job::where('status', 'in_progress')->count(),
-            'total_employees' => Employee::count(),
-            'active_employees' => Employee::where('active', true)->count(),
-            'total_clients' => Client::count(),
-            'active_clients' => Client::where('active', true)->count(),
-            'total_equipment' => Equipment::count(),
-            'available_equipment' => Equipment::where('status', 'available')->count(),
-            'total_items' => Item::count(),
-            'total_job_types' => JobType::count(),
+            'total_companies' => Company::where('active', true)->count(),
+            'total_users' => User::where('active', true)->count(),
+            'total_jobs' => Job::where('active', true)->count(),
+            'total_employees' => Employee::where('active', true)->count(),
+            'total_clients' => Client::where('active', true)->count(),
+            'total_equipment' => Equipment::where('active', true)->count(),
+            'total_items' => Item::where('active', true)->count(),
+            'total_job_types' => JobType::where('active', true)->count(),
+        ];
+
+        // Job statistics
+        $jobStats = [
+            'pending_jobs' => Job::where('status', 'pending')->where('active', true)->count(),
+            'in_progress_jobs' => Job::where('status', 'in_progress')->where('active', true)->count(),
+            'completed_jobs' => Job::where('status', 'completed')->where('active', true)->count(),
+            'overdue_jobs' => Job::where('due_date', '<', Carbon::now())
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->where('active', true)->count(),
+            'high_priority_jobs' => Job::where('priority', 1)
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->where('active', true)->count(),
         ];
 
         // Recent activity logs
@@ -64,6 +68,7 @@ class SuperAdminDashboardController extends Controller
 
         // Jobs by status chart data
         $jobsByStatus = Job::select('status', DB::raw('count(*) as count'))
+            ->where('active', true)
             ->groupBy('status')
             ->get()
             ->pluck('count', 'status');
@@ -79,6 +84,7 @@ class SuperAdminDashboardController extends Controller
             END as priority_label'),
             DB::raw('count(*) as count')
         )
+            ->where('active', true)
             ->groupBy('priority')
             ->get()
             ->pluck('count', 'priority_label');
@@ -89,56 +95,94 @@ class SuperAdminDashboardController extends Controller
             DB::raw('count(*) as count')
         )
             ->where('created_at', '>=', Carbon::now()->subMonths(6))
+            ->where('active', true)
             ->groupBy('month')
             ->orderBy('month')
             ->get();
 
+        // Top performing companies
+        $topCompanies = Company::withCount([
+            'jobs as completed_jobs' => function ($query) {
+                $query->where('status', 'completed');
+            }
+        ])
+            ->where('active', true)
+            ->orderBy('completed_jobs', 'desc')
+            ->take(5)
+            ->get();
+
+        // Equipment status overview
+        $equipmentStats = Equipment::select('status', DB::raw('count(*) as count'))
+            ->where('active', true)
+            ->groupBy('status')
+            ->get()
+            ->pluck('count', 'status');
+
         // Critical alerts
         $alerts = [];
 
-        // Overdue jobs
-        $overdueJobs = Job::where('due_date', '<', Carbon::now())
-            ->where('status', '!=', 'completed')
-            ->where('status', '!=', 'cancelled')
-            ->count();
-
-        if ($overdueJobs > 0) {
+        if ($jobStats['overdue_jobs'] > 0) {
             $alerts[] = [
                 'type' => 'danger',
                 'icon' => 'fas fa-exclamation-triangle',
-                'message' => "{$overdueJobs} jobs are overdue",
-                'link' => route('jobs.index', ['filter' => 'overdue'])
+                'message' => "{$jobStats['overdue_jobs']} jobs are overdue across all companies",
+                'count' => $jobStats['overdue_jobs']
             ];
         }
 
-        // Equipment in maintenance
-        $maintenanceEquipment = Equipment::where('status', 'maintenance')->count();
-        if ($maintenanceEquipment > 0) {
+        if ($jobStats['high_priority_jobs'] > 0) {
             $alerts[] = [
                 'type' => 'warning',
-                'icon' => 'fas fa-tools',
-                'message' => "{$maintenanceEquipment} equipment items need maintenance",
-                'link' => route('equipments.index', ['status' => 'maintenance'])
+                'icon' => 'fas fa-exclamation-circle',
+                'message' => "{$jobStats['high_priority_jobs']} high priority jobs need attention",
+                'count' => $jobStats['high_priority_jobs']
             ];
         }
 
-        // Recent high priority jobs
+        $maintenanceEquipment = $equipmentStats['maintenance'] ?? 0;
+        if ($maintenanceEquipment > 0) {
+            $alerts[] = [
+                'type' => 'info',
+                'icon' => 'fas fa-tools',
+                'message' => "{$maintenanceEquipment} equipment items need maintenance",
+                'count' => $maintenanceEquipment
+            ];
+        }
+
+        // Recent high priority jobs across all companies
         $highPriorityJobs = Job::with(['jobType', 'client', 'company'])
             ->where('priority', 1)
             ->where('status', '!=', 'completed')
+            ->where('active', true)
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
+        // System health metrics
+        $systemHealth = [
+            'active_companies_percentage' => Company::count() > 0 ?
+                round((Company::where('active', true)->count() / Company::count()) * 100, 1) : 0,
+            'job_completion_rate' => Job::count() > 0 ?
+                round((Job::where('status', 'completed')->count() / Job::count()) * 100, 1) : 0,
+            'employee_utilization' => Employee::where('active', true)->count() > 0 ?
+                round((Employee::whereHas('jobEmployees', function($q) {
+                    $q->whereIn('status', ['pending', 'in_progress']);
+                })->count() / Employee::where('active', true)->count()) * 100, 1) : 0,
+        ];
+
         return view('dashboard.superadmin', compact(
             'stats',
+            'jobStats',
             'recentLogs',
             'companyStats',
             'jobsByStatus',
             'jobsByPriority',
             'monthlyJobTrends',
+            'topCompanies',
+            'equipmentStats',
             'alerts',
-            'highPriorityJobs'
+            'highPriorityJobs',
+            'systemHealth'
         ));
     }
 
@@ -172,9 +216,21 @@ class SuperAdminDashboardController extends Controller
 
             case 'equipment_status':
                 return Equipment::select('status', DB::raw('count(*) as count'))
+                    ->where('active', true)
                     ->groupBy('status')
                     ->get()
                     ->pluck('count', 'status');
+
+            case 'task_completion_trends':
+                return Task::select(
+                    DB::raw('DATE_FORMAT(updated_at, "%Y-%m") as month'),
+                    DB::raw('count(*) as count')
+                )
+                    ->where('status', 'completed')
+                    ->where('updated_at', '>=', Carbon::now()->subMonths(6))
+                    ->groupBy('month')
+                    ->orderBy('month')
+                    ->get();
 
             default:
                 return response()->json(['error' => 'Invalid chart type'], 400);

@@ -1,293 +1,711 @@
 @extends('layouts.app')
 
-@section('title', 'Admin Dashboard')
-
 @section('content')
 <div class="container-fluid">
-    <!-- Welcome Section -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Company Dashboard</h1>
-        <div class="d-none d-lg-inline-block text-muted">
-            <i class="fas fa-building"></i> {{ Auth::user()->company->name }}
-        </div>
-    </div>
-
-    <!-- Alert Section -->
-    @if(count($alerts) > 0)
-    <div class="row mb-4">
-        <div class="col-12">
-            @foreach($alerts as $alert)
-            <div class="alert alert-{{ $alert['type'] }} alert-dismissible fade show" role="alert">
-                <i class="{{ $alert['icon'] }} me-2"></i>
-                {{ $alert['message'] }}
-                @if(isset($alert['link']))
-                <a href="{{ $alert['link'] }}" class="alert-link ms-2">{{ $alert['action'] ?? 'View Details' }}</a>
-                @endif
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
-
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <x-dashboard.stat-card
-                title="Active Jobs"
-                :value="$stats['active_jobs']"
-                icon="fas fa-tasks"
-                color="primary"
-                {{-- :link="route('jobs.index')" --}}
-            />
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <x-dashboard.stat-card
-                title="Pending Tasks"
-                :value="$stats['pending_tasks']"
-                icon="fas fa-clock"
-                color="warning"
-                {{-- :link="route('jobs.tasks.index', $job->id)" --}}
-            />
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <x-dashboard.stat-card
-                title="Total Employees"
-                :value="$stats['total_employees']"
-                icon="fas fa-users"
-                color="success"
-               
-            />
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <x-dashboard.stat-card
-                title="Total Clients"
-                :value="$stats['total_clients']"
-                icon="fas fa-user-tie"
-                color="info"
-                :link="route('clients.index')"
-            />
-        </div>
-    </div>
-
-    <!-- Recent Jobs and Tasks -->
-    <div class="row mb-4">
-        <!-- Recent Jobs -->
-        <div class="col-xl-8">
-            <x-dashboard.recent-table
-                title="Recent Jobs"
-                :headers="['Job #', 'Type', 'Client', 'Status', 'Priority', 'Due Date', 'Actions']"
-                :items="$recentJobs"
-                :viewAllRoute="route('jobs.index')"
-                emptyMessage="No recent jobs found"
-            >
-                <td>
-                    <a href="{{ route('jobs.show', $item) }}" class="font-weight-bold text-decoration-none">
-                        {{ $item->job_number }}
-                    </a>
-                </td>
-                <td>
-                    <span class="badge" style="background-color: {{ $item->jobType->color ?? '#6c757d' }};">
-                        {{ $item->jobType->name ?? 'N/A' }}
-                    </span>
-                </td>
-                <td>{{ $item->client->name ?? 'N/A' }}</td>
-                <td>
-                    <span class="badge bg-{{ $item->status_color }}">
-                        {{ ucfirst(str_replace('_', ' ', $item->status)) }}
-                    </span>
-                </td>
-                <td>
-                    <span class="badge bg-{{ $item->priority_color }}">
-                        {{ $item->priority_label }}
-                    </span>
-                </td>
-                <td>{{ $item->due_date ? $item->due_date->format('M d, Y') : 'N/A' }}</td>
-                <td>
-                    <div class="btn-group">
-                        <a href="{{ route('jobs.show', $item) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="{{ route('jobs.edit', $item) }}" class="btn btn-sm btn-outline-info">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    </div>
-                </td>
-            </x-dashboard.recent-table>
-        </div>
-
-        <!-- Pending Approvals -->
-        <div class="col-xl-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Pending Approvals</h6>
-                </div>
-                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    @forelse($pendingApprovals as $approval)
-                    <div class="d-flex align-items-center border-bottom py-2">
-                        <div class="flex-grow-1">
-                            <div class="font-weight-bold">{{ $approval->title }}</div>
-                            <small class="text-muted">{{ $approval->description }}</small>
-                            <div class="mt-1">
-                                <small class="text-info">
-                                    Requested by: {{ $approval->requested_by->name }}
-                                </small>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-success" onclick="approveRequest({{ $approval->id }})">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-sm btn-danger" onclick="rejectRequest({{ $approval->id }})">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-check-circle fa-3x mb-3"></i>
-                        <p>No pending approvals!</p>
-                    </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Company Resources -->
     <div class="row">
-        <div class="col-xl-4">
-            <x-dashboard.recent-table
-                title="Recent Clients"
-                :headers="['Name', 'Contact', 'Jobs', 'Actions']"
-                :items="$recentClients"
-                :viewAllRoute="route('clients.index')"
-                emptyMessage="No recent clients found"
-            >
-                <td>{{ $item->name }}</td>
-                <td>{{ $item->contact_person }}</td>
-                <td>{{ $item->jobs_count }}</td>
-                <td>
-                    <div class="btn-group">
-                        <a href="{{ route('clients.show', $item) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="{{ route('clients.edit', $item) }}" class="btn btn-sm btn-outline-info">
-                            <i class="fas fa-edit"></i>
-                        </a>
+        <div class="col-md-12">
+            <!-- Header Section -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-component-title">
+                            <span>Company Admin Dashboard</span>
+                        </div>
+                        <div>
+                            <a href="{{ route('jobs.create') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus"></i> New Job
+                            </a>
+                            <a href="{{ route('employees.create') }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-user-plus"></i> Add Employee
+                            </a>
+                        </div>
                     </div>
-                </td>
-            </x-dashboard.recent-table>
-        </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Overview Cards -->
+                        <div class="col-md-2">
+                            <div class="card bg-primary text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['total_jobs'] }}</h5>
+                                    <small>Total Jobs</small>
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="col-xl-4">
-            <x-dashboard.recent-table
-                title="Recent Employees"
-                :headers="['Name', 'Role', 'Tasks', 'Status']"
-                :items="$recentEmployees"
-                :viewAllRoute="route('employees.index')"
-                emptyMessage="No recent employees found"
-            >
-                <td>{{ $item->name }}</td>
-                <td>{{ $item->role->name }}</td>
-                <td>{{ $item->tasks_count }}</td>
-                <td>
-                    <span class="badge bg-{{ $item->is_active ? 'success' : 'danger' }}">
-                        {{ $item->is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                </td>
-            </x-dashboard.recent-table>
-        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-success text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['total_employees'] }}</h5>
+                                    <small>Employees</small>
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="col-xl-4">
-            <x-dashboard.recent-table
-                title="Recent Equipment"
-                :headers="['Name', 'Type', 'Status', 'Actions']"
-                :items="$recentEquipment"
-                :viewAllRoute="route('equipment.index')"
-                emptyMessage="No recent equipment found"
-            >
-                <td>{{ $item->name }}</td>
-                <td>{{ $item->type }}</td>
-                <td>
-                    <span class="badge bg-{{ $item->status_color }}">
-                        {{ $item->status }}
-                    </span>
-                </td>
-                <td>
-                    <div class="btn-group">
-                        <a href="{{ route('equipment.show', $item) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye"></i>
-                        </a>
-                        <a href="{{ route('equipment.edit', $item) }}" class="btn btn-sm btn-outline-info">
-                            <i class="fas fa-edit"></i>
-                        </a>
+                        <div class="col-md-2">
+                            <div class="card bg-info text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['total_clients'] }}</h5>
+                                    <small>Clients</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-warning text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['total_equipment'] }}</h5>
+                                    <small>Equipment</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-secondary text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['total_items'] }}</h5>
+                                    <small>Items</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-dark text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $taskStats['pending_tasks'] }}</h5>
+                                    <small>Pending Tasks</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </td>
-            </x-dashboard.recent-table>
+                </div>
+            </div>
+
+            <!-- Quick Management Navigation -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-component-title">
+                        <span>Management Console</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Job Management -->
+                        <div class="col-md-3">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-briefcase"></i> Job Management</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-list"></i> View All Jobs
+                                        </a>
+                                        <a href="{{ route('jobs.create') }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus"></i> Create New Job
+                                        </a>
+                                        <a href="{{ route('job-types.index') }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-tags"></i> Job Types
+                                        </a>
+                                        <a href="{{ route('job-options.index') }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-sliders-h"></i> Job Options
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee Management -->
+                        <div class="col-md-3">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-users"></i> Employee Management</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-list"></i> View Employees
+                                        </a>
+                                        <a href="{{ route('employees.create') }}" class="btn btn-sm btn-success">
+                                            <i class="fas fa-user-plus"></i> Add Employee
+                                        </a>
+                                        <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-users-cog"></i> Manage Users
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Client & Resources -->
+                        <div class="col-md-3">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-handshake"></i> Clients & Resources</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-handshake"></i> Manage Clients
+                                        </a>
+                                        <a href="{{ route('equipments.index') }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-tools"></i> Equipment
+                                        </a>
+                                        <a href="{{ route('items.index') }}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-boxes"></i> Items
+                                        </a>
+                                        <a href="{{ route('suppliers.index') }}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-truck"></i> Suppliers
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reports & Analytics -->
+                        <div class="col-md-3">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-white">
+                                    <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Reports & Analytics</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('logs.index') }}" class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-history"></i> Activity Logs
+                                        </a>
+                                        <button class="btn btn-sm btn-warning" onclick="generateJobReport()">
+                                            <i class="fas fa-file-alt"></i> Job Report
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-warning" onclick="generateEmployeeReport()">
+                                            <i class="fas fa-user-chart"></i> Employee Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @if(count($alerts) > 0)
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-component-title">
+                        <span>Alerts & Notifications</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach($alerts as $alert)
+                        <div class="col-md-6 mb-2">
+                            <div class="alert alert-{{ $alert['type'] }} mb-0">
+                                <i class="{{ $alert['icon'] }}"></i>
+                                <strong>{{ $alert['count'] }}</strong> - {{ $alert['message'] }}
+                                <small class="d-block mt-1">{{ $alert['action'] }}</small>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <div class="row">
+                <!-- Job Status Overview -->
+                <div class="col-md-8">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Job Status Overview</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h4 class="text-warning">{{ $jobStats['pending_jobs'] }}</h4>
+                                        <small>Pending Jobs</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h4 class="text-primary">{{ $jobStats['in_progress_jobs'] }}</h4>
+                                        <small>In Progress</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h4 class="text-success">{{ $jobStats['completed_jobs'] }}</h4>
+                                        <small>Completed</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h4 class="text-danger">{{ $jobStats['overdue_jobs'] }}</h4>
+                                        <small>Overdue</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Jobs by Priority -->
+                            <div class="mb-3">
+                                <h6>Priority Distribution</h6>
+                                <div class="row">
+                                    @foreach($jobsByPriority as $priority => $count)
+                                    <div class="col-md-3">
+                                        @php
+                                            $priorityColors = ['High' => 'danger', 'Medium' => 'warning', 'Low' => 'info', 'Very Low' => 'secondary'];
+                                        @endphp
+                                        <div class="card border-{{ $priorityColors[$priority] ?? 'secondary' }}">
+                                            <div class="card-body text-center">
+                                                <h5 class="text-{{ $priorityColors[$priority] ?? 'secondary' }}">{{ $count }}</h5>
+                                                <small>{{ $priority }} Priority</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Task Statistics -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h5 class="text-warning">{{ $taskStats['pending_tasks'] }}</h5>
+                                        <small>Pending Tasks</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h5 class="text-primary">{{ $taskStats['in_progress_tasks'] }}</h5>
+                                        <small>In Progress Tasks</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center">
+                                        <h5 class="text-success">{{ $taskStats['completed_tasks'] }}</h5>
+                                        <small>Completed Tasks</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions & Equipment Status -->
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Quick Actions</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{{ route('jobs.create') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Create New Job
+                                </a>
+                                <a href="{{ route('employees.create') }}" class="btn btn-success">
+                                    <i class="fas fa-user-plus"></i> Add Employee
+                                </a>
+                                <a href="{{ route('clients.create') }}" class="btn btn-info">
+                                    <i class="fas fa-handshake"></i> Add Client
+                                </a>
+                                <a href="{{ route('equipments.create') }}" class="btn btn-warning">
+                                    <i class="fas fa-tools"></i> Add Equipment
+                                </a>
+                                <a href="{{ route('items.create') }}" class="btn btn-secondary">
+                                    <i class="fas fa-box"></i> Add Item
+                                </a>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cogs"></i> Job Actions
+                                    </button>
+                                    <ul class="dropdown-menu w-100">
+                                        <li><a class="dropdown-item" href="{{ route('job-types.create') }}">
+                                            <i class="fas fa-plus"></i> Add Job Type
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{{ route('job-options.create') }}">
+                                            <i class="fas fa-sliders-h"></i> Add Job Option
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Equipment Status -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Equipment Status</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @php
+                                $equipmentStatusColors = [
+                                    'available' => 'success',
+                                    'in_use' => 'primary',
+                                    'maintenance' => 'warning',
+                                    'retired' => 'secondary'
+                                ];
+                            @endphp
+                            @foreach($equipmentStats as $status => $count)
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>{{ ucfirst($status) }}</span>
+                                <span class="badge bg-{{ $equipmentStatusColors[$status] ?? 'secondary' }}">{{ $count }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Jobs and Employee Performance -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-component-title">
+                                    <span>Recent Jobs</span>
+                                </div>
+                                <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive table-compact">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Job #</th>
+                                            <th>Type</th>
+                                            <th>Client</th>
+                                            <th>Priority</th>
+                                            <th>Status</th>
+                                            <th>Due Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($recentJobs as $job)
+                                        <tr>
+                                            <td>{{ $job->job_number }}</td>
+                                            <td>
+                                                <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
+                                                    {{ $job->jobType->name }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $job->client->name ?? 'N/A' }}</td>
+                                            <td>
+                                                @php
+                                                    $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
+                                                    $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
+                                                @endphp
+                                                <span class="badge bg-{{ $priorityColors[$job->priority] }}">
+                                                    {{ $priorityLabels[$job->priority] }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $statusColors = [
+                                                        'draft' => 'secondary',
+                                                        'pending' => 'warning',
+                                                        'in_progress' => 'primary',
+                                                        'on_hold' => 'info',
+                                                        'completed' => 'success',
+                                                        'cancelled' => 'danger'
+                                                    ];
+                                                @endphp
+                                                <span class="badge bg-{{ $statusColors[$job->status] ?? 'secondary' }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $job->status)) }}
+                                                </span>
+                                            </td>
+                                            <td>{{ $job->due_date ? $job->due_date->format('M d') : 'N/A' }}</td>
+                                            <td>
+                                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-xs btn-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('jobs.edit', $job) }}" class="btn btn-xs btn-info">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <div class="btn-group" role="group">
+                                                    <button class="btn btn-xs btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                        <i class="fas fa-ellipsis-v"></i>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a class="dropdown-item" href="{{ route('jobs.tasks.create', $job) }}">
+                                                            <i class="fas fa-plus"></i> Add Task
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ route('jobs.items.create', $job) }}">
+                                                            <i class="fas fa-box"></i> Add Item
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ route('jobs.copy', $job) }}">
+                                                            <i class="fas fa-copy"></i> Copy Job
+                                                        </a></li>
+                                                        <li><a class="dropdown-item" href="{{ route('jobs.extend-task', $job) }}">
+                                                            <i class="fas fa-clock"></i> Extend Task
+                                                        </a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center">No recent jobs found</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Employee Performance -->
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Employee Performance</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive table-compact">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Employee</th>
+                                            <th>Completed</th>
+                                            <th>Active</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($employeePerformance as $employee)
+                                        <tr>
+                                            <td>{{ $employee->name }}</td>
+                                            <td>
+                                                <span class="badge bg-success">{{ $employee->completed_tasks_this_month }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-primary">{{ $employee->total_active_tasks }}</span>
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('employees.show', $employee) }}" class="btn btn-xs btn-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ route('employees.edit', $employee) }}" class="btn btn-xs btn-info">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center">No employees found</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Tasks and Upcoming Deadlines -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Active Tasks</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive table-compact">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Task</th>
+                                            <th>Job</th>
+                                            <th>Assigned To</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($activeTasks as $task)
+                                        <tr>
+                                            <td>{{ Str::limit($task->task, 30) }}</td>
+                                            <td>{{ $task->job->job_number }}</td>
+                                            <td>
+                                                @foreach($task->jobEmployees as $assignment)
+                                                <small class="badge bg-info">{{ $assignment->employee->name ?? 'N/A' }}</small>
+                                                @endforeach
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center">No active tasks</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Deadlines -->
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Upcoming Deadlines (Next 7 Days)</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive table-compact">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Job #</th>
+                                            <th>Client</th>
+                                            <th>Due Date</th>
+                                            <th>Priority</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($upcomingDeadlines as $job)
+                                        <tr>
+                                            <td>
+                                                <a href="{{ route('jobs.show', $job) }}">{{ $job->job_number }}</a>
+                                            </td>
+                                            <td>{{ $job->client->name ?? 'N/A' }}</td>
+                                            <td>
+                                                @php
+                                                    $daysUntilDue = \Carbon\Carbon::now()->diffInDays($job->due_date);
+                                                    $textClass = $daysUntilDue <= 1 ? 'text-danger' : ($daysUntilDue <= 3 ? 'text-warning' : 'text-primary');
+                                                @endphp
+                                                <span class="{{ $textClass }}">{{ $job->due_date->format('M d') }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ $priorityColors[$job->priority] }}">
+                                                    {{ $priorityLabels[$job->priority] }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="4" class="text-center">No upcoming deadlines</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Client Statistics -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-component-title">
+                        <span>Client Job Distribution</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive table-compact">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Total Jobs</th>
+                                    <th>Completed</th>
+                                    <th>Pending</th>
+                                    <th>Completion Rate</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($clientJobStats as $client)
+                                <tr>
+                                    <td>{{ $client->name }}</td>
+                                    <td>{{ $client->total_jobs }}</td>
+                                    <td>
+                                        <span class="badge bg-success">{{ $client->completed_jobs }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">{{ $client->pending_jobs }}</span>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $completionRate = $client->total_jobs > 0 ? round(($client->completed_jobs / $client->total_jobs) * 100, 1) : 0;
+                                        @endphp
+                                        <div class="progress" style="height: 20px; width: 80px;">
+                                            <div class="progress-bar bg-success" style="width: {{ $completionRate }}%">
+                                                {{ $completionRate }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('clients.edit', $client) }}" class="btn btn-xs btn-info">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="6" class="text-center">No client data available</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
+@endsection
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Company statistics chart
-    const ctx = document.getElementById('companyStatsChart').getContext('2d');
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($monthlyStats->pluck('month')) !!},
-            datasets: [{
-                label: 'Jobs Created',
-                data: {!! json_encode($monthlyStats->pluck('jobs')) !!},
-                borderColor: '#4e73df',
-                backgroundColor: 'rgba(78, 115, 223, 0.1)',
-                tension: 0.3,
-                fill: true
-            }, {
-                label: 'Tasks Completed',
-                data: {!! json_encode($monthlyStats->pluck('tasks')) !!},
-                borderColor: '#1cc88a',
-                backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    <script>
+function generateJobReport() {
+    // Implementation for generating job reports
+    if (confirm('Generate job report for this company?')) {
+        window.open('/admin/reports/jobs', '_blank');
+    }
+}
 
-    // Auto-refresh dashboard every 30 seconds
-    setInterval(function() {
-        fetch('{{ route("admin.dashboard.quick-stats") }}')
-            .then(response => response.json())
-            .then(data => {
-                // Update dashboard stats
-                console.log('Quick stats updated:', data);
-            })
-            .catch(error => console.error('Error updating stats:', error));
-    }, 30000);
+function generateEmployeeReport() {
+    // Implementation for generating employee reports
+    if (confirm('Generate employee performance report?')) {
+        window.open('/admin/reports/employees', '_blank');
+    }
+}
+
+// Auto-refresh dashboard data every 5 minutes
+setInterval(function() {
+    fetch('/admin/dashboard/quick-stats')
+        .then(response => response.json())
+        .then(data => {
+            // Update quick stats if elements exist
+            updateQuickStats(data);
+        })
+        .catch(error => console.log('Auto-refresh failed:', error));
+}, 300000); // 5 minutes
+
+function updateQuickStats(data) {
+    // Update dashboard statistics dynamically
+    console.log('Dashboard stats updated:', data);
+}
 </script>
 @endpush
 
-@push('styles')
-<style>
-    .border-left-primary { border-left: 0.25rem solid #4e73df !important; }
-    .border-left-success { border-left: 0.25rem solid #1cc88a !important; }
-    .border-left-info { border-left: 0.25rem solid #36b9cc !important; }
-    .border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
-    .text-xs { font-size: 0.7rem; }
-    .shadow { box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
-</style>
-@endpush
-@endsection
+
+

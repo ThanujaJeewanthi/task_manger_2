@@ -6,6 +6,7 @@
         "dev": "vite"
     },
     "devDependencies": {
+        "@fullhuman/postcss-purgecss": "^7.0.2",
         "@popperjs/core": "^2.11.6",
         "@tailwindcss/vite": "^4.0.0",
         "axios": "^1.8.2",
