@@ -5,16 +5,17 @@ namespace App\Http\Controllers\Job;
 use App\Models\Job;
 use App\Models\Item;
 use App\Models\Task;
+use App\Models\User;
 use App\Models\Client;
 use App\Models\JobType;
 use App\Models\Employee;
 use App\Models\Equipment;
 use App\Models\JobOption;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class JobController extends Controller
 {
@@ -73,7 +74,7 @@ class JobController extends Controller
     return view('jobs.index', compact('jobs', 'jobTypes', 'clients', 'equipments', 'sortBy', 'sortOrder'));
 }
 
-   public function create()
+ public function create()
     {
         $companyId = Auth::user()->company_id;
         // return $companyId;
@@ -84,7 +85,16 @@ class JobController extends Controller
 
         $employees = Employee::where('company_id', $companyId)->where('active', true)->get();
 
-        return view('jobs.create', compact('jobTypes', 'clients', 'equipments', 'employees'));
+        // Get users with their roles for job assignment
+        $users = User::with('userRole')
+            ->where('company_id', $companyId)
+            ->where('active', true)
+            ->whereHas('userRole', function($query) {
+                $query->where('active', true);
+            })
+            ->get();
+
+        return view('jobs.create', compact('jobTypes', 'clients', 'equipments', 'employees', 'users'));
     }
 
     // Add this new method to handle AJAX requests for job type options

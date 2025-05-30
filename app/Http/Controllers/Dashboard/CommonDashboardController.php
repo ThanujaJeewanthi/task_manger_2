@@ -1,43 +1,29 @@
 <?php
 
-
 namespace App\Http\Controllers\Dashboard;
 
-use Illuminate\Http\Request;
-use App\Models\User;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Routing\Controller;
-
 
 class CommonDashboardController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    // Common dashboard for all users
-    public function index( )
+    public function index()
     {
         $user = Auth::user();
-       $role = $user-> userRole;
+        $userRole = strtolower($user->userRole->name ?? '');
 
-       if (!$role) {
-        dd('The userRole relationship is not loaded or is null.');
-    }
-
-        $data = [
-            'user' => $user,
-            'role' => $role,
-        ];
-
-        return view('dashboard.common', $data);
+        // Redirect based on user role
+        switch ($userRole) {
+            case 'super admin':
+                return redirect()->route('superadmin.dashboard');
+            case 'admin':
+            case 'company admin':
+                return redirect()->route('admin.dashboard');
+            case 'employee':
+                return redirect()->route('employee.dashboard');
+            default:
+                // Default fallback - you can customize this
+                return redirect()->route('admin.dashboard');
+        }
     }
 }
-
-
-
-
-
-
-

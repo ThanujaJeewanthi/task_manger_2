@@ -1,270 +1,787 @@
 @extends('layouts.app')
 
-@section('title', 'Employee Dashboard')
-
 @section('content')
 <div class="container-fluid">
-    <!-- Welcome Section -->
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">My Dashboard</h1>
-        <div class="d-none d-lg-inline-block text-muted">
-            <i class="fas fa-user"></i> {{ Auth::user()->name }}
-        </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <x-dashboard.stat-card 
-                title="Assigned Tasks"
-                :value="$stats['assigned_tasks']"
-                icon="fas fa-tasks"
-                color="primary"
-                :link="route('tasks.index')"
-            />
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <x-dashboard.stat-card 
-                title="Completed Tasks"
-                :value="$stats['completed_tasks']"
-                icon="fas fa-check-circle"
-                color="success"
-                :link="route('tasks.index', ['status' => 'completed'])"
-            />
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <x-dashboard.stat-card 
-                title="Pending Tasks"
-                :value="$stats['pending_tasks']"
-                icon="fas fa-clock"
-                color="warning"
-                :link="route('tasks.index', ['status' => 'pending'])"
-            />
-        </div>
-        <div class="col-xl-3 col-md-6 mb-4">
-            <x-dashboard.stat-card 
-                title="On-Time Rate"
-                :value="$stats['on_time_rate'] . '%'"
-                icon="fas fa-chart-line"
-                color="info"
-            />
-        </div>
-    </div>
-
-    <!-- My Tasks and Recent Activity -->
-    <div class="row mb-4">
-        <!-- My Tasks -->
-        <div class="col-xl-8">
-            <x-dashboard.recent-table 
-                title="My Tasks"
-                :headers="['Task', 'Job', 'Due Date', 'Status', 'Actions']"
-                :items="$myTasks"
-                :viewAllRoute="route('tasks.index')"
-                emptyMessage="No tasks assigned"
-            >
-                <tr>
-                    <td>
-                        <a href="{{ route('tasks.show', $item) }}" class="font-weight-bold text-decoration-none">
-                            {{ $item->task }}
-                        </a>
-                    </td>
-                    <td>
-                        <a href="{{ route('jobs.show', $item->job) }}" class="text-decoration-none">
-                            {{ $item->job->job_number }}
-                        </a>
-                    </td>
-                    <td>{{ $item->due_date ? $item->due_date->format('M d, Y') : 'N/A' }}</td>
-                    <td>
-                        <span class="badge bg-{{ $item->status_color }}">
-                            {{ ucfirst(str_replace('_', ' ', $item->status)) }}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="btn-group">
-                            <a href="{{ route('tasks.show', $item) }}" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            @if($item->status === 'pending')
-                            <button class="btn btn-sm btn-outline-success" onclick="updateTaskStatus({{ $item->id }}, 'in_progress')">
-                                <i class="fas fa-play"></i>
-                            </button>
-                            @endif
-                            @if($item->status === 'in_progress')
-                            <button class="btn btn-sm btn-outline-info" onclick="updateTaskStatus({{ $item->id }}, 'completed')">
-                                <i class="fas fa-check"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning" onclick="requestExtension({{ $item->id }})">
-                                <i class="fas fa-clock"></i>
-                            </button>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
-            </x-dashboard.recent-table>
-        </div>
-
-        <!-- Recent Activity -->
-        <div class="col-xl-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Recent Activity</h6>
-                </div>
-                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
-                    @forelse($recentActivity as $activity)
-                    <div class="d-flex align-items-center border-bottom py-2">
-                        <div class="flex-grow-1">
-                            <div class="font-weight-bold">{{ $activity->description }}</div>
-                            <small class="text-muted">{{ $activity->created_at->diffForHumans() }}</small>
-                        </div>
-                        <div class="text-right">
-                            <span class="badge bg-{{ $activity->type_color }}">
-                                {{ $activity->type }}
-                            </span>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center text-muted py-4">
-                        <i class="fas fa-history fa-3x mb-3"></i>
-                        <p>No recent activity!</p>
-                    </div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Performance Metrics -->
     <div class="row">
-        <div class="col-xl-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Task Completion Rate</h6>
+        <div class="col-md-12">
+            <!-- Header Section -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-component-title">
+                        <span>Employee Dashboard - {{ $employee->name }}</span>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <canvas id="taskCompletionChart" height="100"></canvas>
+                    <div class="row">
+                        <!-- Personal Stats Cards -->
+                        <div class="col-md-2">
+                            <div class="card bg-primary text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['my_active_jobs'] }}</h5>
+                                    <small>Active Jobs</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-warning text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['my_pending_tasks'] }}</h5>
+                                    <small>Pending Tasks</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-info text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['my_in_progress_tasks'] }}</h5>
+                                    <small>In Progress</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-success text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['my_completed_tasks'] }}</h5>
+                                    <small>Completed</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-danger text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['my_overdue_tasks'] }}</h5>
+                                    <small>Overdue</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-secondary text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['my_completed_jobs'] }}</h5>
+                                    <small>Jobs Done</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-xl-6">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Task Status Distribution</h6>
+
+            <!-- Alerts Section -->
+            @if(count($alerts) > 0)
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-component-title">
+                        <span>Your Alerts</span>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <canvas id="taskStatusChart" height="100"></canvas>
+                    <div class="row">
+                        @foreach($alerts as $alert)
+                        <div class="col-md-6 mb-2">
+                            <div class="alert alert-{{ $alert['type'] }} mb-0">
+                                <i class="{{ $alert['icon'] }}"></i>
+                                <strong>{{ $alert['count'] }}</strong> - {{ $alert['message'] }}
+                                <small class="d-block mt-1">{{ $alert['action'] }}</small>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <div class="row">
+                <!-- Performance Overview -->
+                <div class="col-md-8">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Your Performance Overview</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h4 class="text-success">{{ $performanceStats['tasks_completed_this_week'] }}</h4>
+                                        <small>This Week</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h4 class="text-primary">{{ $performanceStats['tasks_completed_this_month'] }}</h4>
+                                        <small>This Month</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h4 class="text-info">{{ $performanceStats['average_task_completion_time'] }}</h4>
+                                        <small>Avg Days/Task</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        <h4 class="text-warning">{{ $performanceStats['on_time_completion_rate'] }}%</h4>
+                                        <small>On-Time Rate</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Task Status Distribution -->
+                            <div class="mb-3">
+                                <h6>Your Task Distribution</h6>
+                                <div class="progress" style="height: 25px;">
+                                    @php
+                                        $totalTasks = array_sum($tasksByStatus->toArray());
+                                        $statusColors = [
+                                            'pending' => 'warning',
+                                            'in_progress' => 'primary',
+                                            'completed' => 'success',
+                                            'cancelled' => 'danger'
+                                        ];
+                                    @endphp
+                                    @foreach($tasksByStatus as $status => $count)
+                                        @if($totalTasks > 0)
+                                            @php $percentage = ($count / $totalTasks) * 100; @endphp
+                                            <div class="progress-bar bg-{{ $statusColors[$status] ?? 'secondary' }}"
+                                                 style="width: {{ $percentage }}%"
+                                                 title="{{ ucfirst(str_replace('_', ' ', $status)) }}: {{ $count }}">
+                                                @if($percentage > 15){{ $count }}@endif
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+                                <div class="row mt-2">
+                                    @foreach($tasksByStatus as $status => $count)
+                                    <div class="col-md-3">
+                                        <small><span class="badge bg-{{ $statusColors[$status] ?? 'secondary' }}">{{ ucfirst(str_replace('_', ' ', $status)) }}: {{ $count }}</span></small>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions & Upcoming Deadlines -->
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Quick Actions</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary" onclick="quickStatusUpdate()">
+                                    <i class="fas fa-check"></i> Quick Status Update
+                                </button>
+                                <button type="button" class="btn btn-success" onclick="markTaskComplete()">
+                                    <i class="fas fa-check-circle"></i> Complete Task
+                                </button>
+                                <button type="button" class="btn btn-info" onclick="viewMyJobs()">
+                                    <i class="fas fa-briefcase"></i> View My Jobs
+                                </button>
+                                <button type="button" class="btn btn-warning" onclick="requestHelp()">
+                                    <i class="fas fa-question-circle"></i> Request Help
+                                </button>
+                                <div class="dropdown">
+                                    <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
+                                        <i class="fas fa-cogs"></i> More Actions
+                                    </button>
+                                    <ul class="dropdown-menu w-100">
+                                        <li><a class="dropdown-item" href="{{ route('profile') }}">
+                                            <i class="fas fa-user"></i> View Profile
+                                        </a></li>
+                                        <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                            <i class="fas fa-edit"></i> Edit Profile
+                                        </a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><button class="dropdown-item" onclick="showTimeTracker()">
+                                            <i class="fas fa-clock"></i> Time Tracker
+                                        </button></li>
+                                        <li><button class="dropdown-item" onclick="downloadWorkReport()">
+                                            <i class="fas fa-download"></i> Download Work Report
+                                        </button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Deadlines -->
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Upcoming Deadlines</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @forelse($upcomingDeadlines as $task)
+                            <div class="mb-2 p-2 border rounded">
+                                <strong>{{ Str::limit($task->task, 25) }}</strong>
+                                <div class="small text-muted">
+                                    Job: {{ $task->job->job_number ?? 'No Job' }}
+                                    @foreach($task->jobEmployees as $assignment)
+                                        @if($assignment->employee_id == $employee->id)
+                                            <br>Due: {{ $assignment->end_date ? \Carbon\Carbon::parse($assignment->end_date)->format('M d, Y') : 'No due date' }}
+                                            @if($assignment->end_date)
+                                                @php
+                                                    $daysLeft = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($assignment->end_date), false);
+                                                    $textClass = $daysLeft < 0 ? 'text-danger' : ($daysLeft <= 2 ? 'text-warning' : 'text-success');
+                                                @endphp
+                                                <span class="{{ $textClass }}">
+                                                    ({{ $daysLeft < 0 ? abs($daysLeft) . ' days overdue' : $daysLeft . ' days left' }})
+                                                </span>
+                                            @endif
+                                        @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                            @empty
+                            <p class="text-muted">No upcoming deadlines</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Active Jobs -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-component-title">
+                        <span>My Active Jobs</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive table-compact">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Job #</th>
+                                    <th>Type</th>
+                                    <th>Client</th>
+                                    <th>Priority</th>
+                                    <th>Progress</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($myActiveJobs as $job)
+                                <tr>
+                                    <td>{{ $job->job_number }}</td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
+                                            {{ $job->jobType->name }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $job->client->name ?? 'N/A' }}</td>
+                                    <td>
+                                        @php
+                                            $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
+                                            $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
+                                        @endphp
+                                        <span class="badge bg-{{ $priorityColors[$job->priority] }}">
+                                            {{ $priorityLabels[$job->priority] }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 20px; width: 80px;">
+                                            <div class="progress-bar bg-success" style="width: {{ $job->progress }}%">
+                                                {{ $job->progress }}%
+                                            </div>
+                                        </div>
+                                        <small>{{ $job->my_completed_tasks }}/{{ $job->my_tasks_count }} tasks</small>
+                                    </td>
+                                    <td>
+                                        @if($job->due_date)
+                                            @php
+                                                $daysUntilDue = \Carbon\Carbon::now()->diffInDays($job->due_date, false);
+                                                $textClass = $daysUntilDue < 0 ? 'text-danger' : ($daysUntilDue <= 3 ? 'text-warning' : 'text-primary');
+                                            @endphp
+                                            <span class="{{ $textClass }}">{{ $job->due_date->format('M d') }}</span>
+                                        @else
+                                            N/A
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @php
+                                            $statusColors = [
+                                                'draft' => 'secondary',
+                                                'pending' => 'warning',
+                                                'in_progress' => 'primary',
+                                                'on_hold' => 'info',
+                                                'completed' => 'success',
+                                                'cancelled' => 'danger'
+                                            ];
+                                        @endphp
+                                        <span class="badge bg-{{ $statusColors[$job->status] ?? 'secondary' }}">
+                                            {{ ucfirst(str_replace('_', ' ', $job->status)) }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-xs btn-primary" onclick="viewJobDetails({{ $job->id }})">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        @if($job->status != 'completed')
+                                        <button class="btn btn-xs btn-success" onclick="updateJobStatus({{ $job->id }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="8" class="text-center">No active jobs assigned to you</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Active Tasks -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>My Active Tasks</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive table-compact">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Task</th>
+                                            <th>Job</th>
+                                            <th>Start Date</th>
+                                            <th>End Date</th>
+                                            <th>Status</th>
+                                            <th>Progress</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($myActiveTasks as $task)
+                                        <tr id="task-row-{{ $task->id }}">
+                                            <td>
+                                                <strong>{{ Str::limit($task->task, 30) }}</strong>
+                                                @if($task->description)
+                                                <br><small class="text-muted">{{ Str::limit($task->description, 50) }}</small>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                {{ $task->job->job_number ?? 'No Job' }}
+                                                <br><small class="text-muted">{{ $task->job->client->name ?? 'No Client' }}</small>
+                                            </td>
+                                            <td>
+                                                @foreach($task->jobEmployees as $assignment)
+                                                    @if($assignment->employee_id == $employee->id)
+                                                        {{ $assignment->start_date ? \Carbon\Carbon::parse($assignment->start_date)->format('M d') : 'N/A' }}
+                                                    @endif
+                                                @endforeach
+                                            </td>
+                                            <td>
+                                                @foreach($task->jobEmployees as $assignment)
+                                                    @if($assignment->employee_id == $employee->id)
+                                                        @if($assignment->end_date)
+                                                            @php
+                                                                $endDate = \Carbon\Carbon::parse($assignment->end_date);
+                                                                $isOverdue = $endDate->isPast() && $task->status != 'completed';
+                                                                $textClass = $isOverdue ? 'text-danger' : 'text-primary';
+                                                            @endphp
+                                                            <span class="{{ $textClass }}">{{ $endDate->format('M d') }}</span>
+                                                            @if($isOverdue)
+                                                                <br><small class="text-danger">Overdue</small>
+                                                            @endif
+                                                        @else
+                                                            N/A
+                                                        @endif
+                                                    @endif
+                                                @endforeach
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}" id="task-status-{{ $task->id }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @foreach($task->jobEmployees as $assignment)
+                                                    @if($assignment->employee_id == $employee->id && $assignment->start_date && $assignment->end_date)
+                                                        @php
+                                                            $startDate = \Carbon\Carbon::parse($assignment->start_date);
+                                                            $endDate = \Carbon\Carbon::parse($assignment->end_date);
+                                                            $today = \Carbon\Carbon::now();
+
+                                                            if ($task->status == 'completed') {
+                                                                $progress = 100;
+                                                            } elseif ($today <= $startDate) {
+                                                                $progress = 0;
+                                                            } elseif ($today >= $endDate) {
+                                                                $progress = 100;
+                                                            } else {
+                                                                $totalDays = $startDate->diffInDays($endDate);
+                                                                $elapsedDays = $startDate->diffInDays($today);
+                                                                $progress = $totalDays > 0 ? round(($elapsedDays / $totalDays) * 100, 1) : 0;
+                                                            }
+                                                        @endphp
+                                                        <div class="progress" style="height: 15px; width: 60px;">
+                                                            <div class="progress-bar bg-{{ $task->status == 'completed' ? 'success' : 'primary' }}"
+                                                                 style="width: {{ $progress }}%">
+                                                            </div>
+                                                        </div>
+                                                        <small>{{ $progress }}%</small>
+                                                    @else
+                                                        <small class="text-muted">No dates set</small>
+                                                    @endif
+                                                @endforeach
+                                            </td>
+                                            <td>
+                                                @if($task->status != 'completed')
+                                                <div class="btn-group" role="group">
+                                                    @if($task->status == 'pending')
+                                                    <button class="btn btn-xs btn-primary" onclick="updateTaskStatus({{ $task->id }}, 'in_progress')">
+                                                        <i class="fas fa-play"></i>
+                                                    </button>
+                                                    @endif
+                                                    @if($task->status == 'in_progress')
+                                                    <button class="btn btn-xs btn-success" onclick="updateTaskStatus({{ $task->id }}, 'completed')">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                    @endif
+                                                    <button class="btn btn-xs btn-info" onclick="viewTaskDetails({{ $task->id }})">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                                @else
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Done
+                                                </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center">No active tasks assigned to you</td>
+                                        </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Completed Tasks -->
+                <div class="col-md-4">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Recently Completed</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @forelse($myRecentCompletedTasks as $task)
+                            <div class="mb-2 p-2 border rounded bg-light">
+                                <strong>{{ Str::limit($task->task, 25) }}</strong>
+                                <div class="small text-muted">
+                                    Job: {{ $task->job->job_number ?? 'No Job' }}
+                                    <br>Completed: {{ $task->updated_at->format('M d, H:i') }}
+                                    <br>Client: {{ $task->job->client->name ?? 'No Client' }}
+                                </div>
+                            </div>
+                            @empty
+                            <p class="text-muted">No completed tasks yet</p>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Work Trends -->
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <div class="d-component-title">
+                                <span>Your Work Trends (Last 6 Months)</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            @if($workloadTrends->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Month</th>
+                                            <th>Tasks Assigned</th>
+                                            <th>Tasks Completed</th>
+                                            <th>Completion Rate</th>
+                                            <th>Performance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($workloadTrends as $trend)
+                                        <tr>
+                                            <td>{{ \Carbon\Carbon::createFromFormat('Y-m', $trend->month)->format('M Y') }}</td>
+                                            <td>{{ $trend->assigned_tasks }}</td>
+                                            <td>{{ $trend->completed_tasks }}</td>
+                                            <td>
+                                                @php
+                                                    $rate = $trend->assigned_tasks > 0 ? round(($trend->completed_tasks / $trend->assigned_tasks) * 100, 1) : 0;
+                                                @endphp
+                                                {{ $rate }}%
+                                            </td>
+                                            <td>
+                                                <div class="progress" style="height: 20px; width: 100px;">
+                                                    <div class="progress-bar bg-{{ $rate >= 80 ? 'success' : ($rate >= 60 ? 'warning' : 'danger') }}"
+                                                         style="width: {{ $rate }}%">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            @else
+                            <p class="text-muted">No work trend data available yet</p>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-@push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Task Status Update Modal -->
+<div class="modal fade" id="taskStatusModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Update Task Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="taskStatusForm">
+                    <input type="hidden" id="taskId" name="task_id">
+                    <div class="mb-3">
+                        <label for="taskStatus" class="form-label">Status</label>
+                        <select class="form-control" id="taskStatus" name="status" required>
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="taskNotes" class="form-label">Notes (Optional)</label>
+                        <textarea class="form-control" id="taskNotes" name="notes" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3" id="completionNotesDiv" style="display: none;">
+                        <label for="completionNotes" class="form-label">Completion Notes</label>
+                        <textarea class="form-control" id="completionNotes" name="completion_notes" rows="2"
+                                  placeholder="Describe what was completed..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitTaskStatus()">Update Status</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // Task Completion Rate Chart
-    const completionCtx = document.getElementById('taskCompletionChart').getContext('2d');
-    new Chart(completionCtx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($monthlyStats->pluck('month')) !!},
-            datasets: [{
-                label: 'Tasks Completed',
-                data: {!! json_encode($monthlyStats->pluck('completed_tasks')) !!},
-                borderColor: '#1cc88a',
-                backgroundColor: 'rgba(28, 200, 138, 0.1)',
-                tension: 0.3,
-                fill: true
-            }]
+function updateTaskStatus(taskId, status = null) {
+    document.getElementById('taskId').value = taskId;
+    if (status) {
+        document.getElementById('taskStatus').value = status;
+        toggleCompletionNotes();
+    }
+    new bootstrap.Modal(document.getElementById('taskStatusModal')).show();
+}
+
+function toggleCompletionNotes() {
+    const status = document.getElementById('taskStatus').value;
+    const completionDiv = document.getElementById('completionNotesDiv');
+    if (status === 'completed') {
+        completionDiv.style.display = 'block';
+    } else {
+        completionDiv.style.display = 'none';
+    }
+}
+
+document.getElementById('taskStatus').addEventListener('change', toggleCompletionNotes);
+
+function submitTaskStatus() {
+    const form = document.getElementById('taskStatusForm');
+    const formData = new FormData(form);
+    const taskId = formData.get('task_id');
+
+    fetch(`/employee/tasks/${taskId}/status`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
         },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
+        body: JSON.stringify({
+            status: formData.get('status'),
+            notes: formData.get('notes'),
+            completion_notes: formData.get('completion_notes')
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the UI
+            const statusBadge = document.getElementById(`task-status-${taskId}`);
+            const newStatus = data.new_status;
+            statusBadge.textContent = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).replace('_', ' ');
+            statusBadge.className = `badge bg-${getStatusColor(newStatus)}`;
+
+            // Close modal and refresh page
+            bootstrap.Modal.getInstance(document.getElementById('taskStatusModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            alert('Error updating task status: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating task status');
+    });
+}
+
+function getStatusColor(status) {
+    const colors = {
+        'pending': 'warning',
+        'in_progress': 'primary',
+        'completed': 'success',
+        'cancelled': 'danger'
+    };
+    return colors[status] || 'secondary';
+}
+
+function viewJobDetails(jobId) {
+    window.open(`/jobs/${jobId}`, '_blank');
+}
+
+function viewTaskDetails(taskId) {
+    // Implementation for viewing task details
+    alert('Task details view - to be implemented');
+}
+
+function updateJobStatus(jobId) {
+    // Implementation for updating job status
+    alert('Job status update - to be implemented');
+}
+
+function markTaskComplete() {
+    const activeTasks = document.querySelectorAll('#task-row-[id] .btn-success');
+    if (activeTasks.length === 0) {
+        alert('No tasks available to complete. Please check your active tasks.');
+        return;
+    }
+    alert('Please select a task from the "My Active Tasks" table and click the green checkmark button to mark it as complete.');
+}
+
+function viewMyJobs() {
+    // Navigate to jobs page filtered for this employee
+    window.location.href = '/jobs?employee={{ $employee->id }}';
+}
+
+function quickStatusUpdate() {
+    // Show a modal with all pending/in-progress tasks for quick status update
+    showTaskStatusModal();
+}
+
+function showTaskManager() {
+    // Implementation for task management interface
+    alert('Task Manager - Feature to be implemented');
+}
+
+function showPendingTasks() {
+    // Filter and show only pending tasks
+    filterTasksByStatus('pending');
+}
+
+function showOverdueTasks() {
+    // Filter and show only overdue tasks
+    filterTasksByStatus('overdue');
+}
+
+function showTimeTracker() {
+    // Implementation for time tracking
+    alert('Time Tracker - Feature to be implemented');
+}
+
+function viewMyProfile() {
+    window.location.href = '{{ route("profile") }}';
+}
+
+function requestHelp() {
+    // Implementation for help requests
+    if (confirm('Do you need help with a specific task or general assistance?')) {
+        alert('Help request system - Feature to be implemented');
+    }
+}
+
+function downloadWorkReport() {
+    // Implementation for downloading work reports
+    alert('Generating your work report...');
+    // This would typically generate and download a PDF report
+}
+
+function filterJobsByStatus(status) {
+    // Filter jobs table by status
+    const rows = document.querySelectorAll('#jobs-table tbody tr');
+    rows.forEach(row => {
+        const statusBadge = row.querySelector('.badge');
+        if (statusBadge && statusBadge.textContent.toLowerCase().includes(status)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filterTasksByStatus(status) {
+    // Filter tasks table by status
+    const rows = document.querySelectorAll('#tasks-table tbody tr');
+    rows.forEach(row => {
+        if (status === 'overdue') {
+            const dueDateCell = row.querySelector('td:nth-child(4)');
+            if (dueDateCell && dueDateCell.querySelector('.text-danger')) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        } else {
+            const statusBadge = row.querySelector('.badge');
+            if (statusBadge && statusBadge.textContent.toLowerCase().includes(status)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
             }
         }
     });
+}
 
-    // Task Status Distribution Chart
-    const statusCtx = document.getElementById('taskStatusChart').getContext('2d');
-    new Chart(statusCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {!! json_encode($taskStatusDistribution->keys()) !!},
-            datasets: [{
-                data: {!! json_encode($taskStatusDistribution->values()) !!},
-                backgroundColor: ['#4e73df', '#1cc88a', '#f6c23e', '#e74a3b']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
-                }
-            }
-        }
-    });
-
-    // Task Status Update Function
-    function updateTaskStatus(taskId, status) {
-        if (confirm('Are you sure you want to update the task status?')) {
-            fetch(`/tasks/${taskId}/status`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ status })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Failed to update task status');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    }
-
-    // Request Extension Function
-    function requestExtension(taskId) {
-        const reason = prompt('Please provide a reason for the extension request:');
-        if (reason) {
-            fetch(`/tasks/${taskId}/extension`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                },
-                body: JSON.stringify({ reason })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Extension request submitted successfully');
-                } else {
-                    alert('Failed to submit extension request');
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    }
+function showTaskStatusModal() {
+    // Show modal with all tasks for quick updates
+    new bootstrap.Modal(document.getElementById('taskStatusModal')).show();
+}
 </script>
-@endpush
-
-@push('styles')
-<style>
-    .border-left-primary { border-left: 0.25rem solid #4e73df !important; }
-    .border-left-success { border-left: 0.25rem solid #1cc88a !important; }
-    .border-left-info { border-left: 0.25rem solid #36b9cc !important; }
-    .border-left-warning { border-left: 0.25rem solid #f6c23e !important; }
-    .text-xs { font-size: 0.7rem; }
-    .shadow { box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important; }
-</style>
-@endpush
-@endsection 
+@endsection

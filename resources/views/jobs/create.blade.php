@@ -65,6 +65,57 @@
 
                                 </div>
                             </div>
+                            <div class="form-group mb-4">
+                                <div class="card border-info">
+                                    <div class="card-header bg-light">
+                                        <h6 class="mb-0"><i class="fas fa-user-check"></i> Job Assignment (Optional)</h6>
+                                        <small class="text-muted">Assign this job to a specific user before creating tasks</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="form-group mb-3">
+                                                    <label for="assigned_user_id">Assign to User</label>
+                                                    <select class="form-control @error('assigned_user_id') is-invalid @enderror" id="assigned_user_id" name="assigned_user_id">
+                                                        <option value="">Select User (Optional)</option>
+                                                        @foreach($users as $user)
+                                                            <option value="{{ $user->id }}" {{ old('assigned_user_id') == $user->id ? 'selected' : '' }}>
+                                                                {{ $user->name }} ({{ $user->userRole->name ?? 'No Role' }})
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    @error('assigned_user_id')
+                                                        <span class="invalid-feedback">{{ $message }}</span>
+                                                    @enderror
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="form-group mb-3">
+                                                    <label>&nbsp;</label>
+                                                    <div class="form-control-static">
+                                                        <small class="text-info">
+                                                            <i class="fas fa-info-circle"></i>
+                                                            Users will be notified of assignment
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group mb-0">
+                                            <label for="assignment_notes">Assignment Notes</label>
+                                            <textarea class="form-control @error('assignment_notes') is-invalid @enderror"
+                                                      id="assignment_notes"
+                                                      name="assignment_notes"
+                                                      rows="2"
+                                                      placeholder="Add any special instructions or notes for the assigned user...">{{ old('assignment_notes') }}</textarea>
+                                            @error('assignment_notes')
+                                                <span class="invalid-feedback">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Description Field -->
                             <div class="form-group mb-4">

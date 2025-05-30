@@ -29,47 +29,55 @@ use App\Http\Controllers\Dashboard\CommonDashboardController;
 
 // Default route
 // Route::get('/', [CommonDashboardController::class, 'index'])->name('home');
-
-// Dashboard route
+// Default route - Common Dashboard (redirects based on role)
 Route::get('/', [CommonDashboardController::class, 'index'])
     ->name('dashboard')
-    ->middleware('role.permission:1.1');
+    ->middleware('auth');
 
-Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])
+// Super Admin Dashboard
+Route::get('/superadmin/dashboard', [SuperAdminDashboardController::class, 'index'])
     ->name('superadmin.dashboard')
-    ->middleware('role.permission:1.2');
+    ->middleware(['auth', 'role.permission:1.2']);
 
 // Company Admin Dashboard
 Route::get('/admin/dashboard', [AdminDashboardController::class, 'index'])
     ->name('admin.dashboard')
-    ->middleware('role.permission:1.3');
+    ->middleware(['auth', 'role.permission:1.3']);
 
 // Employee Dashboard
 Route::get('/employee/dashboard', [EmployeeDashboardController::class, 'index'])
     ->name('employee.dashboard')
-    ->middleware('role.permission:1.4');
+    ->middleware(['auth', 'role.permission:1.4']);
 
+// API routes for dashboard functionality
+Route::middleware(['auth'])->group(function () {
+    // Super Admin Dashboard API
+    Route::get('/superadmin/dashboard/chart-data', [SuperAdminDashboardController::class, 'getChartData'])
+        ->name('superadmin.dashboard.chart-data')
+        ->middleware('role.permission:1.2');
 
+    // Admin Dashboard API
+    Route::get('/admin/dashboard/quick-stats', [AdminDashboardController::class, 'getQuickStats'])
+        ->name('admin.dashboard.quick-stats')
+        ->middleware('role.permission:1.3');
 
-// Additional API routes for dashboard functionality
-Route::get('/super-admin/dashboard/chart-data', [SuperAdminDashboardController::class, 'getChartData'])
-    ->name('super-admin.dashboard.chart-data')
-    ->middleware('role.permission:1.2');
+    Route::get('/admin/dashboard/job-status', [AdminDashboardController::class, 'getJobStatusUpdate'])
+        ->name('admin.dashboard.job-status')
+        ->middleware('role.permission:1.3');
 
-Route::get('/admin/dashboard/quick-stats', [AdminDashboardController::class, 'getQuickStats'])
-    ->name('admin.dashboard.quick-stats')
-    ->middleware('role.permission:1.3');
+    // Employee Dashboard API
+    Route::post('/employee/tasks/{task}/status', [EmployeeDashboardController::class, 'updateTaskStatus'])
+        ->name('employee.tasks.update-status')
+        ->middleware('role.permission:1.4');
 
-// Employee task and job status update routes
-Route::post('/employee/tasks/{task}/status', [EmployeeDashboardController::class, 'updateTaskStatus'])
-    ->name('employee.tasks.update-status')
-    ->middleware('role.permission:1.4');
+    Route::post('/employee/jobs/{job}/status', [EmployeeDashboardController::class, 'updateJobStatus'])
+        ->name('employee.jobs.update-status')
+        ->middleware('role.permission:1.4');
 
-Route::post('/employee/jobs/{job}/status', [EmployeeDashboardController::class, 'updateJobStatus'])
-    ->name('employee.jobs.update-status')
-    ->middleware('role.permission:1.4');
-
-// group Authentication routes
+    Route::get('/employee/tasks/{task}/details', [EmployeeDashboardController::class, 'getTaskDetails'])
+        ->name('employee.tasks.details')
+        ->middleware('role.permission:1.4');
+});
 
 
 
@@ -230,6 +238,38 @@ Route::prefix('suppliers')->name('suppliers.')->middleware(['auth'])->group(func
     Route::put('/{supplier}', [\App\Http\Controllers\SupplierController::class, 'update'])->name('update')->middleware('role.permission:8.3');
     Route::delete('/{supplier}', [\App\Http\Controllers\SupplierController::class, 'destroy'])->name('destroy')->middleware('role.permission:8.3');
 });
+
+Route::middleware(['auth'])->group(function () {
+    // Job Assignment Management
+    Route::get('/job-assignments', [\App\Http\Controllers\Job\JobAssignmentController::class, 'index'])
+        ->name('job-assignments.index')
+        ->middleware('role.permission:11.15');
+
+    Route::get('/jobs/{job}/assign', [\App\Http\Controllers\Job\JobAssignmentController::class, 'create'])
+        ->name('job-assignments.create')
+        ->middleware('role.permission:11.16');
+
+    Route::post('/jobs/{job}/assign', [\App\Http\Controllers\Job\JobAssignmentController::class, 'store'])
+        ->name('job-assignments.store')
+        ->middleware('role.permission:11.16');
+
+    Route::get('/job-assignments/{assignment}', [\App\Http\Controllers\Job\JobAssignmentController::class, 'show'])
+        ->name('job-assignments.show')
+        ->middleware('role.permission:11.17');
+
+    Route::post('/job-assignments/{assignment}/status', [\App\Http\Controllers\Job\JobAssignmentController::class, 'updateStatus'])
+        ->name('job-assignments.update-status')
+        ->middleware('auth');
+
+    Route::delete('/job-assignments/{assignment}', [\App\Http\Controllers\Job\JobAssignmentController::class, 'destroy'])
+        ->name('job-assignments.destroy')
+        ->middleware('role.permission:11.16');
+
+    Route::get('/my-assignments', [\App\Http\Controllers\Job\JobAssignmentController::class, 'myAssignments'])
+        ->name('job-assignments.my-assignments')
+        ->middleware('auth');
+});
+
 
 //tasks
 Route::prefix('jobs')->name('jobs.tasks.')->middleware(['auth'])->group(function () {

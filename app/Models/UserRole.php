@@ -29,11 +29,5 @@ class UserRole extends Model
         return $this->hasMany(UserRoleDetail::class, 'user_role_id');
     }
 
-    /**
-     * Define the relationship with the SpecialPrivilege model.
-     */
-    public function specialPrivileges()
-    {
-        return $this->hasMany(SpecialPrivilege::class, 'user_role_id');
-    }
+ 
 }
