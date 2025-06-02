@@ -226,7 +226,7 @@
                             <div class="mb-2 p-2 border rounded">
                                 <strong>{{ Str::limit($task->task, 25) }}</strong>
                                 <div class="small text-muted">
-                                    Job: {{ $task->job->job_number ?? 'No Job' }}
+                                    Job: {{ $task->job->id ?? 'No Job' }}
                                     @foreach($task->jobEmployees as $assignment)
                                         @if($assignment->employee_id == $employee->id)
                                             <br>Due: {{ $assignment->end_date ? \Carbon\Carbon::parse($assignment->end_date)->format('M d, Y') : 'No due date' }}
@@ -276,7 +276,7 @@
                             <tbody>
                                 @forelse($myActiveJobs as $job)
                                 <tr>
-                                    <td>{{ $job->job_number }}</td>
+                                    <td>{{ $job->id }}</td>
                                     <td>
                                         <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
                                             {{ $job->jobType->name }}
@@ -314,7 +314,7 @@
                                     <td>
                                         @php
                                             $statusColors = [
-                                                'draft' => 'secondary',
+
                                                 'pending' => 'warning',
                                                 'in_progress' => 'primary',
                                                 'on_hold' => 'info',
@@ -381,7 +381,7 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                {{ $task->job->job_number ?? 'No Job' }}
+                                                {{ $task->job->id ?? 'No Job' }}
                                                 <br><small class="text-muted">{{ $task->job->client->name ?? 'No Client' }}</small>
                                             </td>
                                             <td>
@@ -495,7 +495,7 @@
                             <div class="mb-2 p-2 border rounded bg-light">
                                 <strong>{{ Str::limit($task->task, 25) }}</strong>
                                 <div class="small text-muted">
-                                    Job: {{ $task->job->job_number ?? 'No Job' }}
+                                    Job: {{ $task->job->id ?? 'No Job' }}
                                     <br>Completed: {{ $task->updated_at->format('M d, H:i') }}
                                     <br>Client: {{ $task->job->client->name ?? 'No Client' }}
                                 </div>

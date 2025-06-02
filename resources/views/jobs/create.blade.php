@@ -28,14 +28,16 @@
 
                         <div class="d-component-container">
                             <div class="row">
-                                <!-- Job Number Field -->
+                                <!-- Job Id Field -->
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
-                                        <label for="job_number">Job Number</label>
-                                        <input type="text" class="form-control @error('job_number') is-invalid @enderror" id="job_number" name="job_number" value="{{ old('job_number') }}" required>
-                                        @error('job_number')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
+                                        <label for="id">Job Id</label>
+                                        {{-- get and view the auto incremented job_id as input  without giving to edit it --}}
+                                        @php
+                                            $jobId = \App\Models\Job::max('id') + 1;
+                                        @endphp
+                                        <input type="text" class="form-control @error('id') is-invalid @enderror" id="id" name="id" value="{{ old('id', $jobId) }}" readonly>
+
                                     </div>
                                 </div>
 

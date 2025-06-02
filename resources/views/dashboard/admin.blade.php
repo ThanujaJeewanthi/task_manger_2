@@ -389,7 +389,7 @@
                                     <tbody>
                                         @forelse($recentJobs as $job)
                                         <tr>
-                                            <td>{{ $job->job_number }}</td>
+                                            <td>{{ $job->id }}</td>
                                             <td>
                                                 <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
                                                     {{ $job->jobType->name }}
@@ -408,7 +408,7 @@
                                             <td>
                                                 @php
                                                     $statusColors = [
-                                                        'draft' => 'secondary',
+
                                                         'pending' => 'warning',
                                                         'in_progress' => 'primary',
                                                         'on_hold' => 'info',
@@ -436,7 +436,7 @@
                                                         <li><a class="dropdown-item" href="{{ route('jobs.tasks.create', $job) }}">
                                                             <i class="fas fa-plus"></i> Add Task
                                                         </a></li>
-                                                        <li><a class="dropdown-item" href="{{ route('jobs.items.create', $job) }}">
+                                                        <li><a class="dropdown-item" href="{{ route('jobs.items.add', $job) }}">
                                                             <i class="fas fa-box"></i> Add Item
                                                         </a></li>
                                                         <li><a class="dropdown-item" href="{{ route('jobs.copy', $job) }}">
@@ -536,7 +536,7 @@
                                         @forelse($activeTasks as $task)
                                         <tr>
                                             <td>{{ Str::limit($task->task, 30) }}</td>
-                                            <td>{{ $task->job->job_number }}</td>
+                                            <td>{{ $task->job->id }}</td>
                                             <td>
                                                 @foreach($task->jobEmployees as $assignment)
                                                 <small class="badge bg-info">{{ $assignment->employee->name ?? 'N/A' }}</small>
@@ -583,7 +583,7 @@
                                         @forelse($upcomingDeadlines as $job)
                                         <tr>
                                             <td>
-                                                <a href="{{ route('jobs.show', $job) }}">{{ $job->job_number }}</a>
+                                                <a href="{{ route('jobs.show', $job) }}">{{ $job->id }}</a>
                                             </td>
                                             <td>{{ $job->client->name ?? 'N/A' }}</td>
                                             <td>

@@ -7,7 +7,7 @@
             <div class="card" style="width:600px;">
                 <div class="card-header">
                     <div class="d-component-title">
-                        <span>Edit Job: {{ $job->job_number }}</span>
+                        <span>Edit Job: {{ $job->id }}</span>
                     </div>
                 </div>
 
@@ -29,12 +29,12 @@
 
                         <div class="d-component-container">
                             <div class="row">
-                                <!-- Job Number Field -->
+                                <!-- Job Id Field -->
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
-                                        <label for="job_number">Job Number</label>
-                                        <input type="text" class="form-control @error('job_number') is-invalid @enderror" id="job_number" name="job_number" value="{{ old('job_number', $job->job_number) }}" required>
-                                        @error('job_number')
+                                        <label for="id">Job Id</label>
+                                        <input type="text" class="form-control @error('id') is-invalid @enderror" id="id" name="id" value="{{ old('id', $job->id) }}" required>
+                                        @error('id')
                                             <span class="invalid-feedback">{{ $message }}</span>
                                         @enderror
                                     </div>
@@ -91,7 +91,7 @@
                                     <div class="form-group mb-4">
                                         <label for="status">Status</label>
                                         <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
-                                            <option value="draft" {{ old('status', $job->status) == 'draft' ? 'selected' : '' }}>Draft</option>
+
                                             <option value="pending" {{ old('status', $job->status) == 'pending' ? 'selected' : '' }}>Pending</option>
                                             <option value="in_progress" {{ old('status', $job->status) == 'in_progress' ? 'selected' : '' }}>In Progress</option>
                                             <option value="on_hold" {{ old('status', $job->status) == 'on_hold' ? 'selected' : '' }}>On Hold</option>

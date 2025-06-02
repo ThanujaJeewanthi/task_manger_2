@@ -47,7 +47,7 @@ class UserController extends Controller
         $loggedInUser = Auth::user();
 
         $validator = Validator::make($request->all(), [
-            'email' => ['string', 'email', 'max:255', 'unique:users'],
+            'email' => ['nullable','string', 'email', 'max:255', 'unique:users'],
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users'],
             'phone_number' => ['required', 'string', 'max:15'],

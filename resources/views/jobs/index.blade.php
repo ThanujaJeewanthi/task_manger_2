@@ -25,7 +25,7 @@
                                 <div class="col-md-2 col-4" style="max-width: 75px;">
                                     <label for="sort_by" class="form-label text-xs">Sort By</label>
                                     <select name="sort_by" id="sort_by" class="form-control form-control-sm text-xs" style="padding: 0.2rem 0.4rem; height: 1.8rem;">
-                                        <option value="job_number" {{ $sortBy == 'job_number' ? 'selected' : '' }}>Job Number</option>
+                                        <option value="id" {{ $sortBy == 'id' ? 'selected' : '' }}>Job Id</option>
                                         <option value="priority" {{ $sortBy == 'priority' ? 'selected' : '' }}>Priority</option>
                                         <option value="start_date" {{ $sortBy == 'start_date' ? 'selected' : '' }}>Start Date</option>
                                         <option value="due_date" {{ $sortBy == 'due_date' ? 'selected' : '' }}>Due Date</option>
@@ -73,8 +73,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-2 col-4" style="max-width: 75px;">
-                                    <label for="job_number" class="form-label text-xs">Job Number</label>
-                                    <input type="text" name="job_number" id="job_number" class="form-control form-control-sm text-xs" style="padding: 0.2rem 0.4rem; height: 1.8rem;" value="{{ request('job_number') }}" placeholder="Job #">
+                                    <label for="id" class="form-label text-xs">Job Id</label>
+                                    <input type="text" name="id" id="id" class="form-control form-control-sm text-xs" style="padding: 0.2rem 0.4rem; height: 1.8rem;" value="{{ request('id') }}" placeholder="Job Id">
                                 </div>
                                 <div class="col-md-1 col-4">
                                     <button type="submit" class="btn btn-primary btn-sm text-xs w-100" style="padding: 0.15rem 0.3rem; height: 1.8rem;">Filter</button>
@@ -89,7 +89,7 @@
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th style="width: 10px;">Job Number</th>
+                                        <th style="width: 10px;">Job Id</th>
                                         <th>Job Type</th>
                                         <th style="width: 40px;">Client</th>
                                         <th>Equipment</th>
@@ -103,7 +103,7 @@
                                 <tbody>
                                     @forelse ($jobs as $job)
                                         <tr>
-                                            <td>{{ $job->job_number }}</td>
+                                            <td>{{ $job->id }}</td>
                                             <td>
                                                 <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
                                                     {{ $job->jobType->name }}
@@ -114,7 +114,7 @@
                                             <td>
                                                 @php
                                                     $statusColors = [
-                                                        'draft' => 'secondary',
+
                                                         'pending' => 'warning',
                                                         'in_progress' => 'primary',
                                                         'on_hold' => 'info',

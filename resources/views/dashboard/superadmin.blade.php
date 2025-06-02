@@ -247,7 +247,7 @@
                                     @php
                                         $totalJobs = array_sum($jobsByStatus->toArray());
                                         $statusColors = [
-                                            'draft' => 'secondary',
+
                                             'pending' => 'warning',
                                             'in_progress' => 'primary',
                                             'on_hold' => 'info',
@@ -391,7 +391,7 @@
                                     <tbody>
                                         @forelse($highPriorityJobs as $job)
                                         <tr>
-                                            <td>{{ $job->job_number }}</td>
+                                            <td>{{ $job->id }}</td>
                                             <td>{{ $job->company->name }}</td>
                                             <td>
                                                 <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
@@ -401,7 +401,7 @@
                                             <td>
                                                 @php
                                                     $statusColors = [
-                                                        'draft' => 'secondary',
+
                                                         'pending' => 'warning',
                                                         'in_progress' => 'primary',
                                                         'on_hold' => 'info',

@@ -17,11 +17,12 @@ class Job extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'company_id',
-        'job_number',
+      'company_id',
+
         'job_type_id',
         'client_id',
         'equipment_id',
+        'request_approval_from',
         'description',
         'photos',
         'references',
@@ -30,12 +31,21 @@ class Job extends Model
         'start_date',
         'due_date',
         'completed_date',
+        'assigned_user_id',
+        'approval_status',
 
+        'approved_by',
+        'rejected_by',
+        'approved_at',
+        'rejected_at',
+        'approval_notes',
+        'rejection_notes',
         'tasks_added_by',
         'employees_added_by',
         'active',
         'created_by',
         'updated_by',
+        'job_option_values'
     ];
 
     /**
@@ -44,12 +54,14 @@ class Job extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'photos' => 'array',
+   'photos' => 'array',
+        'job_option_values' => 'array',
         'start_date' => 'date',
-
         'due_date' => 'date',
         'completed_date' => 'date',
-        'active' => 'boolean',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'added_at' => 'datetime',
     ];
 
     /**
@@ -67,11 +79,7 @@ class Job extends Model
     {
         return $this->belongsTo(JobType::class);
     }
-// retrieve job number attribute of job model
-    public function job_number()
-    {
-        return $this->attributes['job_number'] ?? 'N/A';
-    }
+
 
     /**
      * Get the client associated with this job.
@@ -200,9 +208,9 @@ class Job extends Model
         ]);
 
         // Update job status if this is the first assignment
-        if ($this->status === 'draft' && $assignmentType === 'primary') {
+        if ($this->status === 'pending' && $assignmentType === 'primary') {
             $this->update([
-                'status' => 'pending',
+
                 'updated_by' => auth()->id()
             ]);
         }
@@ -290,6 +298,47 @@ class Job extends Model
                               ->count();
 
         return round(($completedTasks / $totalTasks) * 100, 1);
+    }
+    public function items()
+    {
+        return $this->belongsToMany(Item::class, 'job_items')
+                    ->withPivot([
+                        'quantity',
+                        'notes',
+                        'issue_description',
+                        'custom_item_description',
+                        'addition_stage',
+                        'added_by',
+                        'added_at',
+                        'active',
+                        'created_by',
+                        'updated_by'
+                    ])
+                    ->withTimestamps();
+    }
+
+    /**
+     * User who approved the job
+     */
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * User who rejected the job
+     */
+    public function rejectedBy()
+    {
+        return $this->belongsTo(User::class, 'rejected_by');
+    }
+
+    /**
+     * User assigned to the job
+     */
+    public function assignedUser()
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
     }
 
 }

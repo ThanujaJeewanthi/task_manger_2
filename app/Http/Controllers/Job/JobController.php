@@ -33,7 +33,7 @@ class JobController extends Controller
     $sortOrder = $request->input('sort_order', 'asc'); // Default to ascending
 
     // Validate sort_by to prevent SQL injection
-    $allowedSorts = ['job_number', 'priority', 'start_date', 'due_date'];
+    $allowedSorts = ['id', 'priority', 'start_date', 'due_date'];
     if (!in_array($sortBy, $allowedSorts)) {
         $sortBy = 'priority';
     }
@@ -59,8 +59,8 @@ class JobController extends Controller
         $query->where('equipment_id', $request->input('equipment_id'));
     }
 
-    if ($request->filled('job_number')) {
-        $query->where('job_number', 'like', '%' . $request->input('job_number') . '%');
+    if ($request->filled('id')) {
+        $query->where('id', 'like', '%' . $request->input('id') . '%');
     }
 
     // Fetch filter options
@@ -85,13 +85,12 @@ class JobController extends Controller
 
         $employees = Employee::where('company_id', $companyId)->where('active', true)->get();
 
-        // Get users with their roles for job assignment
-        $users = User::with('userRole')
-            ->where('company_id', $companyId)
-            ->where('active', true)
-            ->whereHas('userRole', function($query) {
-                $query->where('active', true);
+        // Get users where userRole is Technical officer and company is current company ,active =1
+        $users = User::where('company_id', $companyId)
+            ->whereHas('userRole', function ($query) {
+                $query->where('name', 'Technical Officer');
             })
+            ->where('active', true)
             ->get();
 
         return view('jobs.create', compact('jobTypes', 'clients', 'equipments', 'employees', 'users'));
@@ -125,13 +124,14 @@ class JobController extends Controller
 {
     // Build validation rules dynamically
     $rules = [
-        'job_number' => 'required|string|max:50|unique:jobs',
+
         'job_type_id' => 'required|exists:job_types,id',
         'client_id' => 'nullable|exists:clients,id',
         'equipment_id' => 'nullable|exists:equipments,id',
         'description' => 'nullable|string',
         'references' => 'nullable|string',
         'priority' => 'required|in:1,2,3,4',
+        'assigned_user_id' => 'nullable|exists:users,id',
         'start_date' => 'nullable|date',
         'due_date' => 'nullable|date|after_or_equal:start_date',
         'photos' => 'nullable|array',
@@ -184,9 +184,14 @@ class JobController extends Controller
 
     $data = $request->all();
     $data['company_id'] = Auth::user()->company_id;
-    $data['status'] = 'draft';
+    $data['status'] = 'pending';
     $data['active'] = $request->has('is_active');
     $data['created_by'] = Auth::id();
+
+    //assigned_user_id is assigned with the job ,he must be able to view job
+    if ($request->has('assigned_user_id')) {
+        $data['assigned_user_id'] = $request->input('assigned_user_id');
+    }
 
     // Handle photo uploads
     if ($request->hasFile('photos')) {
@@ -266,13 +271,13 @@ class JobController extends Controller
         }
 
         $request->validate([
-            'job_number' => 'required|string|max:50|unique:jobs,job_number,' . $job->id,
+
             'job_type_id' => 'required|exists:job_types,id',
             'client_id' => 'nullable|exists:clients,id',
             'equipment_id' => 'nullable|exists:equipments,id',
             'description' => 'nullable|string',
             'references' => 'nullable|string',
-            'status' => 'required|in:draft,pending,in_progress,on_hold,completed,cancelled',
+            'status' => 'required|in:pending,in_progress,on_hold,completed,cancelled',
             'priority' => 'required|in:1,2,3,4',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date|after_or_equal:start_date',
@@ -347,7 +352,7 @@ class JobController extends Controller
         ]);
 
         $task = Task::create([
-            'job_id' => $job->id,
+
             'task' => $request->task,
             'description' => $request->description,
             'status' => $request->status,
@@ -443,7 +448,7 @@ class JobController extends Controller
         return redirect()->route('jobs.show', $job)->with('success', 'Task deleted successfully.');
     }
 
-    public function createJobItem(Job $job)
+ public function addItems(Job $job)
     {
         if ($job->company_id !== Auth::user()->company_id) {
             abort(403);
@@ -452,31 +457,258 @@ class JobController extends Controller
         $items = Item::where('company_id', Auth::user()->company_id)
                      ->where('active', true)
                      ->get();
-        return view('items.create', compact('job', 'items'));
+
+        // Get current job items
+        $jobItems = $job->items()->withPivot([
+            'quantity',
+            'notes',
+            'issue_description',
+            'custom_item_description',
+            'added_by',
+            'added_at',
+            'addition_stage',
+            'active'
+        ])->where('job_items.active', true)->get();
+
+        // Get users with approval role whose role is admin,engineer
+        $approvalUsers = User::where('company_id', Auth::user()->company_id)
+            ->whereHas('userRole', function ($query) {
+                $query->whereIn('name', ['Engineer', 'admin']);
+            })
+            ->where('active', true)
+            ->get();
+        return view('jobs.items.add', compact('job', 'items', 'jobItems', 'approvalUsers'));
     }
 
-    public function storeJobItem(Request $request, Job $job)
+    /**
+     * Store items added to a job
+     */
+    public function storeItems(Request $request, Job $job)
     {
         if ($job->company_id !== Auth::user()->company_id) {
             abort(403);
         }
 
         $request->validate([
-            'item_id' => 'required|exists:items,id',
-            'quantity' => 'required|numeric|min:0.01',
-            'notes' => 'nullable|string',
+            'issue_description' => 'required|string|max:1000',
+            'items' => 'nullable|array',
+            'items.*.item_id' => 'nullable|exists:items,id',
+            'items.*.quantity' => 'nullable|numeric|min:0.01',
+            'items.*.notes' => 'nullable|string|max:500',
+            'new_items' => 'nullable|array',
+            'new_items.*.description' => 'nullable|string|max:500',
+            'new_items.*.quantity' => 'nullable|numeric|min:0.01',
+            'close_job' => 'nullable|boolean',
+            'request_approval_from' => 'nullable|exists:users,id',
         ]);
 
-        $job->items()->attach($request->item_id, [
-            'quantity' => $request->quantity,
-            'notes' => $request->notes,
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
-        ]);
+        // If closing job as minor issue
+        if ($request->has('close_job') && $request->close_job) {
+            $job->update([
+                'status' => 'completed',
+                'approval_status' => 'approved',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'approval_notes' => 'Closed as minor issue: ' . $request->issue_description,
+                'completed_date' => now(),
+                'updated_by' => Auth::id(),
+            ]);
 
-        return redirect()->route('jobs.show', $job)->with('success', 'Item added to job successfully.');
+            return redirect()->route('jobs.show', $job)->with('success', 'Job closed successfully as minor issue.');
+        }
+
+        // Store existing items
+        if ($request->has('items')) {
+            foreach ($request->items as $itemData) {
+                if (!empty($itemData['item_id']) && !empty($itemData['quantity'])) {
+                    // Check if item already exists for this job
+                    $existingJobItem = $job->items()->where('item_id', $itemData['item_id'])->first();
+
+                    if ($existingJobItem) {
+                        // Update existing item
+                        $job->items()->updateExistingPivot($itemData['item_id'], [
+                            'quantity' => $itemData['quantity'],
+                            'notes' => $itemData['notes'] ?? null,
+                            'issue_description' => $request->issue_description,
+                            'added_by' => Auth::id(),
+                            'added_at' => now(),
+                            'addition_stage' => 'job_',
+                            'updated_by' => Auth::id(),
+                        ]);
+                    } else {
+                        // Add new item
+                        $job->items()->attach($itemData['item_id'], [
+                            'quantity' => $itemData['quantity'],
+                            'notes' => $itemData['notes'] ?? null,
+                            'issue_description' => $request->issue_description,
+                            'added_by' => Auth::id(),
+                            'added_at' => now(),
+                            'addition_stage' => 'job_approval',
+                            'active' => true,
+                            'created_by' => Auth::id(),
+                            'updated_by' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Store new item descriptions
+        if ($request->has('new_items')) {
+            foreach ($request->new_items as $newItem) {
+                if (!empty($newItem['description']) && !empty($newItem['quantity'])) {
+                    // Create entry with custom item description
+                    $job->items()->attach(null, [
+                        'quantity' => $newItem['quantity'],
+                        'custom_item_description' => $newItem['description'],
+                        'issue_description' => $request->issue_description,
+                        'added_by' => Auth::id(),
+                        'added_at' => now(),
+                        'addition_stage' => 'job_approval',
+                        'active' => true,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            }
+        }
+
+        // Request approval if specified
+        if ($request->has('request_approval_from') && $request->request_approval_from) {
+            $job->update([
+                'approval_status' => 'requested',
+                'request_approval_from' => $request->request_approval_from,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // You can add notification logic here to notify the approval user
+
+            return redirect()->route('jobs.show', $job)->with('success', 'Items added and approval requested successfully.');
+        }
+
+        return redirect()->route('jobs.show', $job)->with('success', 'Items added to job successfully.');
     }
 
+    /**
+     * Show job approval interface
+     */
+    public function showApproval(Job $job)
+    {
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403);
+        }
+
+        // Check if user has approval rights
+        $userRole = Auth::user()->userRole->name ?? '';
+        if (!in_array($userRole, ['Engineer', 'admin'])) {
+            abort(403, 'You do not have permission to approve jobs.');
+        }
+
+        $job->load(['jobType', 'client', 'equipment']);
+
+        // Get job items with their details
+        $jobItems = $job->items()->withPivot([
+            'quantity',
+            'notes',
+            'issue_description',
+            'custom_item_description',
+            'added_by',
+            'added_at',
+            'addition_stage',
+            'active'
+        ])->where('job_items.active', true)->get();
+
+        // Get all items for potential editing
+        $items = Item::where('company_id', Auth::user()->company_id)
+                     ->where('active', true)
+                     ->get();
+
+        return view('jobs.approve', compact('job', 'jobItems', 'items'));
+    }
+
+    /**
+     * Process job approval
+     */
+    public function processApproval(Request $request, Job $job)
+    {
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403);
+        }
+
+        // Check if user has approval rights
+        $userRole = Auth::user()->userRole->name ?? '';
+        if (!in_array($userRole, ['Engineer', 'admin'])) {
+            abort(403, 'You do not have permission to approve jobs.');
+        }
+
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'approval_notes' => 'nullable|string|max:1000',
+            'items' => 'nullable|array',
+            'items.*.item_id' => 'nullable|exists:items,id',
+            'items.*.quantity' => 'nullable|numeric|min:0.01',
+            'items.*.notes' => 'nullable|string|max:500',
+            'new_items' => 'nullable|array',
+            'new_items.*.description' => 'nullable|string|max:500',
+            'new_items.*.quantity' => 'nullable|numeric|min:0.01',
+        ]);
+
+        if ($request->action === 'approve') {
+            // Update existing items if provided
+            if ($request->has('items')) {
+                foreach ($request->items as $itemId => $itemData) {
+                    if (!empty($itemData['quantity'])) {
+                        $job->items()->updateExistingPivot($itemId, [
+                            'quantity' => $itemData['quantity'],
+                            'notes' => $itemData['notes'] ?? null,
+                            'addition_stage' => 'job_approval',
+                            'updated_by' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+
+            // Add new items if provided during approval
+            if ($request->has('new_items')) {
+                foreach ($request->new_items as $newItem) {
+                    if (!empty($newItem['description']) && !empty($newItem['quantity'])) {
+                        $job->items()->attach(null, [
+                            'quantity' => $newItem['quantity'],
+                            'custom_item_description' => $newItem['description'],
+                            'added_by' => Auth::id(),
+                            'added_at' => now(),
+                            'addition_stage' => 'job_approval',
+                            'active' => true,
+                            'created_by' => Auth::id(),
+                            'updated_by' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+
+            $job->update([
+                'approval_status' => 'approved',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'approval_notes' => $request->approval_notes,
+                'status' => 'pending', // Move to pending for task assignment
+                'updated_by' => Auth::id(),
+            ]);
+
+            return back()->with('success', 'Job approved successfully. You can now add tasks.');
+        } else {
+            // Reject the job
+            $job->update([
+                'approval_status' => 'rejected',
+                'rejected_by' => Auth::id(),
+                'rejected_at' => now(),
+                'rejection_notes' => $request->approval_notes,
+                'updated_by' => Auth::id(),
+            ]);
+
+            return redirect()->route('jobs.index')->with('success', 'Job rejected successfully.');
+        }
+    }
      public function copy(Job $job)
     {
 
@@ -585,7 +817,7 @@ class JobController extends Controller
 
         // Create new job with updated due date
         $jobData = [
-            'job_number' => $job->job_number . '-EXT-' . time(), // Unique job number
+
             'job_type_id' => $job->job_type_id,
             'client_id' => $job->client_id,
             'equipment_id' => $job->equipment_id,

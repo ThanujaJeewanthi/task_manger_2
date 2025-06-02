@@ -282,10 +282,15 @@ Route::prefix('jobs')->name('jobs.tasks.')->middleware(['auth'])->group(function
 
 });
 
-//items for jobs
 Route::prefix('jobs')->name('jobs.items.')->middleware(['auth'])->group(function () {
-    Route::get('/{job}/items/create', [JobController::class, 'createJobItem'])->name('create')->middleware('role.permission:11.14');
-    Route::post('/{job}/items', [JobController::class, 'storeJobItem'])->name('store')->middleware('role.permission:11.14');
+    // Item addition routes
+    Route::get('/{job}/add-items', [JobController::class, 'addItems'])->name('add')->middleware('role.permission:11.14');
+    Route::post('/{job}/store-items', [JobController::class, 'storeItems'])->name('store')->middleware('role.permission:11.14');
+
+    // Job approval routes
+    Route::get('/{job}/approval', [JobController::class, 'showApproval'])->name('show-approval')->middleware('role.permission:11.15');
+    Route::post('/{job}/process-approval', [JobController::class, 'processApproval'])->name('process-approval')->middleware('role.permission:11.15');
+
 });
 
 
