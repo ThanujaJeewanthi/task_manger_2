@@ -53,17 +53,12 @@
                             </div>
 
                             <div class="form-group mb-3">
-                                <label for="unit_price">Unit Price</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text">$</span>
-                                    </div>
-                                    <input type="number" class="form-control @error('unit_price') is-invalid @enderror"
-                                        id="unit_price" name="unit_price" value="{{ old('unit_price', $item->unit_price) }}"
-                                        step="0.01" min="0" placeholder="0.00">
-                                </div>
-                                <small class="form-text text-muted">Price per unit (optional)</small>
-                                @error('unit_price')
+                                <label for="quantity">Quantity</label>
+                                <input type="number" class="form-control @error('quantity') is-invalid @enderror"
+                                    id="quantity" name="quantity" value="{{ old('quantity', $item->quantity) }}"
+                                    min="0" placeholder="0">
+                                <small class="form-text text-muted">Available quantity in stock</small>
+                                @error('quantity')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>

@@ -31,7 +31,7 @@
                                 <div class="form-group mb-4">
                                     <label for="email">Email Address</label>
                                     <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                        id="email" name="email" value="{{ old('email') }}" required>
+                                        id="email" name="email" value="{{ old('email') }}">
                                     @error('email')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror

@@ -247,7 +247,7 @@
                                     @php
                                         $totalJobs = array_sum($jobsByStatus->toArray());
                                         $statusColors = [
-                                            'draft' => 'secondary',
+
                                             'pending' => 'warning',
                                             'in_progress' => 'primary',
                                             'on_hold' => 'info',
@@ -352,10 +352,10 @@
                                             </td>
                                             <td>{{ $company->employees_count }}</td>
                                             <td>
-                                                <a href="{{ route('companies.show', $company) }}" class="btn btn-xs btn-primary">
+                                                <a href="{{ route('companies.show', $company) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('companies.edit', $company) }}" class="btn btn-xs btn-info">
+                                                <a href="{{ route('companies.edit', $company) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                             </td>
@@ -391,7 +391,7 @@
                                     <tbody>
                                         @forelse($highPriorityJobs as $job)
                                         <tr>
-                                            <td>{{ $job->job_number }}</td>
+                                            <td>{{ $job->id }}</td>
                                             <td>{{ $job->company->name }}</td>
                                             <td>
                                                 <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
@@ -401,7 +401,7 @@
                                             <td>
                                                 @php
                                                     $statusColors = [
-                                                        'draft' => 'secondary',
+
                                                         'pending' => 'warning',
                                                         'in_progress' => 'primary',
                                                         'on_hold' => 'info',
@@ -414,7 +414,7 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-xs btn-primary">
+                                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             </td>

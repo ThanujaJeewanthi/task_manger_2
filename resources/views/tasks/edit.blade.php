@@ -8,7 +8,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-component-title">
-                            <span>Edit Task: {{ $task->task }} for Job: {{ $job->job_number }}</span>
+                            <span>Edit Task: {{ $task->task }} for Job: {{ $job->id }}</span>
                         </div>
                         <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Back to Job

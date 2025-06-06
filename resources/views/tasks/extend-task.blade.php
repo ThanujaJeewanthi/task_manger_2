@@ -7,7 +7,7 @@
             <div class="card" style="width:600px;">
                 <div class="card-header">
                     <div class="d-component-title">
-                        <span>Extend Task for Job: {{ $job->job_number }}</span>
+                        <span>Extend Task for Job: {{ $job->id }}</span>
                     </div>
                 </div>
 

@@ -194,7 +194,7 @@
             <a href="#">Link 2</a>
             <a href="#">Link 3</a>
         </div>
-         <button class="dropdown-btn">
+         {{-- <button class="dropdown-btn">
             <i class="fa fa-caret-down"></i>
             <span class="side-link"> Last Link page</span>
         </button>
@@ -231,7 +231,7 @@
             <a href="#"><i class=" icon-spacing"></i>Link 1</a>
             <a href="#"><i class=" icon-spacing"></i>Link 2</a>
             <a href="#"><i class=" icon-spacing"></i>Link 3</a>
-        </div>
+        </div> --}}
 
 
 

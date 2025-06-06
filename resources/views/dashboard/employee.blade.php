@@ -226,7 +226,7 @@
                             <div class="mb-2 p-2 border rounded">
                                 <strong>{{ Str::limit($task->task, 25) }}</strong>
                                 <div class="small text-muted">
-                                    Job: {{ $task->job->job_number ?? 'No Job' }}
+                                    Job: {{ $task->job->id ?? 'No Job' }}
                                     @foreach($task->jobEmployees as $assignment)
                                         @if($assignment->employee_id == $employee->id)
                                             <br>Due: {{ $assignment->end_date ? \Carbon\Carbon::parse($assignment->end_date)->format('M d, Y') : 'No due date' }}
@@ -276,7 +276,7 @@
                             <tbody>
                                 @forelse($myActiveJobs as $job)
                                 <tr>
-                                    <td>{{ $job->job_number }}</td>
+                                    <td>{{ $job->id }}</td>
                                     <td>
                                         <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
                                             {{ $job->jobType->name }}
@@ -314,7 +314,7 @@
                                     <td>
                                         @php
                                             $statusColors = [
-                                                'draft' => 'secondary',
+
                                                 'pending' => 'warning',
                                                 'in_progress' => 'primary',
                                                 'on_hold' => 'info',
@@ -327,11 +327,11 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="btn btn-xs btn-primary" onclick="viewJobDetails({{ $job->id }})">
+                                        <button class="btn btn-sm btn-primary" onclick="viewJobDetails({{ $job->id }})">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         @if($job->status != 'completed')
-                                        <button class="btn btn-xs btn-success" onclick="updateJobStatus({{ $job->id }})">
+                                        <button class="btn btn-sm btn-success" onclick="updateJobStatus({{ $job->id }})">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         @endif
@@ -381,7 +381,7 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                {{ $task->job->job_number ?? 'No Job' }}
+                                                {{ $task->job->id ?? 'No Job' }}
                                                 <br><small class="text-muted">{{ $task->job->client->name ?? 'No Client' }}</small>
                                             </td>
                                             <td>
@@ -450,16 +450,16 @@
                                                 @if($task->status != 'completed')
                                                 <div class="btn-group" role="group">
                                                     @if($task->status == 'pending')
-                                                    <button class="btn btn-xs btn-primary" onclick="updateTaskStatus({{ $task->id }}, 'in_progress')">
+                                                    <button class="btn btn-sm btn-primary" onclick="updateTaskStatus({{ $task->id }}, 'in_progress')">
                                                         <i class="fas fa-play"></i>
                                                     </button>
                                                     @endif
                                                     @if($task->status == 'in_progress')
-                                                    <button class="btn btn-xs btn-success" onclick="updateTaskStatus({{ $task->id }}, 'completed')">
+                                                    <button class="btn btn-sm btn-success" onclick="updateTaskStatus({{ $task->id }}, 'completed')">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                     @endif
-                                                    <button class="btn btn-xs btn-info" onclick="viewTaskDetails({{ $task->id }})">
+                                                    <button class="btn btn-sm btn-info" onclick="viewTaskDetails({{ $task->id }})">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
                                                 </div>
@@ -495,7 +495,7 @@
                             <div class="mb-2 p-2 border rounded bg-light">
                                 <strong>{{ Str::limit($task->task, 25) }}</strong>
                                 <div class="small text-muted">
-                                    Job: {{ $task->job->job_number ?? 'No Job' }}
+                                    Job: {{ $task->job->id ?? 'No Job' }}
                                     <br>Completed: {{ $task->updated_at->format('M d, H:i') }}
                                     <br>Client: {{ $task->job->client->name ?? 'No Client' }}
                                 </div>

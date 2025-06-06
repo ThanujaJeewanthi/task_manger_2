@@ -331,7 +331,7 @@ max-width: 900px !important;
 
             <!-- Main Content -->
             <main class="main-content flex-grow-1 p-4 mb-3">
-                @if (session('success'))
+                {{-- @if (session('success'))
                     <div class="alert alert-success mb-4" role="alert">
                         {{ session('success') }}
                     </div>
@@ -341,7 +341,7 @@ max-width: 900px !important;
                     <div class="alert alert-danger mb-4" role="alert">
                         {{ session('error') }}
                     </div>
-                @endif
+                @endif --}}
                 @yield('content')
             </main>
         </div>
@@ -356,7 +356,31 @@ max-width: 900px !important;
     <script src="{{ asset('assets/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const successAlert = document.querySelector('.alert-success');
+    const errorAlert = document.querySelector('.alert-danger');
 
+    function dismissAlert(alert) {
+        if (alert) {
+            alert.classList.add('fade-out');
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 200);
+        }
+    }
+
+    if (successAlert) {
+        successAlert.classList.add('show');
+        setTimeout(() => dismissAlert(successAlert), 4000);
+    }
+
+    if (errorAlert) {
+        errorAlert.classList.add('show');
+        setTimeout(() => dismissAlert(errorAlert), 4000);
+    }
+});
+</script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Get references to elements

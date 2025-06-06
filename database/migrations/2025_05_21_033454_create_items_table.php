@@ -20,7 +20,7 @@ class CreateItemsTable extends Migration
             $table->text('description')->nullable();
             $table->string('sku', 100)->nullable();
             $table->string('unit', 50)->nullable();
-            $table->decimal('unit_price', 15, 2)->nullable();
+            $table->bigInteger('quantity')->unsigned()->default(0);
              $table->boolean('active')->default(true);
             $table->timestamps();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();

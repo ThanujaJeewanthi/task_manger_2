@@ -56,6 +56,31 @@
         <!-- Footer -->
         @include('layouts.footer')
     </div>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const successAlert = document.querySelector('.alert-success');
+    const errorAlert = document.querySelector('.alert-danger');
+
+    function dismissAlert(alert) {
+        if (alert) {
+            alert.classList.add('fade-out');
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 200);
+        }
+    }
+
+    if (successAlert) {
+        successAlert.classList.add('show');
+        setTimeout(() => dismissAlert(successAlert), 4000);
+    }
+
+    if (errorAlert) {
+        errorAlert.classList.add('show');
+        setTimeout(() => dismissAlert(errorAlert), 4000);
+    }
+});
+</script>
 
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>

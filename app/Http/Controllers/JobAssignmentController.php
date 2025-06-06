@@ -122,7 +122,7 @@ class JobAssignmentController extends Controller
                 'user_id' => Auth::id(),
                 'user_role_id' => Auth::user()->user_role_id,
                 'ip_address' => $request->ip(),
-                'description' => "Assigned job {$job->job_number} to {$user->name} as {$request->assignment_type}",
+                'description' => "Assigned job {$job->id} to {$user->name} as {$request->assignment_type}",
                 'active' => true
             ]);
 
@@ -215,7 +215,7 @@ class JobAssignmentController extends Controller
                 'user_id' => Auth::id(),
                 'user_role_id' => Auth::user()->user_role_id,
                 'ip_address' => $request->ip(),
-                'description' => "Updated assignment status for job {$assignment->job->job_number} to {$status}",
+                'description' => "Updated assignment status for job {$assignment->job->id} to {$status}",
                 'active' => true
             ]);
 
@@ -256,7 +256,7 @@ class JobAssignmentController extends Controller
             'user_id' => Auth::id(),
             'user_role_id' => Auth::user()->user_role_id,
             'ip_address' => request()->ip(),
-            'description' => "Removed assignment for job {$assignment->job->job_number} from {$assignment->user->name}",
+            'description' => "Removed assignment for job {$assignment->job->id} from {$assignment->user->name}",
             'active' => true
         ]);
 

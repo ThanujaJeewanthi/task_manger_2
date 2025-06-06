@@ -127,7 +127,9 @@ class User extends Authenticatable
     {
         return $this->userRole && strtolower($this->userRole->name) === 'employee';
     }
-
+    public function assignedJobs(){
+        return $this->hasMany(Job::class, 'assigned_user_id');
+    }
 
 
 }
