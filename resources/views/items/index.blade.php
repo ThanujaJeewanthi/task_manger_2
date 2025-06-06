@@ -37,7 +37,7 @@
                                         <th>Name</th>
                                         <th>SKU</th>
                                         <th>Unit</th>
-                                        <th>Unit Price</th>
+                                        <th>Quantity</th>
                                         <th>Status</th>
                                         <th>Created At</th>
                                         <th>Actions</th>
@@ -57,11 +57,9 @@
                                             </td>
                                             <td>{{ $item->unit ?? '-' }}</td>
                                             <td>
-                                                @if($item->unit_price)
-                                                    ${{ number_format($item->unit_price, 2) }}
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
+                                                <span class="badge {{ $item->quantity > 0 ? 'bg-success' : 'bg-warning' }}">
+                                                    {{ number_format($item->quantity) }}
+                                                </span>
                                             </td>
                                             <td>
                                                 <span class="badge {{ $item->active ? 'bg-success' : 'bg-danger' }}">

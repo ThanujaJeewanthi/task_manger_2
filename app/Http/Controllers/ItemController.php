@@ -30,7 +30,7 @@ class ItemController extends Controller
             'description' => 'nullable|string',
             'sku' => 'nullable|string|max:100',
             'unit' => 'nullable|string|max:50',
-            'unit_price' => 'nullable|numeric|min:0|max:9999999999999.99',
+            'quantity' => 'nullable|integer|min:0|max:999999999',
         ]);
 
         $itemData = [
@@ -38,7 +38,7 @@ class ItemController extends Controller
             'description' => $request->description,
             'sku' => $request->sku,
             'unit' => $request->unit,
-            'unit_price' => $request->unit_price,
+            'quantity' => $request->quantity ?? 0,
             'company_id' => Auth::user()->company_id,
             'created_by' => Auth::id()
         ];
@@ -65,7 +65,7 @@ class ItemController extends Controller
             'description' => 'nullable|string',
             'sku' => 'nullable|string|max:100',
             'unit' => 'nullable|string|max:50',
-            'unit_price' => 'nullable|numeric|min:0|max:9999999999999.99',
+            'quantity' => 'nullable|integer|min:0|max:999999999',
         ]);
 
         // Update item
@@ -74,7 +74,7 @@ class ItemController extends Controller
             'description' => $request->description,
             'sku' => $request->sku,
             'unit' => $request->unit,
-            'unit_price' => $request->unit_price,
+            'quantity' => $request->quantity ?? 0,
             'company_id' => Auth::user()->company_id,
             'updated_by' => Auth::id()
         ];

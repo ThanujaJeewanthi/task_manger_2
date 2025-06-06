@@ -141,6 +141,8 @@
                                                 <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-eye"></i> View
                                                 </a>
+                                                {{-- if the job is not completed --}}
+                                                @if ($job->status !== 'completed')
                                                 <a href="{{ route('jobs.edit', $job) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
@@ -151,6 +153,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty

@@ -331,7 +331,7 @@ max-width: 900px !important;
 
             <!-- Main Content -->
             <main class="main-content flex-grow-1 p-4 mb-3">
-                @if (session('success'))
+                {{-- @if (session('success'))
                     <div class="alert alert-success mb-4" role="alert">
                         {{ session('success') }}
                     </div>
@@ -341,7 +341,7 @@ max-width: 900px !important;
                     <div class="alert alert-danger mb-4" role="alert">
                         {{ session('error') }}
                     </div>
-                @endif
+                @endif --}}
                 @yield('content')
             </main>
         </div>

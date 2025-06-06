@@ -9,14 +9,14 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-component-title">
-                            <span>Company Admin Dashboard</span>
+                            <span>Engineer Dashboard</span>
                         </div>
                         <div>
-                            <a href="{{ route('jobs.create') }}" class="btn btn-primary btn-sm">
-                                <i class="fas fa-plus"></i> New Job
+                            <a href="{{ route('jobs.index') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-list"></i> All Jobs
                             </a>
-                            <a href="{{ route('employees.create') }}" class="btn btn-success btn-sm">
-                                <i class="fas fa-user-plus"></i> Add Employee
+                            <a href="{{ route('jobs.create') }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-plus"></i> Create Job
                             </a>
                         </div>
                     </div>
@@ -34,7 +34,25 @@
                         </div>
 
                         <div class="col-md-2">
+                            <div class="card bg-warning text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['jobs_pending_approval'] }}</h5>
+                                    <small>Pending Approval</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
                             <div class="card bg-success text-white mb-3">
+                                <div class="card-body text-center">
+                                    <h5>{{ $stats['jobs_approved_by_me'] }}</h5>
+                                    <small>Approved by Me</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card bg-info text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_employees'] }}</h5>
                                     <small>Employees</small>
@@ -43,16 +61,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-info text-white mb-3">
-                                <div class="card-body text-center">
-                                    <h5>{{ $stats['total_clients'] }}</h5>
-                                    <small>Clients</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <div class="card bg-warning text-white mb-3">
+                            <div class="card bg-secondary text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_equipment'] }}</h5>
                                     <small>Equipment</small>
@@ -61,19 +70,10 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-secondary text-white mb-3">
+                            <div class="card bg-danger text-white mb-3">
                                 <div class="card-body text-center">
-                                    <h5>{{ $stats['total_items'] }}</h5>
-                                    <small>Items</small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-2">
-                            <div class="card bg-dark text-white mb-3">
-                                <div class="card-body text-center">
-                                    <h5>{{ $taskStats['pending_tasks'] }}</h5>
-                                    <small>Pending Tasks</small>
+                                    <h5>{{ $stats['maintenance_equipment'] }}</h5>
+                                    <small>Maintenance</small>
                                 </div>
                             </div>
                         </div>
@@ -81,116 +81,12 @@
                 </div>
             </div>
 
-            <!-- Quick Management Navigation -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <div class="d-component-title">
-                        <span>Management Console</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <!-- Job Management -->
-                        <div class="col-md-3">
-                            <div class="card border-primary">
-                                <div class="card-header bg-primary text-white">
-                                    <h6 class="mb-0"><i class="fas fa-briefcase"></i> Job Management</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-list"></i> View All Jobs
-                                        </a>
-                                        <a href="{{ route('jobs.create') }}" class="btn btn-sm btn-primary">
-                                            <i class="fas fa-plus"></i> Create New Job
-                                        </a>
-                                        <a href="{{ route('job-types.index') }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-tags"></i> Job Types
-                                        </a>
-                                        <a href="{{ route('job-options.index') }}" class="btn btn-sm btn-outline-primary">
-                                            <i class="fas fa-sliders-h"></i> Job Options
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Employee Management -->
-                        <div class="col-md-3">
-                            <div class="card border-success">
-                                <div class="card-header bg-success text-white">
-                                    <h6 class="mb-0"><i class="fas fa-users"></i> Employee Management</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-success">
-                                            <i class="fas fa-list"></i> View Employees
-                                        </a>
-                                        <a href="{{ route('employees.create') }}" class="btn btn-sm btn-success">
-                                            <i class="fas fa-user-plus"></i> Add Employee
-                                        </a>
-                                        <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-success">
-                                            <i class="fas fa-users-cog"></i> Manage Users
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Client & Resources -->
-                        <div class="col-md-3">
-                            <div class="card border-info">
-                                <div class="card-header bg-info text-white">
-                                    <h6 class="mb-0"><i class="fas fa-handshake"></i> Clients & Resources</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-handshake"></i> Manage Clients
-                                        </a>
-                                        <a href="{{ route('equipments.index') }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-tools"></i> Equipment
-                                        </a>
-                                        <a href="{{ route('items.index') }}" class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-boxes"></i> Items
-                                        </a>
-                                        <a href="{{ route('suppliers.index') }}" class="btn btn-sm btn-outline-info">
-                                            <i class="fas fa-truck"></i> Suppliers
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Reports & Analytics -->
-                        <div class="col-md-3">
-                            <div class="card border-warning">
-                                <div class="card-header bg-warning text-white">
-                                    <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Reports & Analytics</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="d-grid gap-2">
-                                        <a href="{{ route('logs.index') }}" class="btn btn-sm btn-outline-warning">
-                                            <i class="fas fa-history"></i> Activity Logs
-                                        </a>
-                                        <button class="btn btn-sm btn-warning" onclick="generateJobReport()">
-                                            <i class="fas fa-file-alt"></i> Job Report
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-warning" onclick="generateEmployeeReport()">
-                                            <i class="fas fa-user-chart"></i> Employee Report
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <!-- Alerts Section -->
             @if(count($alerts) > 0)
             <div class="card mb-3">
                 <div class="card-header">
                     <div class="d-component-title">
-                        <span>Alerts & Notifications</span>
+                        <span>Priority Alerts</span>
                     </div>
                 </div>
                 <div class="card-body">
@@ -208,6 +104,94 @@
                 </div>
             </div>
             @endif
+
+            <!-- Quick Actions Section -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-component-title">
+                        <span>Engineering Operations</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Job Approval -->
+                        <div class="col-md-3">
+                            <div class="card border-warning">
+                                <div class="card-header bg-warning text-white">
+                                    <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Job Approvals</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('jobs.index', ['approval_status' => 'requested']) }}" class="btn btn-sm btn-outline-warning">
+                                            <i class="fas fa-list"></i> Pending Approvals ({{ $stats['jobs_pending_approval'] }})
+                                        </a>
+                                        <button class="btn btn-sm btn-warning" onclick="showQuickApprovalModal()">
+                                            <i class="fas fa-fast-forward"></i> Quick Approve
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Task Management -->
+                        <div class="col-md-3">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
+                                    <h6 class="mb-0"><i class="fas fa-tasks"></i> Task Management</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('jobs.index', ['status' => 'approved']) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-plus"></i> Add Tasks to Jobs
+                                        </a>
+                                        {{-- <a href="{{ route('tasks.index') }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-list"></i> View All Tasks
+                                        </a> --}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Employee Management -->
+                        <div class="col-md-3">
+                            <div class="card border-success">
+                                <div class="card-header bg-success text-white">
+                                    <h6 class="mb-0"><i class="fas fa-users"></i> Employee Management</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-list"></i> View Employees
+                                        </a>
+                                        <button class="btn btn-sm btn-success" onclick="showEmployeePerformance()">
+                                            <i class="fas fa-chart-line"></i> Performance
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Equipment Management -->
+                        <div class="col-md-3">
+                            <div class="card border-info">
+                                <div class="card-header bg-info text-white">
+                                    <h6 class="mb-0"><i class="fas fa-tools"></i> Equipment Management</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-grid gap-2">
+                                        <a href="{{ route('equipments.index') }}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-list"></i> All Equipment
+                                        </a>
+                                        <a href="{{ route('equipments.index', ['status' => 'maintenance']) }}" class="btn btn-sm btn-info">
+                                            <i class="fas fa-wrench"></i> Maintenance ({{ $stats['maintenance_equipment'] }})
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="row">
                 <!-- Job Status Overview -->
@@ -291,49 +275,8 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions & Equipment Status -->
+                <!-- Equipment Status -->
                 <div class="col-md-4">
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Quick Actions</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <a href="{{ route('jobs.create') }}" class="btn btn-primary">
-                                    <i class="fas fa-plus"></i> Create New Job
-                                </a>
-                                <a href="{{ route('employees.create') }}" class="btn btn-success">
-                                    <i class="fas fa-user-plus"></i> Add Employee
-                                </a>
-                                <a href="{{ route('clients.create') }}" class="btn btn-info">
-                                    <i class="fas fa-handshake"></i> Add Client
-                                </a>
-                                <a href="{{ route('equipments.create') }}" class="btn btn-warning">
-                                    <i class="fas fa-tools"></i> Add Equipment
-                                </a>
-                                <a href="{{ route('items.create') }}" class="btn btn-secondary">
-                                    <i class="fas fa-box"></i> Add Item
-                                </a>
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-cogs"></i> Job Actions
-                                    </button>
-                                    <ul class="dropdown-menu w-100">
-                                        <li><a class="dropdown-item" href="{{ route('job-types.create') }}">
-                                            <i class="fas fa-plus"></i> Add Job Type
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('job-options.create') }}">
-                                            <i class="fas fa-sliders-h"></i> Add Job Option
-                                        </a></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Equipment Status -->
                     <div class="card mb-3">
                         <div class="card-header">
                             <div class="d-component-title">
@@ -359,6 +302,74 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Jobs Requiring Approval -->
+            @if($jobsForApproval->count() > 0)
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-component-title">
+                            <span>Jobs Requiring Your Approval</span>
+                        </div>
+                        <a href="{{ route('jobs.index', ['approval_status' => 'requested']) }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive table-compact">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Job #</th>
+                                    <th>Type</th>
+                                    <th>Client</th>
+                                    <th>Priority</th>
+                                    <th>Requested By</th>
+                                    <th>Items</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($jobsForApproval as $job)
+                                <tr>
+                                    <td>{{ $job->id }}</td>
+                                    <td>
+                                        <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
+                                            {{ $job->jobType->name }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $job->client->name ?? 'N/A' }}</td>
+                                    <td>
+                                        @php
+                                            $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
+                                            $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
+                                        @endphp
+                                        <span class="badge bg-{{ $priorityColors[$job->priority] }}">
+                                            {{ $priorityLabels[$job->priority] }}
+                                        </span>
+                                    </td>
+                                    <td>{{ $job->creator->name ?? 'N/A' }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ $job->items->count() }} items</span>
+                                    </td>
+                                    <td>
+                                        {{-- <a href="{{ route('jobs.approval.show', $job) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> Review
+                                        </a> --}}
+                                        <button class="btn btn-sm btn-success" onclick="quickApprove({{ $job->id }})">
+                                            <i class="fas fa-check"></i> Approve
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="quickReject({{ $job->id }})">
+                                            <i class="fas fa-times"></i> Reject
+                                        </button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- Recent Jobs and Employee Performance -->
             <div class="row">
@@ -397,10 +408,10 @@
                                             </td>
                                             <td>{{ $job->client->name ?? 'N/A' }}</td>
                                             <td>
-                                                @php
-                                                    $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
-                                                    $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
-                                                @endphp
+                                                 @php
+                                            $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
+                                            $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
+                                        @endphp
                                                 <span class="badge bg-{{ $priorityColors[$job->priority] }}">
                                                     {{ $priorityLabels[$job->priority] }}
                                                 </span>
@@ -408,7 +419,6 @@
                                             <td>
                                                 @php
                                                     $statusColors = [
-
                                                         'pending' => 'warning',
                                                         'in_progress' => 'primary',
                                                         'on_hold' => 'info',
@@ -425,28 +435,11 @@
                                                 <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('jobs.edit', $job) }}" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-edit"></i>
+                                                @if($job->approval_status === 'approved' && $job->tasks->count() === 0)
+                                                <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-sm btn-success">
+                                                    <i class="fas fa-plus"></i>
                                                 </a>
-                                                <div class="btn-group" role="group">
-                                                    <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                                        <i class="fas fa-ellipsis-v"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu">
-                                                        <li><a class="dropdown-item" href="{{ route('jobs.tasks.create', $job) }}">
-                                                            <i class="fas fa-plus"></i> Add Task
-                                                        </a></li>
-                                                        <li><a class="dropdown-item" href="{{ route('jobs.items.add', $job) }}">
-                                                            <i class="fas fa-box"></i> Add Item
-                                                        </a></li>
-                                                        <li><a class="dropdown-item" href="{{ route('jobs.copy', $job) }}">
-                                                            <i class="fas fa-copy"></i> Copy Job
-                                                        </a></li>
-                                                        <li><a class="dropdown-item" href="{{ route('jobs.extend-task', $job) }}">
-                                                            <i class="fas fa-clock"></i> Extend Task
-                                                        </a></li>
-                                                    </ul>
-                                                </div>
+                                                @endif
                                             </td>
                                         </tr>
                                         @empty
@@ -477,7 +470,6 @@
                                             <th>Employee</th>
                                             <th>Completed</th>
                                             <th>Active</th>
-                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -490,18 +482,10 @@
                                             <td>
                                                 <span class="badge bg-primary">{{ $employee->total_active_tasks }}</span>
                                             </td>
-                                            <td>
-                                                <a href="{{ route('employees.show', $employee) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                                <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            </td>
                                         </tr>
                                         @empty
                                         <tr>
-                                            <td colspan="4" class="text-center">No employees found</td>
+                                            <td colspan="3" class="text-center">No employees found</td>
                                         </tr>
                                         @endforelse
                                     </tbody>
@@ -594,6 +578,10 @@
                                                 <span class="{{ $textClass }}">{{ $job->due_date->format('M d') }}</span>
                                             </td>
                                             <td>
+                                                 @php
+                                            $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
+                                            $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
+                                        @endphp
                                                 <span class="badge bg-{{ $priorityColors[$job->priority] }}">
                                                     {{ $priorityLabels[$job->priority] }}
                                                 </span>
@@ -611,101 +599,105 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
 
-            <!-- Client Statistics -->
-            <div class="card mb-3">
-                <div class="card-header">
-                    <div class="d-component-title">
-                        <span>Client Job Distribution</span>
+<!-- Quick Approval Modal -->
+<div class="modal fade" id="quickApprovalModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Job Approval</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickApprovalForm">
+                    <input type="hidden" id="approvalJobId" name="job_id">
+                    <div class="mb-3">
+                        <label for="approvalAction" class="form-label">Action</label>
+                        <select class="form-control" id="approvalAction" name="action" required>
+                            <option value="approve">Approve</option>
+                            <option value="reject">Reject</option>
+                        </select>
                     </div>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive table-compact">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Client</th>
-                                    <th>Total Jobs</th>
-                                    <th>Completed</th>
-                                    <th>Pending</th>
-                                    <th>Completion Rate</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($clientJobStats as $client)
-                                <tr>
-                                    <td>{{ $client->name }}</td>
-                                    <td>{{ $client->total_jobs }}</td>
-                                    <td>
-                                        <span class="badge bg-success">{{ $client->completed_jobs }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-warning">{{ $client->pending_jobs }}</span>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $completionRate = $client->total_jobs > 0 ? round(($client->completed_jobs / $client->total_jobs) * 100, 1) : 0;
-                                        @endphp
-                                        <div class="progress" style="height: 20px; width: 80px;">
-                                            <div class="progress-bar bg-success" style="width: {{ $completionRate }}%">
-                                                {{ $completionRate }}%
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('clients.edit', $client) }}" class="btn btn-sm btn-info">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="6" class="text-center">No client data available</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                    <div class="mb-3">
+                        <label for="approvalNotes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="approvalNotes" name="approval_notes" rows="3"></textarea>
                     </div>
-                </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitQuickApproval()">Submit</button>
             </div>
         </div>
     </div>
 </div>
-@endsection
-@push('scripts')
-    <script>
-function generateJobReport() {
-    // Implementation for generating job reports
-    if (confirm('Generate job report for this company?')) {
-        window.open('/admin/reports/jobs', '_blank');
-    }
+
+<script>
+function quickApprove(jobId) {
+    document.getElementById('approvalJobId').value = jobId;
+    document.getElementById('approvalAction').value = 'approve';
+    new bootstrap.Modal(document.getElementById('quickApprovalModal')).show();
 }
 
-function generateEmployeeReport() {
-    // Implementation for generating employee reports
-    if (confirm('Generate employee performance report?')) {
-        window.open('/admin/reports/employees', '_blank');
-    }
+function quickReject(jobId) {
+    document.getElementById('approvalJobId').value = jobId;
+    document.getElementById('approvalAction').value = 'reject';
+    new bootstrap.Modal(document.getElementById('quickApprovalModal')).show();
+}
+
+function showQuickApprovalModal() {
+    // Show modal with all pending approvals for quick processing
+    new bootstrap.Modal(document.getElementById('quickApprovalModal')).show();
+}
+
+function submitQuickApproval() {
+    const form = document.getElementById('quickApprovalForm');
+    const formData = new FormData(form);
+    const jobId = formData.get('job_id');
+
+    fetch(`/engineer/jobs/${jobId}/approve`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            action: formData.get('action'),
+            approval_notes: formData.get('approval_notes')
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            bootstrap.Modal.getInstance(document.getElementById('quickApprovalModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            alert('Error processing approval: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error processing approval');
+    });
+}
+
+function showEmployeePerformance() {
+    // Implementation for showing detailed employee performance
+    alert('Employee Performance Analytics - Feature to be implemented');
 }
 
 // Auto-refresh dashboard data every 5 minutes
 setInterval(function() {
-    fetch('/admin/dashboard/quick-stats')
+    fetch('/engineer/dashboard/quick-stats')
         .then(response => response.json())
         .then(data => {
             // Update quick stats if elements exist
-            updateQuickStats(data);
+            console.log('Dashboard stats updated:', data);
         })
         .catch(error => console.log('Auto-refresh failed:', error));
 }, 300000); // 5 minutes
-
-function updateQuickStats(data) {
-    // Update dashboard statistics dynamically
-    console.log('Dashboard stats updated:', data);
-}
 </script>
-@endpush
-
-
-
+@endsection

@@ -281,13 +281,13 @@
                                     <form method="POST" action="{{ route('jobs.items.process-approval', $job) }}" id="approval-form">
                                         @csrf
                                         <input type="hidden" name="action" value="">
-                                        <button type="submit" class="btn btn-success btn-lg me-2" value="approve">
+                                        <button type="submit" class="btn btn-sm btn-success  me-2" value="approve">
                                             <i class="fas fa-check"></i> Approve Job
                                         </button>
-                                        <button type="submit" class="btn btn-danger btn-lg" value="reject">
+                                        <button type="submit" class="btn btn-sm btn-danger " value="reject">
                                             <i class="fas fa-times"></i> Reject Job
                                         </button>
-                                        <button type="submit" class="btn btn-secondary btn-lg" value="back">
+                                        <button type="submit" class="btn btn-sm btn-secondary " value="back">
                                             <i class="fas fa-arrow-left"></i> Back to Jobs
                                         </button>
                                     </form>

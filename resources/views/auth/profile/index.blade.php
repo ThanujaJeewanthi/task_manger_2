@@ -12,7 +12,7 @@
                 </div>
 
                 <div class="card-body">
-                    {{-- @if (session('success'))
+                    @if (session('success'))
                         <div class="alert alert-success mt-3">
                             {{ session('success') }}
                         </div>
@@ -21,7 +21,7 @@
                         <div class="alert alert-danger mt-3">
                             {{ session('error') }}
                         </div>
-                    @endif --}}
+                    @endif
 
                     <div class="d-component-container">
                         <div class="row">

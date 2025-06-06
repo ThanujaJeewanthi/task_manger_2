@@ -327,11 +327,11 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="btn btn-xs btn-primary" onclick="viewJobDetails({{ $job->id }})">
+                                        <button class="btn btn-sm btn-primary" onclick="viewJobDetails({{ $job->id }})">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         @if($job->status != 'completed')
-                                        <button class="btn btn-xs btn-success" onclick="updateJobStatus({{ $job->id }})">
+                                        <button class="btn btn-sm btn-success" onclick="updateJobStatus({{ $job->id }})">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         @endif
@@ -450,16 +450,16 @@
                                                 @if($task->status != 'completed')
                                                 <div class="btn-group" role="group">
                                                     @if($task->status == 'pending')
-                                                    <button class="btn btn-xs btn-primary" onclick="updateTaskStatus({{ $task->id }}, 'in_progress')">
+                                                    <button class="btn btn-sm btn-primary" onclick="updateTaskStatus({{ $task->id }}, 'in_progress')">
                                                         <i class="fas fa-play"></i>
                                                     </button>
                                                     @endif
                                                     @if($task->status == 'in_progress')
-                                                    <button class="btn btn-xs btn-success" onclick="updateTaskStatus({{ $task->id }}, 'completed')">
+                                                    <button class="btn btn-sm btn-success" onclick="updateTaskStatus({{ $task->id }}, 'completed')">
                                                         <i class="fas fa-check"></i>
                                                     </button>
                                                     @endif
-                                                    <button class="btn btn-xs btn-info" onclick="viewTaskDetails({{ $task->id }})">
+                                                    <button class="btn btn-sm btn-info" onclick="viewTaskDetails({{ $task->id }})">
                                                         <i class="fas fa-eye"></i>
                                                     </button>
                                                 </div>

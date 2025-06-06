@@ -21,7 +21,7 @@ class Item extends Model
         'description',
         'sku',
         'unit',
-        'unit_price',
+        'quantity',
         'active',
         'created_by',
         'updated_by',
@@ -33,7 +33,7 @@ class Item extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'unit_price' => 'decimal:2',
+        'quantity' => 'integer',
         'active' => 'boolean',
     ];
 

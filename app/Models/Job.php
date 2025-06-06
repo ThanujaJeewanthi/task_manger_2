@@ -299,6 +299,10 @@ class Job extends Model
 
         return round(($completedTasks / $totalTasks) * 100, 1);
     }
+    public function jobItems()
+    {
+        return $this->belongsToMany(JobItems::class,'job_id');
+    }
     public function items()
     {
         return $this->belongsToMany(Item::class, 'job_items')

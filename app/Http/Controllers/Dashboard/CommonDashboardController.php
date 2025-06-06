@@ -21,9 +21,15 @@ class CommonDashboardController extends Controller
                 return redirect()->route('admin.dashboard');
             case 'employee':
                 return redirect()->route('employee.dashboard');
+            case 'engineer':
+                return redirect()->route('engineer.dashboard');
+            case 'supervisor':
+                return redirect()->route('supervisor.dashboard');
+            case 'technical officer':
+                return redirect()->route('technicalofficer.dashboard');
             default:
-                // Default fallback - you can customize this
-                return redirect()->route('admin.dashboard');
+
+                return redirect()->route('dashboard');
         }
     }
 }

@@ -352,10 +352,10 @@
                                             </td>
                                             <td>{{ $company->employees_count }}</td>
                                             <td>
-                                                <a href="{{ route('companies.show', $company) }}" class="btn btn-xs btn-primary">
+                                                <a href="{{ route('companies.show', $company) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('companies.edit', $company) }}" class="btn btn-xs btn-info">
+                                                <a href="{{ route('companies.edit', $company) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
                                             </td>
@@ -414,7 +414,7 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-xs btn-primary">
+                                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             </td>

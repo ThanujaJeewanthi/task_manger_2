@@ -18,17 +18,22 @@
 
                                 @if ($job->approval_status == 'requested')
                                     {{-- if the 'request_approval_from' attribute of job table is the auth user id --}}
-                                    @if (auth()->user()->id == $job->request_approval_from)
+                                     @if(auth()->user()->userRole->name=='Engineer')
                                         <a href="{{ route('jobs.items.show-approval', $job) }}"
                                             class="btn btn-success btn-sm">
                                             <i class="fas fa-check"></i> Approve Job
                                         </a>
                                     @endif
                                 @endif
-                                @if ($job->approval_status == 'approved')
+
+
+
+                                @if ($job->approval_status == 'approved' && $job->status !='completed')
+                                      @if(auth()->user()->userRole->name=='Engineer')
                                     <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-primary btn-sm">
                                         <i class="fas fa-plus"></i> Add Task
                                     </a>
+                                    @endif
                                 @endif
                                {{-- if there are tasks added for the job  --}}
                                 @if ($job->jobEmployees->count() > 0)
@@ -36,7 +41,7 @@
                                     <i class="fas fa-clock"></i> Extend Task
                                 </a>
                                 @endif
-                                @if ($job->assigned_user_id == auth()->user()->id && $job->status == 'pending')
+                                @if ($job->assigned_user_id == auth()->user()->id && $job->status !='completed' && $job->status != 'cancelled' && $job->approval_status !='approved')
                                     <a href="{{ route('jobs.items.add', $job) }}" class="btn btn-primary btn-sm">
                                         <i class="fas fa-plus"></i> Add Item
                                     </a>
@@ -81,6 +86,17 @@
                                             {{ ucfirst(str_replace('_', ' ', $job->status)) }}
                                         </span>
                                     </p>
+                                    {{-- approval status is requested /approved or NA --}}
+                                    <p><strong>Approval Status:</strong>
+                                        @if ($job->approval_status == 'requested')
+                                            <span class="badge bg-warning">Requested</span>
+                                        @elseif ($job->approval_status == 'approved')
+                                            <span class="badge bg-success">Approved</span>
+                                        @else
+                                            <span class="badge bg-secondary">N/A</span>
+                                        @endif
+                                    </p>
+
                                     <p><strong>Priority:</strong>
                                         @php
                                             $priorityColors = [
@@ -128,6 +144,72 @@
                                 </div>
                             </div>
                         @endif
+{{-- Items card--}}
+                        <div class="d-component-container mb-4">
+                            <h5>Items</h5>
+      {{-- for already  registered items  the item_id exists and custom_item_description is null ,
+      for not registered items ,item_id is null and custom_item_description exists--}}
+      <div class="table-responsive table-compact">
+          <table class="table table-bordered">
+              <thead>
+                  <tr>
+                      <th>Item</th>
+                        <th>Unit</th>
+                      <th>Quantity</th>
+                      <th>Notes</th>
+                      <th>Added by</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  @if($jobItems->whereNotNull('item_id')->whereNull('custom_item_description')->count() > 0)
+                      @foreach ($jobItems->whereNotNull('item_id')->whereNull('custom_item_description') as $item)
+                          <tr>
+                              <td>{{ $item->item->name }}</td>
+                              <td>{{ $item->item->unit }}</td>
+                              <td>{{ $item->quantity }}</td>
+                              <td>{{ $item->notes }}</td>
+                              @php
+                            //   get the user name whose id is item->added_by
+                              $added_by = \App\Models\User::find($item->added_by);
+                              @endphp
+                              <td>{{ $added_by->name ?? 'N/A' }}</td>
+                          </tr>
+                      @endforeach
+                  @endif
+              </tbody>
+          </table>
+      </div>
+         <div class="table-responsive table-compact mt-3">
+          <table class="table table-bordered">
+              <thead>
+                  <tr>
+                      <th>Item</th>
+                    
+                      <th>Quantity</th>
+                      <th>Notes</th>
+                      <th>Added by</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  @if($jobItems->whereNotNull('custom_item_description')->whereNull('item_id')->count() > 0)
+                      @foreach ($jobItems->whereNotNull('custom_item_description')->whereNull('item_id') as $item)
+                          <tr>
+                              <td>{{ $item->custom_item_description }}</td>
+                             
+                              <td>{{ $item->quantity }}</td>
+                              <td>{{ $item->notes }}</td>
+                                @php
+                            //   get the user name whose id is item->added_by
+                              $added_by = \App\Models\User::find($item->added_by);
+                              @endphp
+                              <td>{{ $added_by->name ?? 'N/A' }}</td>
+                          </tr>
+                      @endforeach
+                  @endif
+              </tbody>
+          </table>
+      </div>
+                        </div>
 
                         <!-- Tasks Card -->
                         <div class="d-component-container mb-4">
