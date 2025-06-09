@@ -35,15 +35,24 @@ class JobController extends Controller
 
     // Filter jobs based on user role
     switch($userRole) {
+        case 'Super Admin':
+
+            break;
         case 'Supervisor':
             $query->where('created_by', Auth::id());
             break;
 
         case 'Employee':
-            $employeeId = Auth::user()->employee_id;
-            $query->whereHas('jobEmployees', function($q) use ($employeeId) {
-                $q->where('employee_id', $employeeId);
+            // Get employee record for logged in user
+            $employee = Employee::where('user_id', Auth::id())->first();
+            if ($employee) {
+            $query->whereHas('jobEmployees', function($q) use ($employee) {
+                $q->where('employee_id', $employee->id);
             });
+            } else {
+            // If no employee record found, return no results
+            $query->where('id', 0);
+            }
             break;
 
         case 'Engineer':
@@ -492,11 +501,11 @@ class JobController extends Controller
                      ->where('active', true)
                      ->get();
 
-        // Get all current job items with job id 
+        // Get all current job items with job id
         $jobItems = JobItems::where('job_id', $job->id)
             ->where('active', true)
             ->with('item')  // Load the related item model
-            ->get(['id', 'job_id', 'item_id', 'quantity', 'notes', 'issue_description', 
+            ->get(['id', 'job_id', 'item_id', 'quantity', 'notes', 'issue_description',
                    'custom_item_description', 'added_by', 'added_at', 'addition_stage', 'active']);
 
         // Get users with approval role whose role is admin,engineer
@@ -548,7 +557,7 @@ public function storeItems(Request $request, Job $job)
 
     // Check if job is already in approval process
     $isInApprovalProcess = $job->approval_status === 'requested';
-    
+
     // Get current job items to check for existing ones
     $currentJobItems = DB::table('job_items')
         ->where('job_id', $job->id)
@@ -560,9 +569,9 @@ public function storeItems(Request $request, Job $job)
     if ($request->has('items')) {
         foreach ($request->items as $itemData) {
             if (!empty($itemData['item_id']) && !empty($itemData['quantity'])) {
-                
+
                 $itemId = $itemData['item_id'];
-                
+
                 // Check if this item already exists for this job
                 if ($currentJobItems->has($itemId)) {
                     // Update existing item: sum the quantities
@@ -575,8 +584,8 @@ public function storeItems(Request $request, Job $job)
                             'quantity' => $newQuantity,
                             'notes' => $itemData['notes'] ?? $existingItem->notes,
                             'issue_description' => $request->issue_description,
-                            'added_by' => Auth::id(), 
-                            'added_at' => now(),      
+                            'added_by' => Auth::id(),
+                            'added_at' => now(),
                             'updated_by' => Auth::id(),
                             'updated_at' => now(),
                         ]);
@@ -606,9 +615,9 @@ public function storeItems(Request $request, Job $job)
     if ($request->has('new_items')) {
         foreach ($request->new_items as $newItem) {
             if (!empty($newItem['description']) && !empty($newItem['quantity'])) {
-                
-               
-                
+
+
+
                 DB::table('job_items')->insert([
                     'job_id' => $job->id,
                     'item_id' => null, // null for custom items
@@ -637,14 +646,14 @@ public function storeItems(Request $request, Job $job)
                 'request_approval_from' => $request->request_approval_from,
                 'updated_by' => Auth::id(),
             ]);
-            
+
             $message = 'Items added and approval requested successfully.';
         } else {
             // Job already in approval, just update the timestamp
             $job->update([
                 'updated_by' => Auth::id(),
             ]);
-            
+
             $message = 'Additional items added to existing approval request.';
         }
     } else {
@@ -652,7 +661,7 @@ public function storeItems(Request $request, Job $job)
         $job->update([
             'updated_by' => Auth::id(),
         ]);
-        
+
         if ($isInApprovalProcess) {
             $message = 'Additional items added. Job remains in approval process.';
         } else {
