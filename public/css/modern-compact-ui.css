@@ -287,7 +287,7 @@ width:auto;
 }
 
 .table td {
-    padding: 0rem 0.5rem!important;
+    padding: 0.3rem 0.3rem !important;
     vertical-align: middle!important;
     border-bottom: 1px solid var(--border-light);
     font-size: 0.713rem!important;
@@ -330,17 +330,18 @@ td > form.d-inline:last-child {
 }
 
 .table-compact td {
-    padding: 0.15rem 0.45rem;
+    padding: 0.3rem 0.3rem !important;
     font-size: 0.75rem;
     line-height: 0.9;
 }
 .table-bordered td {
-     padding: 0.15rem 0.45rem;
+   padding: 0.3rem 0.3rem !important;
     font-size: 0.75rem;
     line-height: 0.9;
 }
 .table-striped  td{
-      padding: 0.3rem 0.5rem!important;
+
+    padding: 0.3rem 0.3rem !important;
     vertical-align: middle!important;
     border-bottom: 1px solid var(--border-light);
     font-size: 0.813rem!important;

@@ -296,7 +296,7 @@
                                                                 <i class="fas fa-clock"></i> Extension Pending
                                                             </span>
                                                         @else
-                                                            <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-sm btn-warning mb-1">
+                                                            <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-sm btn-warning ">
                                                                 <i class="fas fa-clock"></i> Request Extension
                                                             </a>
                                                         @endif
