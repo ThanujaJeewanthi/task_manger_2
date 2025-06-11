@@ -64,4 +64,7 @@ class Task extends Model
     {
         return $this->belongsTo(Job::class);
     }
+    public function taskExtensionRequests() {
+        return $this->hasMany(TaskExtensionRequest::class, 'task_id');
+    }
 }
