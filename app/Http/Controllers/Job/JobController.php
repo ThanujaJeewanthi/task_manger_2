@@ -872,17 +872,13 @@ public function storeItems(Request $request, Job $job)
 
     public function extendTask(Job $job)
     {
-
-
-        $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
+      $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
         return view('tasks.extend-task', compact('job', 'tasks'));
     }
 
     public function storeExtendTask(Request $request, Job $job)
     {
-
-
-        $request->validate([
+             $request->validate([
             'task_id' => 'required|exists:tasks,id',
             'new_end_date' => 'required|date|after_or_equal:start_date',
         ]);
