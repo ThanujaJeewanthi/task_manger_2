@@ -18,8 +18,9 @@ use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\Job\JobOptionController;
 
-use App\Http\Controllers\Dashboard\AdminDashboardController;
+use App\Http\Controllers\Task\TaskExtensionController;
 
+use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\CommonDashboardController;
 use App\Http\Controllers\Dashboard\EmployeeDashboardController;
 use App\Http\Controllers\Dashboard\EngineerDashboardController;
@@ -371,6 +372,49 @@ Route::middleware(['auth'])->group(function () {
     Route::post('jobs/{job}/extend-task', [JobController::class, 'storeExtendTask'])
         ->name('jobs.extend-task.store')
         ->middleware('role.permission:11.22');
+});
+
+Route::middleware(['auth'])->group(function () {
+    // Employee can request task extension
+    Route::get('/tasks/{task}/request-extension', [TaskExtensionController::class, 'create'])
+        ->name('tasks.extension.create')
+        ->middleware('role.permission:12.1');
+
+    Route::post('/tasks/{task}/request-extension', [TaskExtensionController::class, 'store'])
+        ->name('tasks.extension.store')
+        ->middleware('role.permission:12.1');
+
+    // View own extension requests
+    Route::get('/my-extension-requests', [TaskExtensionController::class, 'myRequests'])
+        ->name('tasks.extension.my-requests')
+        ->middleware('role.permission:12.2');
+});
+
+// Task Extension Approval routes for Supervisors, Technical Officers, and Engineers
+Route::middleware(['auth'])->group(function () {
+    // View pending extension requests for approval
+    Route::get('/extension-requests', [TaskExtensionController::class, 'index'])
+        ->name('tasks.extension.index')
+        ->middleware('role.permission:12.3'); // Technical Officer, Supervisor, and Engineer permissions
+
+    // Show specific extension request
+    Route::get('/extension-requests/{extensionRequest}', [TaskExtensionController::class, 'show'])
+        ->name('tasks.extension.show')
+        ->middleware('role.permission:12.4');
+
+    // Approve or reject extension request
+    Route::post('/extension-requests/{extensionRequest}/approve', [TaskExtensionController::class, 'approve'])
+        ->name('tasks.extension.approve')
+        ->middleware('role.permission:12.5');
+
+    Route::post('/extension-requests/{extensionRequest}/reject', [TaskExtensionController::class, 'reject'])
+        ->name('tasks.extension.reject')
+        ->middleware('role.permission:12.5');
+
+    // API endpoint for getting pending extension count (for dashboards)
+    Route::get('/api/extension-requests/pending-count', [TaskExtensionController::class, 'getPendingCount'])
+        ->name('tasks.extension.pending-count')
+        ->middleware('role.permission:12.6 ');
 });
 
 Route::fallback(function () {

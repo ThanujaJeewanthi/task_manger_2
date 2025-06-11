@@ -13,11 +13,13 @@
                             </div>
                             <a href="{{ route('jobs.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Create New Job
+
                             </a>
                         </div>
                     </div>
 
                     <div class="card-body">
+
                         <!-- Compact Sort and Filter Form -->
                         <form method="GET" action="{{ route('jobs.index') }}" class="mb-0">
                             <div class="row g-1 align-items-end">

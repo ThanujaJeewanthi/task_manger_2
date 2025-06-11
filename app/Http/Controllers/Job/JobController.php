@@ -41,18 +41,18 @@ class JobController extends Controller
         case 'Supervisor':
             $query->where('created_by', Auth::id());
             break;
-
         case 'Employee':
-            // Get employee record for logged in user
-            $employee = Employee::where('user_id', Auth::id())->first();
-            if ($employee) {
-            $query->whereHas('jobEmployees', function($q) use ($employee) {
-                $q->where('employee_id', $employee->id);
-            });
-            } else {
-            // If no employee record found, return no results
-            $query->where('id', 0);
-            }
+
+            $employeeId = auth()->user()->employee->id ?? null;
+
+
+                $query->whereIn('id', function($q) use ($employeeId) {
+                    $q->select('job_id')
+                      ->from('job_employees')
+                      ->where('employee_id', $employeeId)
+                      ->where('active', true); // Only get active assignments
+                });
+
             break;
 
         case 'Engineer':
@@ -398,6 +398,7 @@ class JobController extends Controller
 
             'task' => $request->task,
             'description' => $request->description,
+            'job_id'=> $job->id,
             'status' => $request->status,
             'active' => $request->has('is_active'),
             'created_by' => Auth::id(),
@@ -451,6 +452,7 @@ class JobController extends Controller
 
         $task->update([
             'task' => $request->task,
+            'job_id'=>$job->id,
             'description' => $request->description,
             'status' => $request->status,
             'active' => $request->has('is_active'),

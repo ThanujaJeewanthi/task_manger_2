@@ -72,6 +72,7 @@ class Job extends Model
         return $this->belongsTo(Company::class);
     }
 
+
     /**
      * Get the job type of this job.
      */
