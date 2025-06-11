@@ -26,8 +26,6 @@
                                     @endif
                                 @endif
 
-
-
                                 @if ($job->approval_status == 'approved' && $job->status !='completed')
                                       @if(auth()->user()->userRole->name=='Engineer')
                                     <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-primary btn-sm">
@@ -41,6 +39,14 @@
                                     <i class="fas fa-clock"></i> Extend Task
                                 </a>
                                 @endif
+
+                                {{-- NEW: Extension Requests Management for Supervisors/TOs --}}
+                                @if(in_array(auth()->user()->userRole->name ?? '', ['Supervisor', 'Technical Officer', 'Engineer']))
+                                    <a href="{{ route('tasks.extension.index') }}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-clipboard-list"></i> Extension Requests
+                                    </a>
+                                @endif
+
                                 @if ($job->assigned_user_id == auth()->user()->id && $job->status !='completed' && $job->status != 'cancelled' && $job->approval_status !='approved')
                                     <a href="{{ route('jobs.items.add', $job) }}" class="btn btn-primary btn-sm">
                                         <i class="fas fa-plus"></i> Add Item
@@ -82,6 +88,15 @@
                                 </div>
                                 <div class="col-md-6">
                                     <p><strong>Status:</strong>
+                                        @php
+                                            $statusColors = [
+                                                'pending' => 'warning',
+                                                'in_progress' => 'primary',
+                                                'on_hold' => 'info',
+                                                'completed' => 'success',
+                                                'cancelled' => 'danger'
+                                            ];
+                                        @endphp
                                         <span class="badge bg-{{ $statusColors[$job->status] ?? 'secondary' }}">
                                             {{ ucfirst(str_replace('_', ' ', $job->status)) }}
                                         </span>
@@ -144,76 +159,85 @@
                                 </div>
                             </div>
                         @endif
-{{-- Items card--}}
+
+                        {{-- Items card--}}
                         <div class="d-component-container mb-4">
                             <h5>Items</h5>
-      {{-- for already  registered items  the item_id exists and custom_item_description is null ,
-      for not registered items ,item_id is null and custom_item_description exists--}}
-      <div class="table-responsive table-compact">
-          <table class="table table-bordered">
-              <thead>
-                  <tr>
-                      <th>Item</th>
-                        <th>Unit</th>
-                      <th>Quantity</th>
-                      <th>Notes</th>
-                      <th>Added by</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  @if($jobItems->whereNotNull('item_id')->whereNull('custom_item_description')->count() > 0)
-                      @foreach ($jobItems->whereNotNull('item_id')->whereNull('custom_item_description') as $item)
-                          <tr>
-                              <td>{{ $item->item->name }}</td>
-                              <td>{{ $item->item->unit }}</td>
-                              <td>{{ $item->quantity }}</td>
-                              <td>{{ $item->notes }}</td>
-                              @php
-                            //   get the user name whose id is item->added_by
-                              $added_by = \App\Models\User::find($item->added_by);
-                              @endphp
-                              <td>{{ $added_by->name ?? 'N/A' }}</td>
-                          </tr>
-                      @endforeach
-                  @endif
-              </tbody>
-          </table>
-      </div>
-         <div class="table-responsive table-compact mt-3">
-          <table class="table table-bordered">
-              <thead>
-                  <tr>
-                      <th>Item</th>
-                    
-                      <th>Quantity</th>
-                      <th>Notes</th>
-                      <th>Added by</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  @if($jobItems->whereNotNull('custom_item_description')->whereNull('item_id')->count() > 0)
-                      @foreach ($jobItems->whereNotNull('custom_item_description')->whereNull('item_id') as $item)
-                          <tr>
-                              <td>{{ $item->custom_item_description }}</td>
-                             
-                              <td>{{ $item->quantity }}</td>
-                              <td>{{ $item->notes }}</td>
-                                @php
-                            //   get the user name whose id is item->added_by
-                              $added_by = \App\Models\User::find($item->added_by);
-                              @endphp
-                              <td>{{ $added_by->name ?? 'N/A' }}</td>
-                          </tr>
-                      @endforeach
-                  @endif
-              </tbody>
-          </table>
-      </div>
+                            {{-- for already  registered items  the item_id exists and custom_item_description is null ,
+                            for not registered items ,item_id is null and custom_item_description exists--}}
+                            <div class="table-responsive table-compact">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Unit</th>
+                                            <th>Quantity</th>
+                                            <th>Notes</th>
+                                            <th>Added by</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if($jobItems->whereNotNull('item_id')->whereNull('custom_item_description')->count() > 0)
+                                            @foreach ($jobItems->whereNotNull('item_id')->whereNull('custom_item_description') as $item)
+                                                <tr>
+                                                    <td>{{ $item->item->name }}</td>
+                                                    <td>{{ $item->item->unit }}</td>
+                                                    <td>{{ $item->quantity }}</td>
+                                                    <td>{{ $item->notes }}</td>
+                                                    @php
+                                                    //   get the user name whose id is item->added_by
+                                                    $added_by = \App\Models\User::find($item->added_by);
+                                                    @endphp
+                                                    <td>{{ $added_by->name ?? 'N/A' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="table-responsive table-compact mt-3">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Quantity</th>
+                                            <th>Notes</th>
+                                            <th>Added by</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if($jobItems->whereNotNull('custom_item_description')->whereNull('item_id')->count() > 0)
+                                            @foreach ($jobItems->whereNotNull('custom_item_description')->whereNull('item_id') as $item)
+                                                <tr>
+                                                    <td>{{ $item->custom_item_description }}</td>
+                                                    <td>{{ $item->quantity }}</td>
+                                                    <td>{{ $item->notes }}</td>
+                                                    @php
+                                                    //   get the user name whose id is item->added_by
+                                                    $added_by = \App\Models\User::find($item->added_by);
+                                                    @endphp
+                                                    <td>{{ $added_by->name ?? 'N/A' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         <!-- Tasks Card -->
                         <div class="d-component-container mb-4">
-                            <h5>Tasks</h5>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Tasks</h5>
+                                {{-- NEW: Employee extension request link --}}
+                                @if(auth()->user()->userRole->name == 'Employee')
+                                    <div>
+                                        <a href="{{ route('tasks.extension.my-requests') }}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-history"></i> My Extension Requests
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
                             <div class="table-responsive table-compact">
                                 <table class="table table-bordered">
                                     <thead>
@@ -231,6 +255,18 @@
                                         @forelse ($job->jobEmployees->groupBy('task_id') as $taskId => $jobEmployees)
                                             @php
                                                 $task = $job->jobEmployees->where('task_id', $taskId)->first()->task;
+                                                // Check if current user is assigned to this task
+                                                $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
+                                                $isAssignedToTask = $currentEmployee && $jobEmployees->contains('employee_id', $currentEmployee->id);
+
+                                                // Check for pending extension requests
+                                                $pendingExtension = null;
+                                                if($currentEmployee) {
+                                                    $pendingExtension = \App\Models\TaskExtensionRequest::where('task_id', $task->id)
+                                                        ->where('employee_id', $currentEmployee->id)
+                                                        ->where('status', 'pending')
+                                                        ->first();
+                                                }
                                             @endphp
                                             <tr>
                                                 <td>{{ $task->task }}</td>
@@ -250,22 +286,39 @@
                                                 </td>
                                                 <td>{{ $jobEmployees->first()->start_date ? $jobEmployees->first()->start_date->format('Y-m-d') : 'N/A' }}
                                                 </td>
-                                                <td>{{ $jobEmployees->first()->end_date ? $jobEmployees->first()->end_date->format('Y-m-d') : 'N/A' }}
+                                                <td>{{ $jobEmployees->max('end_date') ? \Carbon\Carbon::parse($jobEmployees->max('end_date'))->format('Y-m-d') : 'N/A' }}
                                                 </td>
                                                 <td>
-                                                    <a href="{{ route('jobs.tasks.edit', [$job, $task]) }}"
-                                                        class="btn btn-sm btn-info">
-                                                        <i class="fas fa-edit"></i> Edit
-                                                    </a>
-                                                    <form action="{{ route('jobs.tasks.destroy', [$job, $task]) }}"
-                                                        method="POST" class="d-inline">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                            onclick="return confirm('Are you sure you want to delete this task?')">
-                                                            <i class="fas fa-trash"></i> Delete
-                                                        </button>
-                                                    </form>
+                                                    {{-- NEW: Employee can request extension for their assigned tasks --}}
+                                                    @if(auth()->user()->userRole->name == 'Employee' && $isAssignedToTask && $task->status !== 'completed')
+                                                        @if($pendingExtension)
+                                                            <span class="badge bg-warning mb-1">
+                                                                <i class="fas fa-clock"></i> Extension Pending
+                                                            </span>
+                                                        @else
+                                                            <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-sm btn-warning mb-1">
+                                                                <i class="fas fa-clock"></i> Request Extension
+                                                            </a>
+                                                        @endif
+                                                        <br>
+                                                    @endif
+
+                                                    {{-- Existing edit/delete actions for appropriate roles --}}
+                                                    @if(in_array(auth()->user()->userRole->name ?? '', ['Engineer', 'Supervisor', 'admin']))
+                                                        <a href="{{ route('jobs.tasks.edit', [$job, $task]) }}"
+                                                            class="btn btn-sm btn-info">
+                                                            <i class="fas fa-edit"></i> Edit
+                                                        </a>
+                                                        <form action="{{ route('jobs.tasks.destroy', [$job, $task]) }}"
+                                                            method="POST" class="d-inline">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-danger"
+                                                                onclick="return confirm('Are you sure you want to delete this task?')">
+                                                                <i class="fas fa-trash"></i> Delete
+                                                            </button>
+                                                        </form>
+                                                    @endif
                                                 </td>
                                             </tr>
                                             @empty
@@ -282,4 +335,4 @@
                 </div>
             </div>
         </div>
-    @endsection
+@endsection
