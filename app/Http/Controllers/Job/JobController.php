@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Job;
 
+use Carbon\Carbon;
 use App\Models\Job;
 use App\Models\Item;
 use App\Models\Task;
@@ -274,22 +275,43 @@ class JobController extends Controller
     return redirect()->route('jobs.index')->with('success', 'Job created successfully.');
 }
 
-    public function show(Job $job)
+      public function show(Job $job)
     {
         // Check if job belongs to current user's company
         if ($job->company_id !== Auth::user()->company_id) {
             abort(403);
         }
 
-        $job->load(['jobType.jobOptions', 'client', 'equipment', 'jobEmployees.employee', 'jobEmployees.task']);
+        // Load relationships for timeline view
+        $job->load([
+            'jobType.jobOptions',
+            'client',
+            'equipment',
+            'jobEmployees.employee',
+            'jobEmployees.task',
+            'tasks.jobEmployees.employee',
+            'tasks.taskExtensionRequests' => function($query) {
+                $query->where('status', 'pending');
+            }
+        ]);
+
+        // Get employees and tasks (your existing code)
         $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
-        // tasks of that job
         $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
-        $jobItems = JobItems::where('job_id', $job->id)
-            ->where('active', true)
-            ->get();
-        return view('jobs.show', compact('job', 'employees', 'tasks', 'jobItems'));
+        $jobItems = JobItems::where('job_id', $job->id)->where('active', true)->get();
+
+        // Get timeline data
+        $timelineData = $this->getTimelineData($job);
+
+        // Get basic job stats
+        $jobStats = $this->getJobStats($job);
+
+        // Return your existing view with timeline data added
+        return view('jobs.show', compact('job', 'employees', 'tasks', 'jobItems', 'timelineData', 'jobStats'));
     }
+
+
+
 
     public function edit(Job $job)
     {
@@ -947,5 +969,188 @@ public function storeItems(Request $request, Job $job)
         }
 
         return redirect()->route('jobs.index')->with('success', 'New job created with extended task duration.');
+    }
+
+
+// timeline
+private function getTimelineData(Job $job)
+    {
+        // Get tasks with proper relationships
+        $tasks = $job->tasks()
+            ->where('active', true)
+            ->with([
+                'jobEmployees' => function($query) {
+                    $query->with('employee');
+                },
+                'taskExtensionRequests' => function($query) {
+                    $query->where('status', 'pending');
+                }
+            ])
+            ->get();
+
+        $timelineData = [
+            'job_start' => $job->start_date ? Carbon::parse($job->start_date) : null,
+            'job_end' => $job->due_date ? Carbon::parse($job->due_date) : null,
+            'tasks' => collect() // Use collection for easier manipulation
+        ];
+
+        foreach ($tasks as $task) {
+            $taskEmployees = $task->jobEmployees;
+
+            // Skip tasks with no employee assignments
+            if ($taskEmployees->isEmpty()) {
+                continue;
+            }
+
+            $taskStart = $taskEmployees->min('start_date');
+            $taskEnd = $taskEmployees->max('end_date');
+
+            // Calculate basic progress
+            $progress = $this->calculateTaskProgress($task, $taskEmployees);
+
+            // Check for extension requests
+            $hasExtensionRequest = $task->taskExtensionRequests->isNotEmpty();
+
+            $timelineData['tasks']->push([
+                'id' => $task->id,
+                'name' => $task->task,
+                'description' => $task->description,
+                'status' => $task->status,
+                'start_date' => $taskStart ? Carbon::parse($taskStart) : null,
+                'end_date' => $taskEnd ? Carbon::parse($taskEnd) : null,
+                'progress' => $progress,
+                'employees' => $taskEmployees->map(function($jobEmployee) {
+                    return [
+                        'id' => $jobEmployee->employee->id,
+                        'name' => $jobEmployee->employee->name,
+                        'initials' => $this->getInitials($jobEmployee->employee->name)
+                    ];
+                }),
+                'has_extension_request' => $hasExtensionRequest
+            ]);
+        }
+
+        return $timelineData;
+    }
+
+    private function calculateTaskProgress(Task $task, $taskEmployees)
+    {
+        if ($task->status === 'completed') return 100;
+        if ($task->status === 'cancelled') return 0;
+        if ($task->status === 'pending') return 0;
+
+        // For in-progress tasks, calculate based on time elapsed
+        $startDate = $taskEmployees->min('start_date');
+        $endDate = $taskEmployees->max('end_date');
+
+        if (!$startDate || !$endDate) return 0;
+
+        $start = Carbon::parse($startDate);
+        $end = Carbon::parse($endDate);
+        $now = Carbon::now();
+
+        if ($now <= $start) return 0;
+        if ($now >= $end) return 90; // Almost complete but not marked as done
+
+        $totalDays = $start->diffInDays($end);
+        if ($totalDays === 0) return 50; // Same day task
+
+        $elapsedDays = $start->diffInDays($now);
+
+        return min(90, round(($elapsedDays / $totalDays) * 100));
+    }
+
+    private function getJobStats(Job $job)
+    {
+        $tasks = $job->tasks()->where('active', true)->get();
+        $totalTasks = $tasks->count();
+
+        if ($totalTasks === 0) {
+            return [
+                'total_tasks' => 0,
+                'completed_tasks' => 0,
+                'in_progress_tasks' => 0,
+                'pending_tasks' => 0,
+                'overall_progress' => 0
+            ];
+        }
+
+        $completedTasks = $tasks->where('status', 'completed')->count();
+        $inProgressTasks = $tasks->where('status', 'in_progress')->count();
+        $pendingTasks = $tasks->where('status', 'pending')->count();
+
+        // Calculate overall progress
+        $overallProgress = round(($completedTasks / $totalTasks) * 100);
+
+        return [
+            'total_tasks' => $totalTasks,
+            'completed_tasks' => $completedTasks,
+            'in_progress_tasks' => $inProgressTasks,
+            'pending_tasks' => $pendingTasks,
+            'overall_progress' => $overallProgress
+        ];
+    }
+
+    private function getInitials($name)
+    {
+        $words = explode(' ', $name);
+        return strtoupper(substr($words[0], 0, 1) . (isset($words[1]) ? substr($words[1], 0, 1) : ''));
+    }
+
+    // API endpoint for timeline data (for AJAX updates)
+    public function getTimelineJson(Job $job)
+    {
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403);
+        }
+
+        return response()->json([
+            'timeline' => $this->getTimelineData($job),
+            'stats' => $this->getJobStats($job)
+        ]);
+    }
+
+    // API endpoint for task details
+    public function getTaskDetails(Job $job, Task $task)
+    {
+        if ($job->company_id !== Auth::user()->company_id || $task->job_id !== $job->id) {
+            abort(403);
+        }
+
+        $task->load([
+            'jobEmployees' => function($query) {
+                $query->where('active', true)->with('employee');
+            },
+            'taskExtensionRequests' => function($query) {
+                $query->where('status', 'pending');
+            }
+        ]);
+
+        $taskEmployees = $task->jobEmployees;
+        $progress = $this->calculateTaskProgress($task, $taskEmployees);
+
+        return response()->json([
+            'task' => [
+                'id' => $task->id,
+                'name' => $task->task,
+                'description' => $task->description ?: 'No description provided',
+                'status' => $task->status,
+                'progress' => $progress
+            ],
+            'employees' => $taskEmployees->map(function($jobEmployee) {
+                return [
+                    'name' => $jobEmployee->employee->name,
+                    'start_date' => $jobEmployee->start_date ? Carbon::parse($jobEmployee->start_date)->format('M d, Y') : null,
+                    'end_date' => $jobEmployee->end_date ? Carbon::parse($jobEmployee->end_date)->format('M d, Y') : null
+                ];
+            }),
+            'extension_requests' => $task->taskExtensionRequests->map(function($request) {
+                return [
+                    'requested_end_date' => Carbon::parse($request->requested_end_date)->format('M d, Y'),
+                    'reason' => $request->reason,
+                    'status' => $request->status
+                ];
+            })
+        ]);
     }
 }

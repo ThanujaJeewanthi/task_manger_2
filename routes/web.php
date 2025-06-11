@@ -417,6 +417,16 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role.permission:12.6 ');
 });
 
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/jobs/{job}/timeline-data', [JobController::class, 'getTimelineJson'])
+        ->name('jobs.timeline-data');
+
+    Route::get('/jobs/{job}/tasks/{task}/details', [JobController::class, 'getTaskDetails'])
+        ->name('jobs.task-details');
+});
+
 Route::fallback(function () {
     return 'Fallback';
 });

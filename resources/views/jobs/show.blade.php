@@ -72,79 +72,160 @@
                         @endif
 
                         <!-- Job Details -->
-                        <div class="d-component-container mb-4">
-                            <h5>Job Information</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Job Id:</strong> {{ $job->id }}</p>
-                                    <p><strong>Job Type:</strong>
-                                        <span class="badge"
-                                            style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
-                                            {{ $job->jobType->name }}
-                                        </span>
-                                    </p>
-                                    <p><strong>Client:</strong> {{ $job->client->name ?? 'N/A' }}</p>
-                                    <p><strong>Equipment:</strong> {{ $job->equipment->name ?? 'N/A' }}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Status:</strong>
-                                        @php
-                                            $statusColors = [
-                                                'pending' => 'warning',
-                                                'in_progress' => 'primary',
-                                                'on_hold' => 'info',
-                                                'completed' => 'success',
-                                                'cancelled' => 'danger'
-                                            ];
-                                        @endphp
-                                        <span class="badge bg-{{ $statusColors[$job->status] ?? 'secondary' }}">
-                                            {{ ucfirst(str_replace('_', ' ', $job->status)) }}
-                                        </span>
-                                    </p>
-                                    {{-- approval status is requested /approved or NA --}}
-                                    <p><strong>Approval Status:</strong>
-                                        @if ($job->approval_status == 'requested')
-                                            <span class="badge bg-warning">Requested</span>
-                                        @elseif ($job->approval_status == 'approved')
-                                            <span class="badge bg-success">Approved</span>
-                                        @else
-                                            <span class="badge bg-secondary">N/A</span>
-                                        @endif
-                                    </p>
+                      <!-- Job Details -->
+<div class="d-component-container mb-4">
+    <h5>Job Information</h5>
 
-                                    <p><strong>Priority:</strong>
-                                        @php
-                                            $priorityColors = [
-                                                '1' => 'danger',
-                                                '2' => 'warning',
-                                                '3' => 'info',
-                                                '4' => 'secondary',
-                                            ];
-                                            $priorityLabels = [
-                                                '1' => 'High',
-                                                '2' => 'Medium',
-                                                '3' => 'Low',
-                                                '4' => 'Very Low',
-                                            ];
-                                        @endphp
-                                        <span class="badge bg-{{ $priorityColors[$job->priority] }}">
-                                            {{ $priorityLabels[$job->priority] }}
-                                        </span>
-                                    </p>
-                                    <p><strong>Start Date:</strong>
-                                        {{ $job->start_date ? $job->start_date->format('Y-m-d') : 'N/A' }}</p>
-                                    <p><strong>Due Date:</strong>
-                                        {{ $job->due_date ? $job->due_date->format('Y-m-d') : 'N/A' }}</p>
-                                </div>
-                            </div>
-                            @if ($job->description)
-                                <p><strong>Description:</strong> {{ $job->description }}</p>
-                            @endif
-                            @if ($job->references)
-                                <p><strong>References:</strong> {{ $job->references }}</p>
-                            @endif
-                        </div>
+    <!-- Basic Information -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">JOB ID</label>
+                <div class="fs-5 fw-semibold">#{{ $job->id }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">JOB TYPE</label>
+                <div>
+                    <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
+                        {{ $job->jobType->name }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">CLIENT</label>
+                <div class="fw-semibold">{{ $job->client->name ?? 'N/A' }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">EQUIPMENT</label>
+                <div class="fw-semibold">{{ $job->equipment->name ?? 'N/A' }}</div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Status Information -->
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">STATUS</label>
+                <div>
+                    @php
+                        $statusColors = [
+                            'pending' => 'warning',
+                            'in_progress' => 'primary',
+                            'on_hold' => 'info',
+                            'completed' => 'success',
+                            'cancelled' => 'danger'
+                        ];
+                    @endphp
+                    <span class="badge bg-{{ $statusColors[$job->status] ?? 'secondary' }}">
+                        {{ ucfirst(str_replace('_', ' ', $job->status)) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">APPROVAL STATUS</label>
+                <div>
+                    @if ($job->approval_status == 'requested')
+                        <span class="badge bg-warning">Requested</span>
+                    @elseif ($job->approval_status == 'approved')
+                        <span class="badge bg-success">Approved</span>
+                    @else
+                        <span class="badge bg-secondary">N/A</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">PRIORITY</label>
+                <div>
+                    @php
+                        $priorityColors = [
+                            '1' => 'danger',
+                            '2' => 'warning',
+                            '3' => 'info',
+                            '4' => 'secondary',
+                        ];
+                        $priorityLabels = [
+                            '1' => 'High',
+                            '2' => 'Medium',
+                            '3' => 'Low',
+                            '4' => 'Very Low',
+                        ];
+                    @endphp
+                    <span class="badge bg-{{ $priorityColors[$job->priority] }}">
+                        {{ $priorityLabels[$job->priority] }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">ASSIGNED TO</label>
+                <div class="fw-semibold">{{ $job->assignedUser->name ?? 'Unassigned' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Information -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">CREATED DATE</label>
+                <div class="fw-semibold">{{ $job->created_at ? $job->created_at->format('M d, Y') : 'N/A' }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">START DATE</label>
+                <div class="fw-semibold">{{ $job->start_date ? $job->start_date->format('M d, Y') : 'Not Set' }}</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">DUE DATE</label>
+                <div class="fw-semibold {{ $job->due_date && $job->due_date->isPast() && $job->status !== 'completed' ? 'text-danger' : '' }}">
+                    {{ $job->due_date ? $job->due_date->format('M d, Y') : 'Not Set' }}
+                    @if($job->due_date && $job->due_date->isPast() && $job->status !== 'completed')
+                        <small class="d-block text-danger">
+                            <i class="fas fa-exclamation-triangle"></i> Overdue
+                        </small>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Information -->
+    @if ($job->description || $job->references)
+        <div class="row">
+            @if ($job->description)
+                <div class="col-md-6 mb-3">
+                    <div class="border p-3 h-100">
+                        <label class="form-label fw-bold text-muted small">DESCRIPTION</label>
+                        <div class="fw-normal">{{ $job->description }}</div>
+                    </div>
+                </div>
+            @endif
+            @if ($job->references)
+                <div class="col-md-6 mb-3">
+                    <div class="border p-3 h-100">
+                        <label class="form-label fw-bold text-muted small">REFERENCES</label>
+                        <div class="fw-normal">{{ $job->references }}</div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    @endif
+</div>
                         <!-- Photos -->
                         @if ($job->photos)
                             <div class="d-component-container mb-4">
@@ -331,6 +412,11 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+    <div class="col-12">
+        @include('jobs.components.timeline')
+    </div>
+</div>
                     </div>
                 </div>
             </div>
