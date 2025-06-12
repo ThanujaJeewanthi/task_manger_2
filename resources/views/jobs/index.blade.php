@@ -19,6 +19,16 @@
                     </div>
 
                     <div class="card-body">
+                        @if (session('success'))
+                            <div class="alert alert-success mt-3">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+                        @if (session('error'))
+                            <div class="alert alert-danger mt-3">
+                                {{ session('error') }}
+                            </div>
+                        @endif
 
                         <!-- Compact Sort and Filter Form -->
                         <form method="GET" action="{{ route('jobs.index') }}" class="mb-0">

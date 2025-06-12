@@ -83,7 +83,7 @@
                                     <strong>Important:</strong> This job has items pending approval. Any new items you add will be marked as additional items and will be reviewed along with the existing approval request.
                                 </div>
                                 <p class="mb-0">
-                                    <strong>Approval Requested From:</strong> 
+                                    <strong>Approval Requested From:</strong>
                                     @if($job->request_approval_from)
                                         {{ \App\Models\User::find($job->request_approval_from)->name ?? 'Unknown' }}
                                     @else
@@ -99,7 +99,7 @@
                         <div class="card mb-4">
                             <div class="card-header">
                                 <h6 class="mb-0">
-                                    Current Job Items 
+                                    Current Job Items
                                     <span class="badge bg-secondary">{{ $jobItems->count() }} items</span>
                                 </h6>
                             </div>
@@ -120,7 +120,7 @@
                                             @foreach($jobItems as $jobItem)
                                                 <tr>
                                                     <td>
-                                                        
+
                                                         @if($jobItem->item_id)
                                                             <strong>{{ $jobItem->item->name }}</strong>
                                                             @if($jobItem->sku)
@@ -151,7 +151,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                
+
                                 @if($job->approval_status !== 'requested')
                                     <div class="alert alert-warning mt-3">
                                         <i class="fas fa-info-ciraddedcle"></i>
@@ -382,7 +382,7 @@
                                     <strong>This job is already in the approval process.</strong>
                                 </p>
                                 <p class="mb-2">
-                                    <strong>Current Approver:</strong> 
+                                    <strong>Current Approver:</strong>
                                     {{ \App\Models\User::find($job->request_approval_from)->name ?? 'Unknown' }}
                                 </p>
                                 <p class="mb-0 text-muted">
@@ -394,7 +394,7 @@
 
                         <!-- Submit Buttons -->
                         <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg">
+                            <button type="submit" class="btn btn-primary btn-sm">
                                 <i class="fas fa-save"></i>
                                 @if($job->approval_status === 'requested')
                                     Add Additional Items
@@ -402,7 +402,7 @@
                                     Save & Process Items
                                 @endif
                             </button>
-                            <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary btn-lg ms-2">
+                            <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary btn-sm ms-2">
                                 <i class="fas fa-arrow-left"></i> Back to Job
                             </a>
                         </div>
@@ -418,7 +418,7 @@
 $(document).ready(function() {
     let existingItemIndex = {{ $jobItems->count() + 1 }};
     let newItemIndex = 1;
-    
+
     const isInApprovalProcess = {{ $job->approval_status === 'requested' ? 'true' : 'false' }};
 
     // Handle close job checkbox (only if not in approval process)
@@ -437,14 +437,14 @@ $(document).ready(function() {
     // Add existing item row
     $(document).on('click', '.add-existing-item', function() {
         const itemsHtml = '{!! $items->map(function($item) {
-            return sprintf('<option value="%s">%s%s%s</option>', 
-                $item->id, 
+            return sprintf('<option value="%s">%s%s%s</option>',
+                $item->id,
                 $item->name,
                 $item->sku ? " - {$item->sku}" : "",
                 $item->unit_price ? " (₹" . number_format($item->unit_price, 2) . ")" : ""
             );
         })->implode('') !!}';
-        
+
         const newRow = `
             <div class="existing-item-row row mb-2">
                 <div class="col-md-5">
@@ -572,7 +572,7 @@ $(document).ready(function() {
 }
 
 .border-bottom {
-    border-bottom: 1px solid #dee2e6 !important; 
+    border-bottom: 1px solid #dee2e6 !important;
 }
 
 .small {

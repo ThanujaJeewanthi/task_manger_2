@@ -18,8 +18,9 @@ use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\Job\JobOptionController;
 
-use App\Http\Controllers\Task\TaskExtensionController;
+use App\Http\Controllers\EmployeeTaskController;
 
+use App\Http\Controllers\Task\TaskExtensionController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\CommonDashboardController;
 use App\Http\Controllers\Dashboard\EmployeeDashboardController;
@@ -422,23 +423,21 @@ Route::middleware(['auth'])->group(function () {
 // Employee Task Management Routes
 Route::middleware(['auth'])->group(function () {
     Route::post('/tasks/{task}/start', [EmployeeTaskController::class, 'startTask'])
-        ->name('tasks.start')
-        ->middleware('role.permission:12.7');
+        ->name('tasks.start');
+
 
     Route::post('/tasks/{task}/complete', [EmployeeTaskController::class, 'completeTask'])
-        ->name('tasks.complete')
-        ->middleware('role.permission:12.8');
+        ->name('tasks.complete');
+
 });
 
 // Engineer Job Review Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/jobs/{job}/review', [JobController::class, 'showReview'])
-        ->name('jobs.review')
-        ->middleware('role.permission:11.23');
+        ->name('jobs.review');
 
     Route::post('/jobs/{job}/review', [JobController::class, 'processReview'])
-        ->name('jobs.review.process')
-        ->middleware('role.permission:11.24');
+        ->name('jobs.review.process');
 });
 
 Route::middleware(['auth'])->group(function () {

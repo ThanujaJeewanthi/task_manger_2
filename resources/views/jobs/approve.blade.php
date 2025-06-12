@@ -72,19 +72,19 @@
                     </div>
 
                     <!-- Issue Description -->
-                    @if($jobItems->count() > 0 && $jobItems->first()->pivot->issue_description)
-                        <div class="card mb-4 border-warning">
-                            <div class="card-header bg-warning text-dark">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    Issue Description
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <p class="mb-0">{{ $jobItems->first()->pivot->issue_description }}</p>
-                            </div>
-                        </div>
-                    @endif
+                 @if($jobItems->count() > 0 && $jobItems->first()->issue_description)
+    <div class="card mb-4 border-warning">
+        <div class="card-header bg-warning text-dark">
+            <h6 class="mb-0">
+                <i class="fas fa-exclamation-triangle"></i>
+                Issue Description
+            </h6>
+        </div>
+        <div class="card-body">
+            <p class="mb-0">{{ $jobItems->first()->issue_description }}</p>
+        </div>
+    </div>
+@endif
 
                     <!-- Current Job Items -->
                     @if($jobItems->count() > 0)
@@ -106,36 +106,36 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($jobItems as $jobItem)
-                                                <tr>
-                                                    <td>
-                                                        @if($jobItem->name)
-                                                            <strong>{{ $jobItem->name }}</strong>
-                                                            @if($jobItem->sku)
-                                                                <br><small class="text-muted">SKU: {{ $jobItem->sku }}</small>
-                                                            @endif
-                                                        @else
-                                                            <span class="text-info">{{ $jobItem->pivot->custom_item_description }}</span>
-                                                            <br><small class="text-muted">(New Item)</small>
-                                                        @endif
-                                                    </td>
-                                                    <td>
-                                                        <strong>{{ $jobItem->pivot->quantity }}</strong>
-                                                        @if($jobItem->unit)
-                                                            <small class="text-muted">{{ $jobItem->unit }}</small>
-                                                        @endif
-                                                    </td>
-                                                    <td>{{ $jobItem->pivot->notes ?? '-' }}</td>
-                                                    <td>{{ $jobItem->pivot->added_by ? \App\Models\User::find($jobItem->pivot->added_by)->name : 'N/A' }}</td>
-                                                    <td>{{ $jobItem->pivot->added_at ? \Carbon\Carbon::parse($jobItem->pivot->added_at)->format('Y-m-d H:i') : 'N/A' }}</td>
-                                                    <td>
-                                                        <span class="badge bg-info">
-                                                            {{ ucfirst(str_replace('_', ' ', $jobItem->pivot->addition_stage)) }}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
+    @foreach($jobItems as $jobItem)
+        <tr>
+            <td>
+                @if($jobItem->item_id)
+                    <strong>{{ $jobItem->item->name }}</strong>
+                    @if($jobItem->item->sku)
+                        <br><small class="text-muted">SKU: {{ $jobItem->item->sku }}</small>
+                    @endif
+                @else
+                    <span class="text-info">{{ $jobItem->custom_item_description }}</span>
+                    <br><small class="text-muted">(New Item)</small>
+                @endif
+            </td>
+            <td>
+                <strong>{{ $jobItem->quantity }}</strong>
+                @if($jobItem->unit)
+                    <small class="text-muted">{{ $jobItem->unit }}</small>
+                @endif
+            </td>
+            <td>{{ $jobItem->notes ?? '-' }}</td>
+            <td>{{ $jobItem->added_by ? \App\Models\User::find($jobItem->added_by)->name : 'N/A' }}</td>
+            <td>{{ $jobItem->added_at ? \Carbon\Carbon::parse($jobItem->added_at)->format('Y-m-d H:i') : 'N/A' }}</td>
+            <td>
+                <span class="badge bg-info">
+                    {{ ucfirst(str_replace('_', ' ', $jobItem->addition_stage)) }}
+                </span>
+            </td>
+        </tr>
+    @endforeach
+</tbody>
                                     </table>
                                 </div>
                             </div>
@@ -156,43 +156,46 @@
                             </div>
                             <div class="card-body">
                                 <!-- Edit Existing Items -->
-                                @if($jobItems->count() > 0)
-                                    <div class="mb-4">
-                                        <h6>Modify Existing Items</h6>
-                                        @foreach($jobItems as $index => $jobItem)
-                                            @if($jobItem->pivot->item_id)
-                                                <div class="row mb-2 align-items-center">
-                                                    <div class="col-md-5">
-                                                        <strong>{{ $jobItem->name }}</strong>
-                                                        @if($jobItem->sku)
-                                                            <br><small class="text-muted">SKU: {{ $jobItem->sku }}</small>
-                                                        @endif
-                                                    </div>
-                                                    <div class="col-md-2">
-                                                        <input type="number"
-                                                               class="form-control"
-                                                               name="items[{{ $jobItem->pivot->item_id }}][quantity]"
-                                                               value="{{ $jobItem->pivot->quantity }}"
-                                                               min="0.01"
-                                                               step="0.01">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <input type="text"
-                                                               class="form-control"
-                                                               name="items[{{ $jobItem->pivot->item_id }}][notes]"
-                                                               value="{{ $jobItem->pivot->notes }}"
-                                                               placeholder="Notes">
-                                                    </div>
-                                                    <div class="col-md-1">
-                                                        <span class="text-muted">
-                                                            <i class="fas fa-edit"></i>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            @endif
-                                        @endforeach
-                                    </div>
-                                @endif
+                               @if($jobItems->count() > 0)
+    <div class="mb-4">
+        <h6>Modify Existing Items</h6>
+        @foreach($jobItems as $index => $jobItem)
+            <div class="row mb-2 align-items-center">
+                <div class="col-md-5">
+                       @if($jobItem->item_id)
+                    <strong>{{ $jobItem->item->name }}</strong>
+                    @if($jobItem->item->sku)
+                        <br><small class="text-muted">SKU: {{ $jobItem->item->sku }}</small>
+                    @endif
+                {{-- @else
+                    <span class="text-info">{{ $jobItem->custom_item_description }}</span>
+                    <br><small class="text-muted">(New Item)</small> --}}
+                @endif
+                </div>
+                <div class="col-md-2">
+                    <input type="number"
+                           class="form-control"
+                           name="items[{{ $jobItem->item_id }}][quantity]"
+                           value="{{ $jobItem->quantity }}"
+                           min="1"
+                           step="1">
+                </div>
+                <div class="col-md-4">
+                    <input type="text"
+                           class="form-control"
+                           name="items[{{ $jobItem->item_id }}][notes]"
+                           value="{{ $jobItem->notes }}"
+                           placeholder="Notes">
+                </div>
+                <div class="col-md-1">
+                    <span class="text-muted">
+                        <i class="fas fa-edit"></i>
+                    </span>
+                </div>
+            </div>
+        @endforeach
+    </div>
+@endif
 
                                 <hr>
 

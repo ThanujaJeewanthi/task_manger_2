@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Task;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Job\JobController;
@@ -59,16 +59,13 @@ class EmployeeTaskController extends Controller
             $jobController->updateJobStatusBasedOnTasks($task->job);
 
             DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Task started successfully',
-                'new_status' => 'in_progress'
-            ]);
+            return redirect()->back()
+                ->with('success', 'Task started successfully');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => 'Failed to start task'], 500);
+            return redirect()->back()
+            ->with('error', 'Failed to start task');
         }
     }
 
