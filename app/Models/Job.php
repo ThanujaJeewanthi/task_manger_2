@@ -45,7 +45,11 @@ class Job extends Model
         'active',
         'created_by',
         'updated_by',
-        'job_option_values'
+        'job_option_values',
+        'reviewed_by',
+    'reviewed_at',
+    'review_notes',
+    'closed_at'
     ];
 
     /**
@@ -62,6 +66,8 @@ class Job extends Model
         'approved_at' => 'datetime',
         'rejected_at' => 'datetime',
         'added_at' => 'datetime',
+         'reviewed_at' => 'datetime',
+    'closed_at' => 'datetime',
     ];
 
     /**

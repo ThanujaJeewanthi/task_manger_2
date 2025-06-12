@@ -792,14 +792,14 @@ public function storeItems(Request $request, Job $job)
                 }
             }
 
-            $job->update([
-                'approval_status' => 'approved',
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
-                'approval_notes' => $request->approval_notes,
-                'status' => 'pending', // Move to pending for task assignment
-                'updated_by' => Auth::id(),
-            ]);
+           $job->update([
+    'approval_status' => 'approved',
+    'approved_by' => Auth::id(),
+    'approved_at' => now(),
+    'approval_notes' => $request->approval_notes,
+    'status' => 'approved',
+    'updated_by' => Auth::id(),
+]);
 
             return redirect()->route('jobs.tasks.create', $job)->with('success', 'Job approved successfully. You can now add tasks.');
         } else {
@@ -970,6 +970,151 @@ public function storeItems(Request $request, Job $job)
 
         return redirect()->route('jobs.index')->with('success', 'New job created with extended task duration.');
     }
+
+
+
+// Add these methods to app/Http/Controllers/Job/JobController.php
+
+/**
+ * Auto-update job status based on task status changes
+ */
+public function updateJobStatusBasedOnTasks(Job $job)
+{
+    $tasks = $job->tasks()->where('active', true)->get();
+
+    if ($tasks->isEmpty()) {
+        return;
+    }
+
+    $completedTasks = $tasks->where('status', 'completed')->count();
+    $inProgressTasks = $tasks->where('status', 'in_progress')->count();
+    $totalTasks = $tasks->count();
+
+    $currentStatus = $job->status;
+    $newStatus = $currentStatus;
+
+    // If all tasks are completed, mark job as completed
+    if ($completedTasks === $totalTasks && $currentStatus !== 'completed') {
+        $newStatus = 'completed';
+        $job->update([
+            'status' => $newStatus,
+            'completed_date' => now(),
+            'updated_by' => auth()->id(),
+        ]);
+    }
+    // If at least one task is in progress, mark job as in_progress
+    elseif ($inProgressTasks > 0 && $currentStatus === 'approved') {
+        $newStatus = 'in_progress';
+        $job->update([
+            'status' => $newStatus,
+            'updated_by' => auth()->id(),
+        ]);
+    }
+}
+
+/**
+ * Show job review interface for engineers
+ */
+public function showReview(Job $job)
+{
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
+    }
+
+    // Check if user has review rights
+    $userRole = Auth::user()->userRole->name ?? '';
+    if (!in_array($userRole, ['Engineer', 'admin'])) {
+        abort(403, 'You do not have permission to review jobs.');
+    }
+
+    if ($job->status !== 'completed') {
+        return redirect()->route('jobs.show', $job)
+            ->with('error', 'Only completed jobs can be reviewed.');
+    }
+
+    $job->load(['tasks', 'jobEmployees.employee', 'jobEmployees.task']);
+
+    return view('jobs.review', compact('job'));
+}
+
+/**
+ * Process job review and closure
+ */
+public function processReview(Request $request, Job $job)
+{
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
+    }
+
+    $userRole = Auth::user()->userRole->name ?? '';
+    if (!in_array($userRole, ['Engineer', 'admin'])) {
+        abort(403, 'You do not have permission to review jobs.');
+    }
+
+    if ($job->status !== 'completed') {
+        return redirect()->route('jobs.show', $job)
+            ->with('error', 'Only completed jobs can be reviewed.');
+    }
+
+    $request->validate([
+        'action' => 'required|in:close,reassign',
+        'review_notes' => 'nullable|string|max:1000',
+        'new_tasks' => 'required_if:action,reassign|array',
+        'new_tasks.*.task' => 'required_if:action,reassign|string|max:255',
+        'new_tasks.*.description' => 'nullable|string',
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        if ($request->action === 'close') {
+            // Close the job
+            $job->update([
+                'status' => 'closed',
+                'reviewed_by' => Auth::id(),
+                'reviewed_at' => now(),
+                'review_notes' => $request->review_notes,
+                'closed_at' => now(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            $message = 'Job closed successfully.';
+
+        } else { // reassign
+            // Add new tasks and change status back to approved
+            if ($request->has('new_tasks')) {
+                foreach ($request->new_tasks as $taskData) {
+                    Task::create([
+                        'task' => $taskData['task'],
+                        'description' => $taskData['description'] ?? null,
+                        'job_id' => $job->id,
+                        'status' => 'pending',
+                        'active' => true,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            }
+
+            $job->update([
+                'status' => 'approved', // Back to approved for new task assignment
+                'reviewed_by' => Auth::id(),
+                'reviewed_at' => now(),
+                'review_notes' => $request->review_notes,
+                'updated_by' => Auth::id(),
+            ]);
+
+            $message = 'New tasks added successfully. Job status updated to approved.';
+        }
+
+        DB::commit();
+        return redirect()->route('jobs.show', $job)->with('success', $message);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->back()->with('error', 'Failed to process review.');
+    }
+}
 
 
 // timeline
