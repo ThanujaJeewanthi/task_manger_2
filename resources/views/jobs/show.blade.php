@@ -15,6 +15,12 @@
                                 <a href="{{ route('jobs.copy', $job) }}" class="btn btn-warning btn-sm">
                                     <i class="fas fa-copy"></i> Copy Job
                                 </a>
+{{-- review job --}}
+                                @if(in_array(auth()->user()->userRole->name, ['Engineer', 'admin']) && $job->status === 'completed')
+    <a href="{{ route('jobs.review', $job) }}" class="btn btn-primary">
+        <i class="fas fa-clipboard-check"></i> Review & Close Job
+    </a>
+@endif
 
                                 @if ($job->approval_status == 'requested')
                                     {{-- if the 'request_approval_from' attribute of job table is the auth user id --}}
@@ -226,6 +232,31 @@
         </div>
     @endif
 </div>
+
+  @if($job->status === 'closed')
+  <div class="d-component-container mb-4">
+    <div class="alert alert-success">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="fas fa-check-circle"></i>
+                <strong>Job Closed</strong>
+                <p class="mb-0">This job has been reviewed and closed by {{ $job->reviewer->name ?? 'Engineer' }}
+                    on {{ $job->closed_at ? $job->closed_at->format('M d, Y') : 'N/A' }}.</p>
+                @if($job->review_notes)
+                    <small class="text-muted">Review Notes: {{ $job->review_notes }}</small>
+                @endif
+            </div>
+            <div>
+                <!-- Copy Job Button for closed jobs -->
+                <a href="#" class="btn btn-outline-primary btn-sm" onclick="copyJob({{ $job->id }})">
+                    <i class="fas fa-copy"></i> Copy as New Job
+                </a>
+            </div>
+        </div>
+    </div>
+    </div>
+@endif
+
                         <!-- Photos -->
                         @if ($job->photos)
                             <div class="d-component-container mb-4">

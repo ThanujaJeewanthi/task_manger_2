@@ -417,7 +417,29 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('role.permission:12.6 ');
 });
 
+// Add these routes to routes/web.php
 
+// Employee Task Management Routes
+Route::middleware(['auth'])->group(function () {
+    Route::post('/tasks/{task}/start', [EmployeeTaskController::class, 'startTask'])
+        ->name('tasks.start')
+        ->middleware('role.permission:12.7');
+
+    Route::post('/tasks/{task}/complete', [EmployeeTaskController::class, 'completeTask'])
+        ->name('tasks.complete')
+        ->middleware('role.permission:12.8');
+});
+
+// Engineer Job Review Routes
+Route::middleware(['auth'])->group(function () {
+    Route::get('/jobs/{job}/review', [JobController::class, 'showReview'])
+        ->name('jobs.review')
+        ->middleware('role.permission:11.23');
+
+    Route::post('/jobs/{job}/review', [JobController::class, 'processReview'])
+        ->name('jobs.review.process')
+        ->middleware('role.permission:11.24');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/jobs/{job}/timeline-data', [JobController::class, 'getTimelineJson'])
@@ -426,6 +448,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/jobs/{job}/tasks/{task}/details', [JobController::class, 'getTaskDetails'])
         ->name('jobs.task-details');
 });
+
+
 
 Route::fallback(function () {
     return 'Fallback';
