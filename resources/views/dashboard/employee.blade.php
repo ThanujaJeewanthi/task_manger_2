@@ -97,8 +97,9 @@
 
             <div class="row">
                 <!-- Performance Overview -->
-                <div class="col-md-8">
-                    <div class="card mb-3">
+              <div class="col-md-8 d-flex flex-column">
+        <div class="card mb-3 h-100 d-flex flex-column">
+
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>Your Performance Overview</span>
@@ -169,8 +170,8 @@
                 </div>
 
                 <!-- Quick Actions & Upcoming Deadlines -->
-                <div class="col-md-4">
-                    <div class="card mb-3">
+               <div class="col-md-4 d-flex flex-column">
+                    {{-- <div class="card mb-3">
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>Quick Actions</span>
@@ -212,16 +213,17 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <!-- Upcoming Deadlines -->
-                    <div class="card mb-3">
+                    <div class="card mb-3 h-100 d-flex flex-column">
+
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>Upcoming Deadlines</span>
                             </div>
                         </div>
-                        <div class="card-body">
+                   <div class="card-body flex-grow-1">
                             @forelse($upcomingDeadlines as $task)
                             <div class="mb-2 p-2 border rounded">
                                 <strong>{{ Str::limit($task->task, 25) }}</strong>
@@ -367,7 +369,7 @@
                                             <th>Start Date</th>
                                             <th>End Date</th>
                                             <th>Status</th>
-                                            <th>Progress</th>
+                                            {{-- <th>Progress</th> --}}
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
@@ -415,7 +417,7 @@
                                                     {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                                                 </span>
                                             </td>
-                                            <td>
+                                            {{-- <td>
                                                 @foreach($task->jobEmployees as $assignment)
                                                     @if($assignment->employee_id == $employee->id && $assignment->start_date && $assignment->end_date)
                                                         @php
@@ -445,30 +447,39 @@
                                                         <small class="text-muted">No dates set</small>
                                                     @endif
                                                 @endforeach
-                                            </td>
+                                            </td> --}}
                                             <td>
-                                                @if($task->status != 'completed')
-                                                <div class="btn-group" role="group">
-                                                    @if($task->status == 'pending')
-                                                    <button class="btn btn-sm btn-primary" onclick="updateTaskStatus({{ $task->id }}, 'in_progress')">
-                                                        <i class="fas fa-play"></i>
-                                                    </button>
-                                                    @endif
-                                                    @if($task->status == 'in_progress')
-                                                    <button class="btn btn-sm btn-success" onclick="updateTaskStatus({{ $task->id }}, 'completed')">
-                                                        <i class="fas fa-check"></i>
-                                                    </button>
-                                                    @endif
-                                                    <button class="btn btn-sm btn-info" onclick="viewTaskDetails({{ $task->id }})">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
-                                                </div>
-                                                @else
-                                                <span class="badge bg-success">
-                                                    <i class="fas fa-check"></i> Done
-                                                </span>
-                                                @endif
-                                            </td>
+    @foreach($task->jobEmployees as $assignment)
+        @if($assignment->employee_id == $employee->id)
+            <!-- Task Action Buttons for Employees -->
+            @if($task->status === 'pending')
+                <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Are you sure you want to start this task?')">
+                        <i class="fas fa-play"></i> Start
+                    </button>
+                </form>
+            @elseif($task->status === 'in_progress')
+               <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to complete this task?')">
+                        <i class="fas fa-check"></i> Complete
+                    </button>
+                </form>
+                <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
+                    <i class="fas fa-clock"></i>
+                </a>
+            @elseif($task->status === 'completed')
+                <span class="badge bg-success">
+                    <i class="fas fa-check-circle"></i> Done
+                </span>
+            @else
+                <span class="badge bg-secondary">{{ ucfirst($task->status) }}</span>
+            @endif
+            @break
+        @endif
+    @endforeach
+</td>
                                         </tr>
                                         @empty
                                         <tr>
@@ -783,5 +794,143 @@ function showTaskStatusModal() {
     // Show modal with all tasks for quick updates
     new bootstrap.Modal(document.getElementById('taskStatusModal')).show();
 }
+
+
+// Task Management Functions
+let currentTaskId = null;
+let currentTaskName = '';
+
+function startTask(taskId, taskName) {
+    currentTaskId = taskId;
+    currentTaskName = taskName;
+
+    if (confirm(`Are you sure you want to start the task: "${taskName}"?\n\nThis will mark it as "In Progress".`)) {
+        fetch(`/tasks/${taskId}/start`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('success', data.message);
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showAlert('error', data.message || 'Failed to start task');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('error', 'Failed to start task');
+        });
+    }
+}
+
+function completeTask(taskId, taskName) {
+    currentTaskId = taskId;
+    currentTaskName = taskName;
+
+    // Show completion modal
+    showCompleteTaskModal();
+}
+
+function showCompleteTaskModal() {
+    // Create modal if it doesn't exist
+    let modal = document.getElementById('completeTaskModal');
+    if (!modal) {
+        const modalHtml = `
+            <div class="modal fade" id="completeTaskModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Complete Task</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <form id="completeTaskForm">
+                            <div class="modal-body">
+                                <p>Are you sure you want to mark this task as completed?</p>
+                                <p class="text-muted"><strong>Task:</strong> <span id="modalTaskName"></span></p>
+
+                                <div class="form-group">
+                                    <label for="completion_notes">Completion Notes (Optional)</label>
+                                    <textarea class="form-control" id="completion_notes" name="completion_notes" rows="3"
+                                              placeholder="Add any notes about task completion..."></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check"></i> Complete Task
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        // Add form submission handler
+        document.getElementById('completeTaskForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = {
+                completion_notes: formData.get('completion_notes')
+            };
+
+            fetch(`/tasks/${currentTaskId}/complete`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('completeTaskModal')).hide();
+                    showAlert('success', data.message);
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showAlert('error', data.message || 'Failed to complete task');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('error', 'Failed to complete task');
+            });
+        });
+    }
+
+    // Set task name and show modal
+    document.getElementById('modalTaskName').textContent = currentTaskName;
+    new bootstrap.Modal(document.getElementById('completeTaskModal')).show();
+}
+
+function showAlert(type, message) {
+    // Create and show an alert message
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+
+    document.body.appendChild(alertDiv);
+
+    // Auto-dismiss after 4 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 4000);
+}
 </script>
+
 @endsection

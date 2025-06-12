@@ -306,13 +306,13 @@ class Job extends Model
 
         return round(($completedTasks / $totalTasks) * 100, 1);
     }
-    public function jobItems()
+     public function jobItems()
     {
-        return $this->belongsToMany(JobItems::class,'job_id');
+        return $this->hasMany(JobItems::class);
     }
     public function items()
     {
-        return $this->belongsToMany(Item::class, 'job_items')
+        return $this->belongsToMany(JobItems::class, 'job_items')
                     ->withPivot([
                         'quantity',
                         'notes',

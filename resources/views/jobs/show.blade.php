@@ -337,111 +337,141 @@
                             </div>
                         </div>
 
-                        <!-- Tasks Card -->
-                        <div class="d-component-container mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5>Tasks</h5>
-                                {{-- NEW: Employee extension request link --}}
-                                @if(auth()->user()->userRole->name == 'Employee')
-                                    <div>
-                                        <a href="{{ route('tasks.extension.my-requests') }}" class="btn btn-info btn-sm">
-                                            <i class="fas fa-history"></i> My Extension Requests
-                                        </a>
-                                    </div>
+  <!-- Tasks Card -->
+<div class="d-component-container mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5>Tasks</h5>
+        {{-- NEW: Employee extension request link --}}
+        @if(auth()->user()->userRole->name == 'Employee')
+            <div>
+                <a href="{{ route('tasks.extension.my-requests') }}" class="btn btn-info btn-sm">
+                    <i class="fas fa-history"></i> My Extension Requests
+                </a>
+            </div>
+        @endif
+    </div>
+    <div class="table-responsive table-compact">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Task Name</th>
+                    <th>Description</th>
+                    <th>Assigned Employees</th>
+                    <th>Status</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php
+                    $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
+                    $isEmployee = auth()->user()->userRole->name === 'Employee';
+                    $jobEmployeesGrouped = $isEmployee && $currentEmployee
+                        ? $job->jobEmployees->where('employee_id', $currentEmployee->id)->groupBy('task_id')
+                        : $job->jobEmployees->groupBy('task_id');
+                @endphp
+                @forelse ($jobEmployeesGrouped as $taskId => $jobEmployees)
+                    @php
+                        $task = $job->jobEmployees->where('task_id', $taskId)->first()->task;
+                        // Check if current user is assigned to this task
+                        $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
+                        $isAssignedToTask = $currentEmployee && $jobEmployees->contains('employee_id', $currentEmployee->id);
+
+                        // Check for pending extension requests
+                        $pendingExtension = null;
+                        if($currentEmployee) {
+                            $pendingExtension = \App\Models\TaskExtensionRequest::where('task_id', $task->id)
+                                ->where('employee_id', $currentEmployee->id)
+                                ->where('status', 'pending')
+                                ->first();
+                        }
+                    @endphp
+                    <tr>
+                        <td>{{ $task->task }}</td>
+                        <td>{{ $task->description ?? 'N/A' }}</td>
+                        <td>
+                            @foreach ($jobEmployees as $je)
+                                {{ $je->employee->name ?? 'N/A' }}@if (!$loop->last)
+                                    ,
                                 @endif
-                            </div>
-                            <div class="table-responsive table-compact">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Task Name</th>
-                                            <th>Description</th>
-                                            <th>Assigned Employees</th>
-                                            <th>Status</th>
-                                            <th>Start Date</th>
-                                            <th>End Date</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse ($job->jobEmployees->groupBy('task_id') as $taskId => $jobEmployees)
-                                            @php
-                                                $task = $job->jobEmployees->where('task_id', $taskId)->first()->task;
-                                                // Check if current user is assigned to this task
-                                                $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
-                                                $isAssignedToTask = $currentEmployee && $jobEmployees->contains('employee_id', $currentEmployee->id);
+                            @endforeach
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
+                                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                            </span>
+                        </td>
+                        <td>{{ $jobEmployees->first()->start_date ? $jobEmployees->first()->start_date->format('Y-m-d') : 'N/A' }}
+                        </td>
+                        <td>{{ $jobEmployees->max('end_date') ? \Carbon\Carbon::parse($jobEmployees->max('end_date'))->format('Y-m-d') : 'N/A' }}
+                        </td>
+                        <td>
+                            @php
+                                $currentUserEmployee = Auth::user()->employee ?? null;
+                                $isAssignedToTask = false;
+                                $userJobEmployee = null;
 
-                                                // Check for pending extension requests
-                                                $pendingExtension = null;
-                                                if($currentEmployee) {
-                                                    $pendingExtension = \App\Models\TaskExtensionRequest::where('task_id', $task->id)
-                                                        ->where('employee_id', $currentEmployee->id)
-                                                        ->where('status', 'pending')
-                                                        ->first();
-                                                }
-                                            @endphp
-                                            <tr>
-                                                <td>{{ $task->task }}</td>
-                                                <td>{{ $task->description ?? 'N/A' }}</td>
-                                                <td>
-                                                    @foreach ($jobEmployees as $je)
-                                                        {{ $je->employee->name ?? 'N/A' }}@if (!$loop->last)
-                                                            ,
-                                                        @endif
-                                                    @endforeach
-                                                </td>
-                                                <td>
-                                                    <span
-                                                        class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
-                                                        {{ ucfirst(str_replace('_', ' ', $task->status)) }}
-                                                    </span>
-                                                </td>
-                                                <td>{{ $jobEmployees->first()->start_date ? $jobEmployees->first()->start_date->format('Y-m-d') : 'N/A' }}
-                                                </td>
-                                                <td>{{ $jobEmployees->max('end_date') ? \Carbon\Carbon::parse($jobEmployees->max('end_date'))->format('Y-m-d') : 'N/A' }}
-                                                </td>
-                                                <td>
-                                                    {{-- NEW: Employee can request extension for their assigned tasks --}}
-                                                    @if(auth()->user()->userRole->name == 'Employee' && $isAssignedToTask && $task->status !== 'completed')
-                                                        @if($pendingExtension)
-                                                            <span class="badge bg-warning mb-1">
-                                                                <i class="fas fa-clock"></i> Extension Pending
-                                                            </span>
-                                                        @else
-                                                            <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-sm btn-warning ">
-                                                                <i class="fas fa-clock"></i> Request Extension
-                                                            </a>
-                                                        @endif
-                                                        <br>
-                                                    @endif
+                                if ($currentUserEmployee) {
+                                    $userJobEmployee = $jobEmployees->where('employee_id', $currentUserEmployee->id)->first();
+                                    $isAssignedToTask = $userJobEmployee !== null;
+                                }
+                            @endphp
 
-                                                    {{-- Existing edit/delete actions for appropriate roles --}}
-                                                    @if(in_array(auth()->user()->userRole->name ?? '', ['Engineer', 'Supervisor', 'admin']))
-                                                        <a href="{{ route('jobs.tasks.edit', [$job, $task]) }}"
-                                                            class="btn btn-sm btn-info">
-                                                            <i class="fas fa-edit"></i> Edit
-                                                        </a>
-                                                        <form action="{{ route('jobs.tasks.destroy', [$job, $task]) }}"
-                                                            method="POST" class="d-inline">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-danger"
-                                                                onclick="return confirm('Are you sure you want to delete this task?')">
-                                                                <i class="fas fa-trash"></i> Delete
-                                                            </button>
-                                                        </form>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="7" class="text-center">No tasks found.</td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
+                            @if(Auth::user()->userRole->name === 'Employee' && $isAssignedToTask)
+                                <!-- Employee Task Actions -->
+                                <div class="btn-group" role="group">
+                                    @if($task->status === 'pending')
+                                        <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Are you sure you want to start this task?')">
+                                                <i class="fas fa-play"></i> Start
+                                            </button>
+                                        </form>
+                                    @elseif($task->status === 'in_progress')
+                                        <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to complete this task?')">
+                                                <i class="fas fa-check"></i> Complete
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
+                                            <i class="fas fa-clock"></i>
+                                        </a>
+                                    @elseif($task->status === 'completed')
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Completed
+                                        </span>
+                                    @endif
                                 </div>
-                            </div>
+                            @else
+                                <!-- Non-employee or unassigned users see view/edit options -->
+                                @if(in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor', 'Technical Officer', 'admin']))
+                                    <div class="btn-group" role="group">
+                                        {{-- <a href="{{ route('tasks.show', $task) }}" class="btn btn-info btn-sm" title="View Details">
+                                            <i class="fas fa-eye"></i>
+                                        </a> --}}
+                                        {{-- @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
+                                            <a href="{{ route('tasks.edit', $task) }}" class="btn btn-secondary btn-sm" title="Edit Task">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endif --}}
+                                    </div>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center">No tasks found.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
                         </div>
                         <div class="row">
     <div class="col-12">
