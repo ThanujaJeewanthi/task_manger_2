@@ -120,11 +120,8 @@ class EmployeeTaskController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Task completed successfully',
-                'new_status' => 'completed'
-            ]);
+            return redirect()->back()
+                ->with('success', 'Task completed successfully');
 
         } catch (\Exception $e) {
             DB::rollBack();

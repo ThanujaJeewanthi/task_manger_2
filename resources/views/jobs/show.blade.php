@@ -448,14 +448,14 @@
                                 <!-- Non-employee or unassigned users see view/edit options -->
                                 @if(in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor', 'Technical Officer', 'admin']))
                                     <div class="btn-group" role="group">
-                                        {{-- <a href="{{ route('tasks.show', $task) }}" class="btn btn-info btn-sm" title="View Details">
+                                        {{-- <a href="{{ route('tasks.show', ['job' => $job->id, 'task' => $task->id]) }}" class="btn btn-info btn-sm" title="View Details">
                                             <i class="fas fa-eye"></i>
                                         </a> --}}
-                                        {{-- @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
-                                            <a href="{{ route('tasks.edit', $task) }}" class="btn btn-secondary btn-sm" title="Edit Task">
+                                        @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
+                                            <a href="{{ route('jobs.tasks.edit', ['job' => $job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                        @endif --}}
+                                        @endif
                                     </div>
                                 @else
                                     <span class="text-muted">-</span>

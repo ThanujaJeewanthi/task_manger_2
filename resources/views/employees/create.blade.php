@@ -11,15 +11,17 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if ($errors->any())
-                        <div class="alert alert-danger">
-                            <ul class="mb-0">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
+                     @if (session('success'))
+                            <div class="alert alert-success">
+                                {{ session('success') }}
+                            </div>
+                        @endif
+
+                        @if (session('error'))
+                            <div class="alert alert-danger">
+                                {{ session('error') }}
+                            </div>
+                        @endif
 
                     <form action="{{ route('employees.store') }}" method="POST">
                         @csrf
@@ -86,13 +88,14 @@
                                 @enderror
                             </div>
                             {{-- confirm password --}}
-                            <div class="form-group mb-4">
-                                <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control @error('password_confirmation') is-invalid @enderror" required>
-                                @error('password_confirmation')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                           <div class="form-group mb-4">
+    <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+    <input type="password" name="password_confirmation" id="password_confirmation"
+           class="form-control @error('password_confirmation') is-invalid @enderror" required>
+    @error('password_confirmation')
+        <span class="invalid-feedback">{{ $message }}</span>
+    @enderror
+</div>
                             <div class="form-group mb-4">
                                 <label for="notes" class="form-label">Notes</label>
                                 <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="3">{{ old('notes') }}</textarea>
@@ -101,16 +104,18 @@
                                 @enderror
                             </div>
                             {{-- active --}}
-                             <div class="d-com-flex justify-content-start mb-4">
-                                <label class="d-label-text me-2">Active</label>
-                                <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                    <input type="checkbox" class="form-check-input d-section-toggle" name="is_active" checked />
-                                    <span class="d-slider">
-                                        <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
-                                        <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
-                                    </span>
-                                </label>
-                            </div>
+                           <div class="d-com-flex justify-content-start mb-4">
+    <label class="d-label-text me-2">Active</label>
+    <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
+        <input type="hidden" name="is_active" value="0">
+        <input type="checkbox" class="form-check-input d-section-toggle"
+               name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} />
+        <span class="d-slider">
+            <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
+            <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
+        </span>
+    </label>
+</div>
                             <div class="form-group mt-4">
                                 <button type="submit" class="btn btn-primary">Create Employee</button>
                                 <a href="{{ route('employees.index') }}" class="btn btn-secondary ms-2">Cancel</a>

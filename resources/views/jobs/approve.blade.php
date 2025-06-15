@@ -167,15 +167,15 @@
                     @if($jobItem->item->sku)
                         <br><small class="text-muted">SKU: {{ $jobItem->item->sku }}</small>
                     @endif
-                {{-- @else
+                @else
                     <span class="text-info">{{ $jobItem->custom_item_description }}</span>
-                    <br><small class="text-muted">(New Item)</small> --}}
+                    <br><small class="text-muted">(New Item)</small>
                 @endif
                 </div>
                 <div class="col-md-2">
                     <input type="number"
                            class="form-control"
-                           name="items[{{ $jobItem->item_id }}][quantity]"
+                           name="items[{{ $jobItem->id }}][quantity]"
                            value="{{ $jobItem->quantity }}"
                            min="1"
                            step="1">
@@ -183,7 +183,7 @@
                 <div class="col-md-4">
                     <input type="text"
                            class="form-control"
-                           name="items[{{ $jobItem->item_id }}][notes]"
+                           name="items[{{ $jobItem->id }}][notes]"
                            value="{{ $jobItem->notes }}"
                            placeholder="Notes">
                 </div>
@@ -218,7 +218,7 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <input type="number" class="form-control" name="additional_items[0][quantity]"
-                                                       placeholder="Quantity" min="0.01" step="0.01">
+                                                       placeholder="Quantity" min="1" step="1">
                                             </div>
                                             <div class="col-md-4">
                                                 <input type="text" class="form-control" name="additional_items[0][notes]"
@@ -244,7 +244,7 @@
                                             </div>
                                             <div class="col-md-2">
                                                 <input type="number" class="form-control" name="new_items[0][quantity]"
-                                                       placeholder="Quantity" min="0.01" step="0.01">
+                                                       placeholder="Quantity" min="1" step="1">
                                             </div>
                                             <div class="col-md-3">
                                                 <span class="form-control-plaintext text-muted">Will be added to inventory</span>
@@ -335,7 +335,7 @@ $(document).ready(function() {
                 </div>
                 <div class="col-md-2">
                     <input type="number" class="form-control" name="additional_items[${additionalItemIndex}][quantity]"
-                           placeholder="Quantity" min="0.01" step="0.01">
+                           placeholder="Quantity" min="1" step="1">
                 </div>
                 <div class="col-md-4">
                     <input type="text" class="form-control" name="additional_items[${additionalItemIndex}][notes]"
@@ -362,7 +362,7 @@ $(document).ready(function() {
                 </div>
                 <div class="col-md-2">
                     <input type="number" class="form-control" name="new_items[${newItemIndex}][quantity]"
-                           placeholder="Quantity" min="0.01" step="0.01">
+                           placeholder="Quantity" min="1" step="1">
                 </div>
                 <div class="col-md-3">
                     <span class="form-control-plaintext text-muted">Will be added to inventory</span>

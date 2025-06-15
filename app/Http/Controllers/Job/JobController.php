@@ -760,7 +760,7 @@ public function processApproval(Request $request, Job $job)
     ]);
 
     // Get the previous issue description from the latest job item (if any)
-    $previousIssue = \App\Models\JobItems::where('job_id', $job->id)
+    $previousIssue = JobItems::where('job_id', $job->id)
         ->where('active', true)
         ->orderByDesc('id')
         ->value('issue_description');
@@ -770,8 +770,8 @@ public function processApproval(Request $request, Job $job)
         if ($request->has('items')) {
             foreach ($request->items as $itemId => $itemData) {
                 if (!empty($itemData['quantity'])) {
-                    \App\Models\JobItems::where('job_id', $job->id)
-                        ->where('item_id', $itemId)
+                   JobItems::where('job_id', $job->id)
+                        ->where('id', $itemId)
                         ->update([
                             'quantity' => $itemData['quantity'],
                             'notes' => $itemData['notes'] ?? null,

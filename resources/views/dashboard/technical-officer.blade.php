@@ -370,7 +370,7 @@
                                                 </span>
                                             </td>
                                             <td>
-                                                <span class="badge bg-info">{{ $job->items->count() }} items</span>
+                                                <span class="badge bg-info">{{ $job->jobItems->count() }} items</span>
                                             </td>
                                             <td>
                                                 <span class="badge bg-warning">Requested</span>
