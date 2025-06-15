@@ -31,7 +31,7 @@ class CreateJobsTable extends Migration
             $table->date('completed_date')->nullable();
             $table->foreignId('assigned_user_id')->nullable();
             $table->unsignedBigInteger('request_approval_from')->nullable();
-            $table->enum('approval_status', [ 'requested', 'approved', 'rejected'])->default('null');
+           $table->enum('approval_status', ['requested', 'approved', 'rejected'])->nullable();
             $table->unsignedBigInteger('approved_by')->nullable();
             $table->unsignedBigInteger('rejected_by')->nullable();
             $table->timestamp('approved_at')->nullable();

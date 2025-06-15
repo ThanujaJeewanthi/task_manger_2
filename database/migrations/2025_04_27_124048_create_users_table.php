@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('email')->unique()->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->string('phone_number');
+            $table->string('phone_number')->nullable();
             $table->foreignId('company_id')->nullable()->constrained('companies','id')->nullOnDelete();
             $table->string('profile_picture')->nullable();
             $table->foreignId('user_role_id')->constrained('user_roles')->onDelete('cascade');

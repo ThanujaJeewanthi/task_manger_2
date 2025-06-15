@@ -22,8 +22,8 @@ class UserRoleDetailsSeeder extends Seeder
 
         // Create permissions for each role
         foreach ($roles as $role) {
-            switch ($role->name) {
-                case 'Super Admin':
+            switch ($role->id) {
+                case '1':
 
                     foreach ($pages as $page) {
                         UserRoleDetail::create([

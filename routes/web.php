@@ -206,9 +206,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
 Route::middleware(['auth'])->group(function () {
 
-Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index')->middleware('role.permission:5.1');
-    Route::get('/logs/{id}', [App\Http\Controllers\LogController::class, 'show'])->name('logs.show');
-    Route::post('/logs/clear', [App\Http\Controllers\LogController::class, 'clear'])->name('logs.clear');
+Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index')->middleware('role.permission:13.1');
+    Route::get('/logs/{id}', [App\Http\Controllers\LogController::class, 'show'])->name('logs.show')->middleware('role.permission:13.2');
+    Route::post('/logs/clear', [App\Http\Controllers\LogController::class, 'clear'])->name('logs.clear')->middleware('role.permission:13.2');
 });
 
 //companies routes

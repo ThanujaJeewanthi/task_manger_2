@@ -14,11 +14,13 @@ class UserRolesSeeder extends Seeder
     public function run()
     {
         $roles = [
-            'admin',
-            'super admin',
-            'engineer',
-            'supervisor',
-            'employee'
+            'Super Admin',
+            'Admin',
+
+            'Engineer',
+            'Technical Officer',
+            'Supervisor',
+            'Employee'
         ];
 
         foreach ($roles as $role) {
@@ -26,7 +28,8 @@ class UserRolesSeeder extends Seeder
                 'name' => $role,
                 //'slug' => Str::slug($role),
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
+                'active'=>true,
             ]);
         }
     }

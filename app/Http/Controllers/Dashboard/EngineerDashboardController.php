@@ -69,7 +69,7 @@ class EngineerDashboardController extends Controller
         ];
 
         // Jobs requiring approval
-        $jobsForApproval = Job::with(['jobType', 'client', 'equipment', 'items'])
+        $jobsForApproval = Job::with(['jobType', 'client', 'equipment', 'jobItems'])
             ->where('company_id', $companyId)
             ->where('approval_status', 'requested')
             ->where('request_approval_from', Auth::id())

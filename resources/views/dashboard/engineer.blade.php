@@ -349,7 +349,7 @@
                                     </td>
                                     <td>{{ $job->creator->name ?? 'N/A' }}</td>
                                     <td>
-                                        <span class="badge bg-info">{{ $job->items->count() }} items</span>
+                                        <span class="badge bg-info">{{ $job->jobItems->count() }} items</span>
                                     </td>
                                     <td>
                                         {{-- <a href="{{ route('jobs.approval.show', $job) }}" class="btn btn-sm btn-primary">

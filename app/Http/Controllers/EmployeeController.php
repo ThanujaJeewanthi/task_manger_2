@@ -5,11 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Employee;
 use App\Models\UserRole;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class EmployeeController extends Controller
 {
@@ -20,7 +21,7 @@ class EmployeeController extends Controller
         // Get employees with their user information
         $employees = Employee::with('user')
             ->where('company_id', $companyId)
-            
+
             ->paginate(10);
 
         return view('employees.index', compact('employees'));
@@ -32,79 +33,78 @@ class EmployeeController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
+{
+    try {
+        DB::beginTransaction();
+
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'nullable|string|email|max:255|unique:users,email',  
+            'email' => 'nullable|string|email|max:255|unique:users,email',
             'username' => 'required|string|max:255|unique:users,username',
             'employee_code' => 'required|string|max:255|unique:employees,employee_code',
             'job_title' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => 'nullable|string|max:20',
             'notes' => 'nullable|string',
-            'password' => 'nullable|string|min:8',
+            'password' => 'required|string|min:8|confirmed',
+            'is_active' => 'sometimes|boolean'
         ]);
 
-        try {
-            DB::beginTransaction();
-
-            // Get or create employee role
-            $employeeRole = UserRole::where('name', 'Employee')->first();
-            if (!$employeeRole) {
-                $employeeRole = UserRole::create([
-                    'name' => 'Employee',
-                    'active' => true,
-                    'created_by' => Auth::id()
-                ]);
-            }
-
-            // Generate password if not provided
-            $password = $request->password ?? Str::random(12);
-
-            // Create user first
-            $user = User::create([
-                'name' => $request->name,
-                'email' => $request->email,
-                'username' => $request->username,
-                'phone_number' => $request->phone,
-                'password' => Hash::make($password),
-                'user_role_id' => $employeeRole->id,
-                'company_id' => Auth::user()->company_id,
-                'type' => 'user',
-                'active' => $request->has('active') ? true : false,
+        // Get or create employee role
+        $employeeRole = UserRole::firstOrCreate(
+            ['name' => 'Employee'],
+            [
+                'active' => true,
                 'created_by' => Auth::id()
-            ]);
+            ]
+        );
 
-            // Create employee record
-            $employee = Employee::create([
-                'user_id' => $user->id,
-                'name' => $request->name,
-                'employee_code' => $request->employee_code,
-                'job_title' => $request->job_title,
-                'phone' => $request->phone,
-                'department' => $request->department,
-                'company_id' => Auth::user()->company_id,
-                'notes' => $request->notes,
-                'active' => $request->has('active') ? true : false,
-                'created_by' => Auth::id()
-            ]);
+        // Create user
+        $user = User::create([
+            'name' => $validated['name'],
+            'username' => $validated['username'],
+            'email' => $validated['email'],
+            'phone_number' => $validated['phone'],
+            'password' => Hash::make($validated['password']),
+            'user_role_id' => $employeeRole->id,
+            'company_id' => Auth::user()->company_id,
+            'type' => 'user',
+            'active' => $request->boolean('is_active'),
+            'created_by' => Auth::id()
+        ]);
 
-            DB::commit();
+        // Create employee record (only store employee-specific fields)
+        Employee::create([
+            'name' => $validated['name'],
+            'username' => $validated['username'],
+            'user_id' => $user->id,
+            'employee_code' => $validated['employee_code'],
+            'job_title' => $validated['job_title'],
+            'department' => $validated['department'],
+            'company_id' => Auth::user()->company_id,
+            'notes' => $validated['notes'],
+            'active' => $request->boolean('is_active'),
+            'created_by' => Auth::id()
+        ]);
 
-            $message = 'Employee created successfully.';
-            if (!$request->password) {
-                $message .= ' Generated password: ' . $password . ' (Please communicate this to the employee)';
-            }
+        DB::commit();
 
-            return redirect()->route('employees.index')->with('success', $message);
+        return redirect()->route('employees.index')
+            ->with('success', 'Employee created successfully.');
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Failed to create employee: ' . $e->getMessage())
-                ->withInput();
-        }
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        DB::rollBack();
+        return redirect()->back()
+            ->withErrors($e->validator)
+            ->withInput();
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Employee creation failed: '.$e->getMessage());
+        return redirect()->back()
+            ->with('error', 'Employee creation failed. Please try again.')
+            ->withInput();
     }
+}
 
     public function show(Employee $employee)
     {
