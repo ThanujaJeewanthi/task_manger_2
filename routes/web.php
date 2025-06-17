@@ -107,6 +107,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('engineer.jobs.approve')
         ->middleware('role.permission:1.5');
 
+    Route::get('/api/engineer/notification-counts', [EngineerDashboardController::class, 'getNotificationCounts'])
+        ->name('engineer.notification-counts')
+        ->middleware('role.permission:1.5');
+
     // Technical Officer Dashboard API
     Route::get('/technicalofficer/dashboard/quick-stats', [TechnicalOfficerDashboardController::class, 'getQuickStats'])
         ->name('technicalofficer.dashboard.quick-stats')

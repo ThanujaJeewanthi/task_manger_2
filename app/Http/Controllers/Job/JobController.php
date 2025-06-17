@@ -1115,65 +1115,66 @@ public function processReview(Request $request, Job $job)
     }
 
     $request->validate([
-        'action' => 'required|in:close,reassign',
+        'action' => 'required|in:close',
         'review_notes' => 'nullable|string|max:1000',
-        'new_tasks' => 'required_if:action,reassign|array',
-        'new_tasks.*.task' => 'required_if:action,reassign|string|max:255',
-        'new_tasks.*.description' => 'nullable|string',
     ]);
 
     try {
         DB::beginTransaction();
 
-        if ($request->action === 'close') {
-            // Close the job
-            $job->update([
-                'status' => 'closed',
-                'reviewed_by' => Auth::id(),
-                'reviewed_at' => now(),
-                'review_notes' => $request->review_notes,
-                'closed_at' => now(),
-                'updated_by' => Auth::id(),
-            ]);
-
-            $message = 'Job closed successfully.';
-
-        } else { // reassign
-            // Add new tasks and change status back to approved
-            if ($request->has('new_tasks')) {
-                foreach ($request->new_tasks as $taskData) {
-                    Task::create([
-                        'task' => $taskData['task'],
-                        'description' => $taskData['description'] ?? null,
-                        'job_id' => $job->id,
-                        'status' => 'pending',
-                        'active' => true,
-                        'created_by' => Auth::id(),
-                        'updated_by' => Auth::id(),
-                    ]);
-                }
-            }
-
-            $job->update([
-                'status' => 'approved', // Back to approved for new task assignment
-                'reviewed_by' => Auth::id(),
-                'reviewed_at' => now(),
-                'review_notes' => $request->review_notes,
-                'updated_by' => Auth::id(),
-            ]);
-
-            $message = 'New tasks added successfully. Job status updated to approved.';
-        }
+        // Always close the job (streamlined - no task adding)
+        $job->update([
+            'status' => 'closed',
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+            'review_notes' => $request->review_notes,
+            'closed_at' => now(),
+            'updated_by' => Auth::id(),
+        ]);
 
         DB::commit();
-        return redirect()->route('jobs.show', $job)->with('success', $message);
+
+        return redirect()->route('jobs.show', $job)
+            ->with('success', 'Job has been reviewed and closed successfully.');
 
     } catch (\Exception $e) {
         DB::rollBack();
-        return redirect()->back()->with('error', 'Failed to process review.');
+        return redirect()->back()
+            ->with('error', 'Failed to process review. Please try again.');
     }
 }
 
+// Add method to get status color for consistent display
+public static function getStatusColor($status)
+{
+    $statusColors = [
+        'pending' => 'warning',
+        'approved' => 'info',
+        'in_progress' => 'primary',
+        'on_hold' => 'secondary',
+        'completed' => 'success',
+        'closed' => 'dark',  // NEW: Different color for closed
+        'cancelled' => 'danger'
+    ];
+
+    return $statusColors[$status] ?? 'secondary';
+}
+
+// Add method to get status label for consistent display
+public static function getStatusLabel($status)
+{
+    $statusLabels = [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'in_progress' => 'In Progress',
+        'on_hold' => 'On Hold',
+        'completed' => 'Completed',
+        'closed' => 'Closed ✓',  // NEW: Special label for closed
+        'cancelled' => 'Cancelled'
+    ];
+
+    return $statusLabels[$status] ?? ucfirst(str_replace('_', ' ', $status));
+}
 
 // timeline
 private function getTimelineData(Job $job)

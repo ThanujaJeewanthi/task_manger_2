@@ -11,53 +11,56 @@
                                 <span>Job Details: {{ $job->id }}</span>
                             </div>
                             <div>
+                                @if($job->status === 'closed')
+                                    <a href="{{ route('jobs.copy', $job) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-copy"></i> Copy Job
+                                    </a>
+                                @else
+                                    <a href="{{ route('jobs.copy', $job) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-copy"></i> Copy Job
+                                    </a>
 
-                                <a href="{{ route('jobs.copy', $job) }}" class="btn btn-warning btn-sm">
-                                    <i class="fas fa-copy"></i> Copy Job
-                                </a>
-{{-- review job --}}
-                                @if(in_array(auth()->user()->userRole->name, ['Engineer', 'admin']) && $job->status === 'completed')
-    <a href="{{ route('jobs.review', $job) }}" class="btn btn-primary">
-        <i class="fas fa-clipboard-check"></i> Review & Close Job
-    </a>
-@endif
+                                    @if(in_array(auth()->user()->userRole->name, ['Engineer', 'admin']) && $job->status === 'completed')
+                                        <a href="{{ route('jobs.review', $job) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-clipboard-check"></i> Review & Close Job
+                                        </a>
+                                    @endif
 
-                                @if ($job->approval_status == 'requested')
-                                    {{-- if the 'request_approval_from' attribute of job table is the auth user id --}}
-                                     @if(auth()->user()->userRole->name=='Engineer')
-                                        <a href="{{ route('jobs.items.show-approval', $job) }}"
-                                            class="btn btn-success btn-sm">
-                                            <i class="fas fa-check"></i> Approve Job
+                                    @if ($job->approval_status == 'requested')
+                                        @if(auth()->user()->userRole->name=='Engineer')
+                                            <a href="{{ route('jobs.items.show-approval', $job) }}" class="btn btn-success btn-sm">
+                                                <i class="fas fa-check"></i> Approve Job
+                                            </a>
+                                        @endif
+                                    @endif
+
+                                    @if ($job->approval_status == 'approved' && $job->status !='completed')
+                                        @if(auth()->user()->userRole->name=='Engineer')
+                                            <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-plus"></i> Add Task
+                                            </a>
+                                        @endif
+                                    @endif
+
+                                    @if ($job->jobEmployees->count() > 0)
+                                        <a href="{{ route('jobs.extend-task', $job) }}" class="btn btn-warning btn-sm">
+                                            <i class="fas fa-clock"></i> Extend Task
+                                        </a>
+                                    @endif
+
+                                    @if(in_array(auth()->user()->userRole->name ?? '', ['Supervisor', 'Technical Officer', 'Engineer']))
+                                        <a href="{{ route('tasks.extension.index') }}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-clipboard-list"></i> Extension Requests
+                                        </a>
+                                    @endif
+
+                                    @if ($job->assigned_user_id == auth()->user()->id && $job->status !='completed' && $job->status != 'cancelled' && $job->approval_status !='approved')
+                                        <a href="{{ route('jobs.items.add', $job) }}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-plus"></i> Add Item
                                         </a>
                                     @endif
                                 @endif
 
-                                @if ($job->approval_status == 'approved' && $job->status !='completed')
-                                      @if(auth()->user()->userRole->name=='Engineer')
-                                    <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-plus"></i> Add Task
-                                    </a>
-                                    @endif
-                                @endif
-                               {{-- if there are tasks added for the job  --}}
-                                @if ($job->jobEmployees->count() > 0)
-                                      <a href="{{ route('jobs.extend-task', $job) }}" class="btn btn-warning btn-sm">
-                                    <i class="fas fa-clock"></i> Extend Task
-                                </a>
-                                @endif
-
-                                {{-- NEW: Extension Requests Management for Supervisors/TOs --}}
-                                @if(in_array(auth()->user()->userRole->name ?? '', ['Supervisor', 'Technical Officer', 'Engineer']))
-                                    <a href="{{ route('tasks.extension.index') }}" class="btn btn-info btn-sm">
-                                        <i class="fas fa-clipboard-list"></i> Extension Requests
-                                    </a>
-                                @endif
-
-                                @if ($job->assigned_user_id == auth()->user()->id && $job->status !='completed' && $job->status != 'cancelled' && $job->approval_status !='approved')
-                                    <a href="{{ route('jobs.items.add', $job) }}" class="btn btn-primary btn-sm">
-                                        <i class="fas fa-plus"></i> Add Item
-                                    </a>
-                                @endif
                                 <a href="{{ route('jobs.index') }}" class="btn btn-secondary btn-sm">
                                     <i class="fas fa-arrow-left"></i> Back to Jobs
                                 </a>
