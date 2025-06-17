@@ -28,6 +28,12 @@
     --radius-lg: 0.75rem;
 }
 
+/* Custom Background Colors */
+.bg-card {
+    background-color: #091b5aed !important;
+
+}
+
 html,body{
     height: 100%!important;
    margin-bottom: 20px!important;

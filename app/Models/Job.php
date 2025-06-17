@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Job extends Model
@@ -225,6 +225,7 @@ class Job extends Model
         return $assignment;
     }
 
+
     public function isAssignedToUser($userId)
     {
         return $this->activeAssignments()
@@ -351,5 +352,57 @@ class Job extends Model
     {
         return $this->belongsTo(User::class, 'assigned_user_id');
     }
+
+    public function reviewer(): BelongsTo
+{
+    return $this->belongsTo(User::class, 'reviewed_by');
+}
+
+public function scopeAwaitingReview($query)
+{
+    return $query->where('status', 'completed')->where('active', true);
+}
+
+/**
+ * Scope for closed jobs
+ */
+public function scopeClosed($query)
+{
+    return $query->where('status', 'closed');
+}
+// public function getStatusBadgeAttribute()
+// {
+//     return view('partials.status-badge', ['status' => $this->status])->render();
+// }
+
+public function getStatusColorAttribute()
+{
+    $statusColors = [
+        'pending' => 'warning',
+        'approved' => 'info',
+        'in_progress' => 'primary',
+        'on_hold' => 'secondary',
+        'completed' => 'success',
+        'closed' => 'dark',
+        'cancelled' => 'danger'
+    ];
+
+    return $statusColors[$this->status] ?? 'secondary';
+}
+
+public function getStatusLabelAttribute()
+{
+    $statusLabels = [
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'in_progress' => 'In Progress',
+        'on_hold' => 'On Hold',
+        'completed' => 'Completed',
+        'closed' => 'Closed ✓',
+        'cancelled' => 'Cancelled'
+    ];
+
+    return $statusLabels[$this->status] ?? ucfirst(str_replace('_', ' ', $this->status));
+}
 
 }

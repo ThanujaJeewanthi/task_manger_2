@@ -15,7 +15,7 @@
                     <div class="row">
                         <!-- Personal Stats Cards -->
                         <div class="col-md-2">
-                            <div class="card bg-primary text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_active_jobs'] }}</h5>
                                     <small>Active Jobs</small>
@@ -24,7 +24,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-warning text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_pending_tasks'] }}</h5>
                                     <small>Pending Tasks</small>
@@ -33,7 +33,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-info text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_in_progress_tasks'] }}</h5>
                                     <small>In Progress</small>
@@ -42,7 +42,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-success text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_completed_tasks'] }}</h5>
                                     <small>Completed</small>
@@ -51,7 +51,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-danger text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_overdue_tasks'] }}</h5>
                                     <small>Overdue</small>
@@ -60,7 +60,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-secondary text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_completed_jobs'] }}</h5>
                                     <small>Jobs Done</small>
@@ -108,27 +108,35 @@
                         <div class="card-body">
                             <div class="row mb-3">
                                 <div class="col-md-3">
-                                    <div class="text-center">
-                                        <h4 class="text-success">{{ $performanceStats['tasks_completed_this_week'] }}</h4>
-                                        <small>This Week</small>
+                                    <div class="card bg-card text-white mb-3">
+                                        <div class="card-body text-center">
+                                            <h4>{{ $performanceStats['tasks_completed_this_week'] }}</h4>
+                                            <small>This Week</small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="text-center">
-                                        <h4 class="text-primary">{{ $performanceStats['tasks_completed_this_month'] }}</h4>
-                                        <small>This Month</small>
+                                    <div class="card bg-card text-white mb-3">
+                                        <div class="card-body text-center">
+                                            <h4>{{ $performanceStats['tasks_completed_this_month'] }}</h4>
+                                            <small>This Month</small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="text-center">
-                                        <h4 class="text-info">{{ $performanceStats['average_task_completion_time'] }}</h4>
-                                        <small>Avg Days/Task</small>
+                                    <div class="card bg-card text-white mb-3">
+                                        <div class="card-body text-center">
+                                            <h4>{{ $performanceStats['average_task_completion_time'] }}</h4>
+                                            <small>Avg Days/Task</small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="text-center">
-                                        <h4 class="text-warning">{{ $performanceStats['on_time_completion_rate'] }}%</h4>
-                                        <small>On-Time Rate</small>
+                                    <div class="card bg-card text-white mb-3">
+                                        <div class="card-body text-center">
+                                            <h4>{{ $performanceStats['on_time_completion_rate'] }}%</h4>
+                                            <small>On-Time Rate</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

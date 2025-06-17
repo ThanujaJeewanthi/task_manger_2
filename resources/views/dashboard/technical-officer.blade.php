@@ -15,7 +15,7 @@
                     <div class="row">
                         <!-- Personal Stats Cards -->
                         <div class="col-md-2">
-                            <div class="card bg-primary text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_assigned_jobs'] }}</h5>
                                     <small>Assigned Jobs</small>
@@ -24,7 +24,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-warning text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_pending_jobs'] }}</h5>
                                     <small>Pending Jobs</small>
@@ -33,7 +33,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-info text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_in_progress_jobs'] }}</h5>
                                     <small>In Progress</small>
@@ -42,7 +42,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-success text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_completed_jobs'] }}</h5>
                                     <small>Completed</small>
@@ -51,7 +51,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-secondary text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['jobs_awaiting_approval'] }}</h5>
                                     <small>Awaiting Approval</small>
@@ -60,7 +60,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-dark text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_equipment'] }}</h5>
                                     <small>Equipment</small>
@@ -107,27 +107,35 @@
                         <div class="card-body">
                             <div class="row mb-3">
                                 <div class="col-md-3">
-                                    <div class="text-center">
-                                        <h4 class="text-success">{{ $performanceStats['jobs_completed_this_week'] }}</h4>
-                                        <small>This Week</small>
+                                    <div class="card bg-card text-white">
+                                        <div class="card-body text-center">
+                                            <h4>{{ $performanceStats['jobs_completed_this_week'] }}</h4>
+                                            <small>This Week</small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="text-center">
-                                        <h4 class="text-primary">{{ $performanceStats['jobs_completed_this_month'] }}</h4>
-                                        <small>This Month</small>
+                                    <div class="card bg-card text-white">
+                                        <div class="card-body text-center">
+                                            <h4>{{ $performanceStats['jobs_completed_this_month'] }}</h4>
+                                            <small>This Month</small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="text-center">
-                                        <h4 class="text-info">{{ $performanceStats['average_completion_time'] }}</h4>
-                                        <small>Avg Days/Job</small>
+                                    <div class="card bg-card text-white">
+                                        <div class="card-body text-center">
+                                            <h4>{{ $performanceStats['average_completion_time'] }}</h4>
+                                            <small>Avg Days/Job</small>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
-                                    <div class="text-center">
-                                        <h4 class="text-warning">{{ $performanceStats['on_time_completion_rate'] }}%</h4>
-                                        <small>On-Time Rate</small>
+                                    <div class="card bg-card text-white">
+                                        <div class="card-body text-center">
+                                            <h4>{{ $performanceStats['on_time_completion_rate'] }}%</h4>
+                                            <small>On-Time Rate</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -171,49 +179,7 @@
 
                 <!-- Quick Actions & Equipment Status -->
                 <div class="col-md-4">
-                    {{-- <div class="card mb-3">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Quick Actions</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <button type="button" class="btn btn-primary" onclick="completeJobModal()">
-                                    <i class="fas fa-check-circle"></i> Complete Job
-                                </button>
-                                <button type="button" class="btn btn-success" onclick="updateJobStatus()">
-                                    <i class="fas fa-edit"></i> Update Job Status
-                                </button>
-                                <button type="button" class="btn btn-info" onclick="addJobItems()">
-                                    <i class="fas fa-box"></i> Add Items to Job
-                                </button>
-                                <button type="button" class="btn btn-warning" onclick="requestApproval()">
-                                    <i class="fas fa-paper-plane"></i> Request Approval
-                                </button>
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-cogs"></i> More Actions
-                                    </button>
-                                    <ul class="dropdown-menu w-100">
-                                        <li><a class="dropdown-item" href="{{ route('jobs.index', ['assigned_user_id' => Auth::id()]) }}">
-                                            <i class="fas fa-list"></i> View My Jobs
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('equipments.index') }}">
-                                            <i class="fas fa-tools"></i> View Equipment
-                                        </a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><button class="dropdown-item" onclick="generateWorkReport()">
-                                            <i class="fas fa-download"></i> Download Work Report
-                                        </button></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-
-                    <!-- Equipment Status -->
-                    <div class="card mb-3">
+                    <div class="card mb-3 h-100"> <!-- Added h-100 class here -->
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>Equipment Status</span>
@@ -223,7 +189,7 @@
                             @php
                                 $equipmentStatusColors = [
                                     'available' => 'success',
-                                    'in_use' => 'primary',
+                                    'in_use' => 'primary', 
                                     'maintenance' => 'warning',
                                     'retired' => 'secondary'
                                 ];
@@ -238,6 +204,7 @@
                     </div>
                 </div>
             </div>
+
 
             <!-- My Assigned Jobs -->
             <div class="card mb-3">

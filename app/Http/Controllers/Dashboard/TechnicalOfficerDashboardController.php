@@ -110,7 +110,7 @@ class TechnicalOfficerDashboardController extends Controller
             ->get();
 
         // Jobs requiring items and approval
-        $jobsRequiringApproval = Job::with(['jobType', 'client', 'equipment', 'items'])
+        $jobsRequiringApproval = Job::with(['jobType', 'client', 'equipment', 'jobItems'])
             ->where('company_id', $companyId)
             ->where('assigned_user_id', Auth::id())
             ->where('approval_status', 'requested')
