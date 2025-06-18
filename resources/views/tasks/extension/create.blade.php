@@ -125,7 +125,7 @@
 
                             <!-- Important Notice -->
                             <div class="card border-warning mb-4">
-                                <div class="card-header bg-warning text-dark">
+                                <div class="card-header bg-warning text-dark text-sm">
                                     <h6 class="mb-0">
                                         <i class="fas fa-exclamation-triangle"></i>
                                         Important Notice
@@ -133,20 +133,18 @@
                                 </div>
                                 <div class="card-body">
                                     <ul class="mb-0">
-                                        <li>Extension requests require approval from your supervisor or technical officer.</li>
-                                        <li>You will be notified when your request is approved or rejected.</li>
-                                        <li>Only one pending request per task is allowed.</li>
-                                        <li>Provide clear and detailed justification to improve approval chances.</li>
+                                        <li class="text-sm">Extension requests require approval from your supervisor or technical officer.</li>
+                                       
                                     </ul>
                                 </div>
                             </div>
 
                             <!-- Submit Buttons -->
                             <div class="form-group mt-4">
-                                <button type="submit" class="btn btn-primary btn-sm">
+                                <button type="submit" class="btn btn-primary ">
                                     <i class="fas fa-paper-plane"></i> Submit Extension Request
                                 </button>
-                                <a href="{{ route('employee.dashboard') }}" class="btn btn-secondary btn-sm ms-2">
+                                <a href="{{ route('employee.dashboard') }}" class="btn btn-secondary  ms-2">
                                     <i class="fas fa-times"></i> Cancel
                                 </a>
                             </div>

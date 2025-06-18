@@ -28,7 +28,7 @@
                     <div class="row">
                         <!-- System Overview Cards -->
                         <div class="col-md-3">
-                            <div class="card bg-primary text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
@@ -44,7 +44,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <div class="card bg-success text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
@@ -60,7 +60,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <div class="card bg-info text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
@@ -76,7 +76,7 @@
                         </div>
 
                         <div class="col-md-3">
-                            <div class="card bg-warning text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between">
                                         <div>
@@ -105,16 +105,16 @@
                     <div class="row">
                         <!-- Company Management -->
                         <div class="col-md-3">
-                            <div class="card border-primary">
-                                <div class="card-header bg-primary text-white">
+                            <div class="card ">
+                                <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-building"></i> Company Management</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('companies.index') }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('companies.index') }}" class="btn btn-sm ">
                                             <i class="fas fa-list"></i> View All Companies
                                         </a>
-                                        <a href="{{ route('companies.create') }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('companies.create') }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-plus"></i> Add New Company
                                         </a>
                                     </div>
@@ -124,13 +124,13 @@
 
                         <!-- User Management -->
                         <div class="col-md-3">
-                            <div class="card border-success">
-                                <div class="card-header bg-success text-white">
+                            <div class="card ">
+                                <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-users"></i> User Management</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-success">
+                                        <a href="{{ route('admin.users.index') }}" class="btn btn-sm ">
                                             <i class="fas fa-list"></i> View All Users
                                         </a>
                                         <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-success">
@@ -143,16 +143,16 @@
 
                         <!-- Role & Permissions -->
                         <div class="col-md-3">
-                            <div class="card border-info">
-                                <div class="card-header bg-info text-white">
+                            <div class="card ">
+                                <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-shield-alt"></i> Roles & Permissions</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('admin.roles.index') }}" class="btn btn-sm btn-outline-info">
+                                        <a href="{{ route('admin.roles.index') }}" class="btn btn-sm ">
                                             <i class="fas fa-list"></i> Manage Roles
                                         </a>
-                                        <a href="{{ route('admin.page-categories.index') }}" class="btn btn-sm btn-info">
+                                        <a href="{{ route('admin.page-categories.index') }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-sitemap"></i> Page Categories
                                         </a>
                                     </div>
@@ -162,16 +162,16 @@
 
                         <!-- System Settings -->
                         <div class="col-md-3">
-                            <div class="card border-warning">
-                                <div class="card-header bg-warning text-white">
+                            <div class="card ">
+                                <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-cogs"></i> System Settings</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('logs.index') }}" class="btn btn-sm btn-outline-warning">
+                                        <a href="{{ route('logs.index') }}" class="btn btn-sm ">
                                             <i class="fas fa-history"></i> System Logs
                                         </a>
-                                        <a href="{{ route('job-types.index') }}" class="btn btn-sm btn-warning">
+                                        <a href="{{ route('job-types.index') }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-tags"></i> Job Types
                                         </a>
                                     </div>
