@@ -411,7 +411,7 @@ class JobController extends Controller
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'required|in:pending,in_progress,completed',
+
             'employee_ids' => 'required|array',
             'employee_ids.*' => 'exists:employees,id',
             'notes' => 'nullable|string',
@@ -422,7 +422,7 @@ class JobController extends Controller
             'task' => $request->task,
             'description' => $request->description,
             'job_id'=> $job->id,
-            'status' => $request->status,
+            'status' => 'pending',
             'active' => $request->has('is_active'),
             'created_by' => Auth::id(),
         ]);

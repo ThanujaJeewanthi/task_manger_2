@@ -1,6 +1,8 @@
 <!-- Timeline Section -->
+
 <div class="timeline-section ">
     <div class="card">
+
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
@@ -188,7 +190,7 @@
                         </div>
                     </div>
 
-                    
+
                 </div>
                     </div>
                 </div>
@@ -202,6 +204,7 @@
         </div>
     </div>
 </div>
+
 
 @section('styles')
 <style>
@@ -716,7 +719,7 @@ function displayTaskDetails(data) {
         employeesContainer.appendChild(empDiv);
     });
 
-   
+
 
     // Show edit button
     const editBtn = document.getElementById('editTaskBtn');
