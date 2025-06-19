@@ -16,6 +16,7 @@ use App\Models\JobOption;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -410,7 +411,7 @@ class JobController extends Controller
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'required|in:pending,in_progress,completed',
+
             'employee_ids' => 'required|array',
             'employee_ids.*' => 'exists:employees,id',
             'notes' => 'nullable|string',
@@ -421,7 +422,7 @@ class JobController extends Controller
             'task' => $request->task,
             'description' => $request->description,
             'job_id'=> $job->id,
-            'status' => $request->status,
+            'status' => 'pending',
             'active' => $request->has('is_active'),
             'created_by' => Auth::id(),
         ]);
@@ -1317,13 +1318,14 @@ private function getTimelineData(Job $job)
     // API endpoint for task details
     public function getTaskDetails(Job $job, Task $task)
     {
+          Log::info('getTaskDetails called', ['job_id' => $job->id, 'task_id' => $task->id]);
         if ($job->company_id !== Auth::user()->company_id || $task->job_id !== $job->id) {
             abort(403);
         }
 
         $task->load([
             'jobEmployees' => function($query) {
-                $query->where('active', true)->with('employee');
+                $query->with('employee');
             },
             'taskExtensionRequests' => function($query) {
                 $query->where('status', 'pending');

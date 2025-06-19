@@ -93,6 +93,7 @@
                 <div class="fs-5 fw-semibold">#{{ $job->id }}</div>
             </div>
         </div>
+        @if($job->jobType)
         <div class="col-md-3">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">JOB TYPE</label>
@@ -103,22 +104,28 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($job->client)
         <div class="col-md-3">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">CLIENT</label>
-                <div class="fw-semibold">{{ $job->client->name ?? 'N/A' }}</div>
+                <div class="fw-semibold">{{ $job->client->name }}</div>
             </div>
         </div>
+        @endif
+        @if($job->equipment)
         <div class="col-md-3">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">EQUIPMENT</label>
-                <div class="fw-semibold">{{ $job->equipment->name ?? 'N/A' }}</div>
+                <div class="fw-semibold">{{ $job->equipment->name }}</div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Status Information -->
     <div class="row mb-3">
+        @if($job->status)
         <div class="col-md-3">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">STATUS</label>
@@ -138,20 +145,20 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($job->approval_status)
         <div class="col-md-3">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">APPROVAL STATUS</label>
                 <div>
-                    @if ($job->approval_status == 'requested')
-                        <span class="badge bg-warning">Requested</span>
-                    @elseif ($job->approval_status == 'approved')
-                        <span class="badge bg-success">Approved</span>
-                    @else
-                        <span class="badge bg-secondary">N/A</span>
-                    @endif
+                    <span class="badge bg-{{ $job->approval_status == 'requested' ? 'warning' : 'success' }}">
+                        {{ ucfirst($job->approval_status) }}
+                    </span>
                 </div>
             </div>
         </div>
+        @endif
+        @if($job->priority)
         <div class="col-md-3">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">PRIORITY</label>
@@ -176,34 +183,42 @@
                 </div>
             </div>
         </div>
+        @endif
+        @if($job->assignedUser)
         <div class="col-md-3">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">ASSIGNED TO</label>
-                <div class="fw-semibold">{{ $job->assignedUser->name ?? 'Unassigned' }}</div>
+                <div class="fw-semibold">{{ $job->assignedUser->name }}</div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Date Information -->
     <div class="row mb-3">
+        @if($job->created_at)
         <div class="col-md-4">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">CREATED DATE</label>
-                <div class="fw-semibold">{{ $job->created_at ? $job->created_at->format('M d, Y') : 'N/A' }}</div>
+                <div class="fw-semibold">{{ $job->created_at->format('M d, Y') }}</div>
             </div>
         </div>
+        @endif
+        @if($job->start_date)
         <div class="col-md-4">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">START DATE</label>
-                <div class="fw-semibold">{{ $job->start_date ? $job->start_date->format('M d, Y') : 'Not Set' }}</div>
+                <div class="fw-semibold">{{ $job->start_date->format('M d, Y') }}</div>
             </div>
         </div>
+        @endif
+        @if($job->due_date)
         <div class="col-md-4">
             <div class="border p-3 h-100">
                 <label class="form-label fw-bold text-muted small">DUE DATE</label>
-                <div class="fw-semibold {{ $job->due_date && $job->due_date->isPast() && $job->status !== 'completed' ? 'text-danger' : '' }}">
-                    {{ $job->due_date ? $job->due_date->format('M d, Y') : 'Not Set' }}
-                    @if($job->due_date && $job->due_date->isPast() && $job->status !== 'completed')
+                <div class="fw-semibold {{ $job->due_date->isPast() && $job->status !== 'completed' ? 'text-danger' : '' }}">
+                    {{ $job->due_date->format('M d, Y') }}
+                    @if($job->due_date->isPast() && $job->status !== 'completed')
                         <small class="d-block text-danger">
                             <i class="fas fa-exclamation-triangle"></i> Overdue
                         </small>
@@ -211,30 +226,31 @@
                 </div>
             </div>
         </div>
+        @endif
     </div>
 
     <!-- Additional Information -->
-    @if ($job->description || $job->references)
-        <div class="row">
-            @if ($job->description)
-                <div class="col-md-6 mb-3">
-                    <div class="border p-3 h-100">
-                        <label class="form-label fw-bold text-muted small">DESCRIPTION</label>
-                        <div class="fw-normal">{{ $job->description }}</div>
-                    </div>
-                </div>
-            @endif
-            @if ($job->references)
-                <div class="col-md-6 mb-3">
-                    <div class="border p-3 h-100">
-                        <label class="form-label fw-bold text-muted small">REFERENCES</label>
-                        <div class="fw-normal">{{ $job->references }}</div>
-                    </div>
-                </div>
-            @endif
+    @if($job->description || $job->references)
+    <div class="row">
+        @if($job->description)
+        <div class="col-md-6 mb-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">DESCRIPTION</label>
+                <div class="fw-normal">{{ $job->description }}</div>
+            </div>
         </div>
+        @endif
+        @if($job->references)
+        <div class="col-md-6 mb-3">
+            <div class="border p-3 h-100">
+                <label class="form-label fw-bold text-muted small">REFERENCES</label>
+                <div class="fw-normal">{{ $job->references }}</div>
+            </div>
+        </div>
+        @endif
+    </div>
     @endif
-</div>
+    </div>
 
   @if($job->status === 'closed')
   <div class="d-component-container mb-4">
@@ -276,69 +292,71 @@
                         @endif
 
                         {{-- Items card--}}
-                        <div class="d-component-container mb-4">
-                            <h5>Items</h5>
-                            {{-- for already  registered items  the item_id exists and custom_item_description is null ,
-                            for not registered items ,item_id is null and custom_item_description exists--}}
-                            <div class="table-responsive table-compact">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Item</th>
-                                            <th>Unit</th>
-                                            <th>Quantity</th>
-                                            <th>Notes</th>
-                                            <th>Added by</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if($jobItems->whereNotNull('item_id')->whereNull('custom_item_description')->count() > 0)
-                                            @foreach ($jobItems->whereNotNull('item_id')->whereNull('custom_item_description') as $item)
+                        @if($jobItems->count() > 0)
+                            <div class="d-component-container mb-4">
+                                <h5>Items</h5>
+                                {{-- for already  registered items  the item_id exists and custom_item_description is null ,
+                                for not registered items ,item_id is null and custom_item_description exists--}}
+                                <div class="table-responsive table-compact">
+                                    <table class="table table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th>Unit</th>
+                                                <th>Quantity</th>
+                                                <th>Notes</th>
+                                                <th>Added by</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if($jobItems->whereNotNull('item_id')->whereNull('custom_item_description')->count() > 0)
+                                                @foreach ($jobItems->whereNotNull('item_id')->whereNull('custom_item_description') as $item)
+                                                    <tr>
+                                                        <td>{{ $item->item->name }}</td>
+                                                        <td>{{ $item->item->unit }}</td>
+                                                        <td>{{ $item->quantity }}</td>
+                                                        <td>{{ $item->notes }}</td>
+                                                        @php
+                                                        //   get the user name whose id is item->added_by
+                                                        $added_by = \App\Models\User::find($item->added_by);
+                                                        @endphp
+                                                        <td>{{ $added_by->name ?? 'N/A' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            @endif
+                                        </tbody>
+                                    </table>
+                                </div>
+                                @if($jobItems->whereNotNull('custom_item_description')->whereNull('item_id')->count() > 0)
+                                    <h6 class="mt-4">New Items</h6>
+                                    <div class="table-responsive table-compact">
+                                        <table class="table table-bordered">
+                                            <thead>
                                                 <tr>
-                                                    <td>{{ $item->item->name }}</td>
-                                                    <td>{{ $item->item->unit }}</td>
-                                                    <td>{{ $item->quantity }}</td>
-                                                    <td>{{ $item->notes }}</td>
-                                                    @php
-                                                    //   get the user name whose id is item->added_by
-                                                    $added_by = \App\Models\User::find($item->added_by);
-                                                    @endphp
-                                                    <td>{{ $added_by->name ?? 'N/A' }}</td>
+                                                    <th>Item</th>
+                                                    <th>Quantity</th>
+                                                    <th>Notes</th>
+                                                    <th>Added by</th>
                                                 </tr>
-                                            @endforeach
-                                        @endif
-                                    </tbody>
-                                </table>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($jobItems->whereNotNull('custom_item_description')->whereNull('item_id') as $item)
+                                                    <tr>
+                                                        <td>{{ $item->custom_item_description }}</td>
+                                                        <td>{{ $item->quantity }}</td>
+                                                        <td>{{ $item->notes }}</td>
+                                                        @php
+                                                        $added_by = \App\Models\User::find($item->added_by);
+                                                        @endphp
+                                                        <td>{{ $added_by->name ?? 'N/A' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                @endif
                             </div>
-                            <div class="table-responsive table-compact mt-3">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Item</th>
-                                            <th>Quantity</th>
-                                            <th>Notes</th>
-                                            <th>Added by</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @if($jobItems->whereNotNull('custom_item_description')->whereNull('item_id')->count() > 0)
-                                            @foreach ($jobItems->whereNotNull('custom_item_description')->whereNull('item_id') as $item)
-                                                <tr>
-                                                    <td>{{ $item->custom_item_description }}</td>
-                                                    <td>{{ $item->quantity }}</td>
-                                                    <td>{{ $item->notes }}</td>
-                                                    @php
-                                                    //   get the user name whose id is item->added_by
-                                                    $added_by = \App\Models\User::find($item->added_by);
-                                                    @endphp
-                                                    <td>{{ $added_by->name ?? 'N/A' }}</td>
-                                                </tr>
-                                            @endforeach
-                                        @endif
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                        @endif
 
   <!-- Tasks Card -->
 <div class="d-component-container mb-4">
