@@ -138,20 +138,26 @@ class JobActivityLog extends Model
     /**
      * Scope for activities by specific user.
      */
-    public function scopeByUser($query, $userId)
+     public function scopeByUser($query, $userId)
     {
-        return $query->where('user_id', $userId);
+        return $query->where(function($q) use ($userId) {
+            $q->where('user_id', $userId)
+              ->orWhere('affected_user_id', $userId);
+        });
     }
-
     /**
      * Scope for activities in date range.
      */
-    public function scopeInDateRange($query, $startDate, $endDate)
+   public function scopeInDateRange($query, $startDate, $endDate)
     {
-        return $query->whereBetween('created_at', [
-            Carbon::parse($startDate)->startOfDay(),
-            Carbon::parse($endDate)->endOfDay()
-        ]);
+        try {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = Carbon::parse($endDate)->endOfDay();
+            return $query->whereBetween('created_at', [$start, $end]);
+        } catch (\Exception $e) {
+            // If date parsing fails, ignore the filter
+            return $query;
+        }
     }
 
     /**
