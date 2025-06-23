@@ -1,128 +1,243 @@
-{{-- Updated resources/views/tasks/extension/index.blade.php --}}
-{{-- Replace JavaScript confirm/prompt with modals --}}
-
 @extends('layouts.app')
 
-@section('title', 'Task Extension Requests')
-
 @section('content')
+<style>
+    /* Table styles */
+    .table-compact td {
+        padding: 0.5rem;
+        vertical-align: middle;
+    }
+
+    .btn-group-vertical .btn {
+        font-size: 0.8rem;
+    }
+
+    .fs-6 {
+        font-size: 1rem !important;
+    }
+
+    .bg-light tr {
+        background-color: transparent !important;
+    }
+
+    .alert {
+        margin-bottom: 1rem;
+    }
+
+    /* Loading button styles */
+    .btn-loading {
+        position: relative;
+        color: transparent !important;
+    }
+
+    .btn-loading::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: auto;
+        border: 4px solid transparent;
+        border-top-color: #ffffff;
+        border-radius: 50%;
+        animation: button-loading-spinner 1s ease infinite;
+    }
+
+    @keyframes button-loading-spinner {
+        from {
+            transform: rotate(0turn);
+        }
+        to {
+            transform: rotate(1turn);
+        }
+    }
+</style>
+
 <div class="container-fluid">
     <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="mb-0">Task Extension Requests</h2>
-                <div class="btn-group">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-filter"></i> Filter
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="?status=pending">Pending Only</a></li>
-                        <li><a class="dropdown-item" href="?status=approved">Approved Only</a></li>
-                        <li><a class="dropdown-item" href="?status=rejected">Rejected Only</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ route('tasks.extension.index') }}">All Requests</a></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="card">
+        <div class="col-md-12">
+            <div class="card table-card mb-3">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span>Extension Requests</span>
-                        <span class="badge bg-warning">{{ $extensionRequests->where('status', 'pending')->count() }} Pending</span>
+                        <div class="d-component-title">
+                            <span>Task Extension Requests</span>
+                            <small class="text-muted">Review and approve employee extension requests</small>
+                        </div>
+                        <a href="{{ route('supervisor.dashboard') }}" class="btn btn-secondary btn-sm">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
                     </div>
                 </div>
+
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
+                    @if (session('success'))
+                        <div class="alert alert-success mt-3">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger mt-3">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    <!-- Filter Form -->
+                    <form method="GET" action="{{ route('tasks.extension.index') }}" class="mb-4">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label for="status" class="form-label">Status</label>
+                                <select name="status" id="status" class="form-control form-control-sm">
+                                    <option value="">All Statuses</option>
+                                    <option value="pending" {{ request('status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
+                                    <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">Filter</button>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="{{ route('tasks.extension.index') }}" class="btn btn-secondary btn-sm w-100">Clear</a>
+                            </div>
+                            <div class="col-md-5 text-end">
+                                @php
+                                    $pendingCount = $extensionRequests->where('status', 'pending')->count();
+                                @endphp
+                                @if($pendingCount > 0)
+                                    <span class="badge bg-warning fs-6">
+                                        {{ $pendingCount }} Pending Review{{ $pendingCount > 1 ? 's' : '' }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Extension Requests Table -->
+                    <div class="table-responsive table-compact">
+                        <table class="table table-bordered">
                             <thead>
                                 <tr>
-                                    <th>Job & Task</th>
-                                    <th>Employee</th>
-                                    <th>Current End Date</th>
-                                    <th>Requested End Date</th>
-                                    <th>Extension Days</th>
-                                    <th>Reason</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
+                                    <th style="width: 8%;">Job ID</th>
+                                    <th style="width: 18%;">Task</th>
+                                    <th style="width: 15%;">Employee</th>
+                                    <th style="width: 10%;">Current End</th>
+                                    <th style="width: 10%;">Requested End</th>
+                                    <th style="width: 8%;">Extension</th>
+                                    <th style="width: 8%;">Status</th>
+                                    <th style="width: 10%;">Requested</th>
+                                    <th style="width: 13%;">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($extensionRequests as $request)
+                                @forelse ($extensionRequests as $request)
                                     <tr>
                                         <td>
-                                            <strong>{{ $request->job->title }}</strong><br>
-                                            <small class="text-muted">{{ $request->task->task }}</small>
+                                            <a href="{{ route('jobs.show', $request->job) }}" class="text-primary">
+                                                {{ $request->job->id }}
+                                            </a>
                                         </td>
                                         <td>
-                                            {{ $request->employee->user->name }}<br>
-                                            <small class="text-muted">{{ $request->employee->user->username }}</small>
+                                            <strong>{{ Str::limit($request->task->task, 30) }}</strong>
+                                            @if($request->task->description)
+                                                <br><small class="text-muted">{{ Str::limit($request->task->description, 40) }}</small>
+                                            @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">
-                                                {{ $request->current_end_date->format('M j, Y') }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-warning">
-                                                {{ $request->requested_end_date->format('M j, Y') }}
-                                            </span>
+                                            <div class="d-flex align-items-center">
+                                                <div>
+                                                    <strong>{{ $request->employee->user->name ?? $request->employee->name }}</strong>
+                                                    <br><small class="text-muted">{{ $request->employee->user->email ?? 'N/A' }}</small>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td>
                                             <span class="badge bg-secondary">
-                                                {{ $request->extension_days }} day{{ $request->extension_days > 1 ? 's' : '' }}
+                                                {{ $request->current_end_date->format('M d') }}
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="text-truncate d-inline-block" style="max-width: 200px;"
-                                                  title="{{ $request->reason }}">
-                                                {{ $request->reason }}
+                                            <span class="badge bg-primary">
+                                                {{ $request->requested_end_date->format('M d') }}
                                             </span>
-                                            @if($request->justification)
-                                                <br><small class="text-muted">{{ Str::limit($request->justification, 50) }}</small>
-                                            @endif
                                         </td>
                                         <td>
-                                            @php
-                                                $statusColors = [
-                                                    'pending' => 'warning',
-                                                    'approved' => 'success',
-                                                    'rejected' => 'danger'
-                                                ];
-                                            @endphp
-                                            <span class="badge bg-{{ $statusColors[$request->status] ?? 'secondary' }}">
+                                            <span class="badge bg-info">
+                                                +{{ $request->extension_days }}d
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ $request->status_badge }}">
                                                 {{ ucfirst($request->status) }}
                                             </span>
-                                            @if($request->reviewed_at)
-                                                <br><small class="text-muted">{{ $request->reviewed_at->diffForHumans() }}</small>
-                                            @endif
+                                        </td>
+                                        <td>
+                                            <small>{{ $request->created_at->format('M d, Y') }}</small>
+                                            <br><small class="text-muted">{{ $request->created_at->diffForHumans() }}</small>
                                         </td>
                                         <td>
                                             @if($request->status === 'pending')
-                                                <div class="btn-group btn-group-sm">
-                                                    <button class="btn btn-success btn-sm"
-                                                            onclick="showApprovalModal({{ $request->id }})">
-                                                        <i class="fas fa-check"></i> Approve
-                                                    </button>
-                                                    <button class="btn btn-danger btn-sm"
-                                                            onclick="showRejectionModal({{ $request->id }})">
-                                                        <i class="fas fa-times"></i> Reject
-                                                    </button>
+                                                <div class="btn-group-vertical" role="group">
+                                                    <!-- Approval Form -->
+                                                    <form method="POST" action="/extension-requests/{{ $request->id }}/approve"
+                                                          onsubmit="return handleApproval(event, this)" class="mb-1">
+                                                        @csrf
+                                                        <input type="hidden" name="review_notes" id="approve_notes_{{ $request->id }}">
+                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                            <i class="fas fa-check"></i> Approve
+                                                        </button>
+                                                    </form>
+
+                                                    <!-- Rejection Form -->
+                                                    <form method="POST" action="/extension-requests/{{ $request->id }}/reject"
+                                                          onsubmit="return handleRejection(event, this)">
+                                                        @csrf
+                                                        <input type="hidden" name="review_notes" id="reject_notes_{{ $request->id }}">
+                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                            <i class="fas fa-times"></i> Reject
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             @else
-                                                <a href="{{ route('tasks.extension.show', $request) }}"
-                                                   class="btn btn-outline-primary btn-sm">
+                                                <a href="{{ route('tasks.extension.show', $request) }}" class="btn btn-info btn-sm">
                                                     <i class="fas fa-eye"></i> View
                                                 </a>
                                             @endif
                                         </td>
                                     </tr>
+                                    <tr class="bg-light">
+                                        <td colspan="9">
+                                            <div class="row">
+                                                <div class="col-md-8">
+                                                    <small>
+                                                        <strong>Reason:</strong> {{ $request->reason }}
+                                                        @if($request->justification)
+                                                            <br><strong>Justification:</strong> {{ Str::limit($request->justification, 200) }}
+                                                        @endif
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    @if($request->review_notes)
+                                                        <small>
+                                                            <strong>Review Notes:</strong>
+                                                            <span class="text-{{ $request->status === 'approved' ? 'success' : 'danger' }}">
+                                                                {{ $request->review_notes }}
+                                                            </span>
+                                                        </small>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center py-4">
-                                            <i class="fas fa-inbox text-muted" style="font-size: 2rem;"></i>
-                                            <h5 class="mt-2 text-muted">No Extension Requests</h5>
-                                            <p class="text-muted">No task extension requests found.</p>
+                                        <td colspan="9" class="text-center py-4">
+                                            <div class="text-muted">
+                                                <i class="fas fa-info-circle"></i>
+                                                No extension requests found.
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -136,191 +251,98 @@
                             {{ $extensionRequests->links() }}
                         </div>
                     @endif
+
                 </div>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- Extension Approval Modal -->
-<div class="modal fade" id="extensionApprovalModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Approve Extension Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="extensionApprovalForm">
-                <div class="modal-body">
-                    <input type="hidden" id="approvalRequestId" name="request_id">
-
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <strong>Confirm Approval</strong>
-                        <p class="mb-0">The task deadline will be extended and the employee will be notified.</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="approvalNotes" class="form-label">Approval Notes</label>
-                        <textarea class="form-control" id="approvalNotes" name="review_notes" rows="3"
-                                  placeholder="Optional notes about the approval..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check"></i> Approve Extension
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Extension Rejection Modal -->
-<div class="modal fade" id="extensionRejectionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Reject Extension Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="extensionRejectionForm">
-                <div class="modal-body">
-                    <input type="hidden" id="rejectionRequestId" name="request_id">
-
-                    <div class="alert alert-danger">
-                        <i class="fas fa-times-circle"></i>
-                        <strong>Confirm Rejection</strong>
-                        <p class="mb-0">The employee will be notified of the rejection.</p>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="rejectionReason" class="form-label">Rejection Reason <span class="text-danger">*</span></label>
-                        <textarea class="form-control" id="rejectionReason" name="review_notes" rows="3"
-                                  placeholder="Explain why the extension is being rejected..." required></textarea>
-                        <div class="form-text">Minimum 10 characters required.</div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-times"></i> Reject Extension
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
 
 <script>
-// Show approval modal
-function showApprovalModal(requestId) {
-    document.getElementById('approvalRequestId').value = requestId;
-    document.getElementById('approvalNotes').value = '';
-    const modal = new bootstrap.Modal(document.getElementById('extensionApprovalModal'));
-    modal.show();
+// Handle approval with confirmation
+function handleApproval(event, form) {
+    event.preventDefault();
+
+    const requestId = form.action.split('/').slice(-2, -1)[0];
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // Show confirmation with optional notes
+    const confirmed = confirm('Are you sure you want to approve this extension request?\n\nThis will update the task deadline and potentially the job deadline.');
+
+    if (confirmed) {
+        // Optional: Ask for approval notes
+        const notes = prompt('Add approval notes (optional):');
+
+        if (notes !== null) { // User didn't cancel
+            document.getElementById(`approve_notes_${requestId}`).value = notes || '';
+
+            // Add loading state
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+
+            // Submit the form
+            form.submit();
+        }
+    }
+
+    return false;
 }
 
-// Show rejection modal
-function showRejectionModal(requestId) {
-    document.getElementById('rejectionRequestId').value = requestId;
-    document.getElementById('rejectionReason').value = '';
-    const modal = new bootstrap.Modal(document.getElementById('extensionRejectionModal'));
-    modal.show();
+// Handle rejection with required reason
+function handleRejection(event, form) {
+    event.preventDefault();
+
+    const requestId = form.action.split('/').slice(-2, -1)[0];
+    const submitBtn = form.querySelector('button[type="submit"]');
+
+    // Show confirmation
+    const confirmed = confirm('Are you sure you want to reject this extension request?\n\nThe employee will be notified of the rejection.');
+
+    if (confirmed) {
+        // Require rejection reason
+        let reason = '';
+        while (reason.trim().length < 10) {
+            reason = prompt('Please provide a detailed reason for rejection (minimum 10 characters):');
+
+            if (reason === null) { // User canceled
+                return false;
+            }
+
+            if (reason.trim().length < 10) {
+                alert('Please provide a more detailed reason (at least 10 characters).');
+            }
+        }
+
+        document.getElementById(`reject_notes_${requestId}`).value = reason;
+
+        // Add loading state
+        submitBtn.classList.add('btn-loading');
+        submitBtn.disabled = true;
+
+        // Submit the form
+        form.submit();
+    }
+
+    return false;
 }
 
-// Handle form submissions
+// Show success/error messages for a few seconds
 document.addEventListener('DOMContentLoaded', function() {
-    // Approval form
-    const approvalForm = document.getElementById('extensionApprovalForm');
-    if (approvalForm) {
-        approvalForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            const requestId = formData.get('request_id');
-
-            try {
-                const response = await fetch(`/tasks/extension/${requestId}/approve`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    },
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('extensionApprovalModal')).hide();
-                    showToast('Extension request approved successfully!', 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showToast(result.message || 'Failed to approve extension request', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showToast('An error occurred while processing the approval', 'error');
-            }
-        });
-    }
-
-    // Rejection form
-    const rejectionForm = document.getElementById('extensionRejectionForm');
-    if (rejectionForm) {
-        rejectionForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // Validate rejection reason
-            const reason = document.getElementById('rejectionReason').value.trim();
-            if (reason.length < 10) {
-                showToast('Please provide a detailed reason (minimum 10 characters)', 'warning');
-                return;
-            }
-
-            const formData = new FormData(this);
-            const requestId = formData.get('request_id');
-
-            try {
-                const response = await fetch(`/tasks/extension/${requestId}/reject`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    },
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    bootstrap.Modal.getInstance(document.getElementById('extensionRejectionModal')).hide();
-                    showToast('Extension request rejected successfully!', 'success');
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    showToast(result.message || 'Failed to reject extension request', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showToast('An error occurred while processing the rejection', 'error');
-            }
-        });
-    }
-
-    // Auto-dismiss flash messages
-    const alerts = document.querySelectorAll('.alert-dismissible');
+    const alerts = document.querySelectorAll('.alert');
     alerts.forEach(function(alert) {
         setTimeout(function() {
-            if (alert.parentNode) {
-                alert.style.transition = 'opacity 0.5s';
-                alert.style.opacity = '0';
-                setTimeout(function() {
-                    if (alert.parentNode) {
-                        alert.remove();
-                    }
-                }, 500);
-            }
-        }, 5000);
+            alert.style.transition = 'opacity 0.5s';
+            alert.style.opacity = '0';
+            setTimeout(function() {
+                alert.remove();
+            }, 500);
+        }, 5000); // Hide after 5 seconds
     });
 });
+
+// Add confirmation for bulk actions (if needed in future)
+function confirmBulkAction(action, count) {
+    return confirm(`Are you sure you want to ${action} ${count} selected request${count > 1 ? 's' : ''}?`);
+}
 </script>
 @endsection

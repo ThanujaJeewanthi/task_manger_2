@@ -10,20 +10,13 @@ use App\Models\JobEmployee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-use App\Services\JobActivityLogger;
 use App\Http\Controllers\Controller;
 use App\Models\TaskExtensionRequest;
 use Illuminate\Support\Facades\Auth;
-use App\Services\NotificationService;
+use App\Services\JobActivityLogger;
 
 class TaskExtensionController extends Controller
 {
-    protected NotificationService $notificationService;
-
-    public function __construct(NotificationService $notificationService)
-    {
-        $this->notificationService = $notificationService;
-    }
     /**
      * Display extension requests for approval (Supervisors/TOs)
      */
@@ -153,18 +146,6 @@ class TaskExtensionController extends Controller
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
-
-            $engineers = User::whereHas('userRole', function($query) {
-                $query->where('name', 'Engineer');
-            })->where('company_id', Auth::user()->company_id)->pluck('id');
-
-            foreach ($engineers as $engineerId) {
-                $this->notificationService->taskExtensionRequested(
-                    $engineerId,
-                    $task->id,
-                    $task->job->title
-                );
-            }
 
             // Log extension request
             JobActivityLogger::logTaskExtensionRequested(
