@@ -15,19 +15,19 @@ use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\Job\JobTypeController;
 use App\Http\Controllers\Auth\ProfileController;
-use App\Http\Controllers\PageCategoryController;
-use App\Http\Controllers\Job\JobOptionController;
-
 use App\Http\Controllers\EmployeeTaskController;
+use App\Http\Controllers\NotificationController;
 
+use App\Http\Controllers\PageCategoryController;
+
+use App\Http\Controllers\Job\JobOptionController;
+use App\Http\Controllers\Job\JobHistoryController;
 use App\Http\Controllers\Task\TaskExtensionController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\CommonDashboardController;
 use App\Http\Controllers\Dashboard\EmployeeDashboardController;
 use App\Http\Controllers\Dashboard\EngineerDashboardController;
 use App\Http\Controllers\Dashboard\SuperAdminDashboardController;
-use App\Http\Controllers\Dashboard\SupervisorDashboardController;
-use App\Http\Controllers\Dashboard\TechnicalOfficerDashboardController;
 
 // Authentication routes
 //Auth::routes();
@@ -459,7 +459,8 @@ Route::fallback(function () {
 });
 
 
-use App\Http\Controllers\Job\JobHistoryController;
+use App\Http\Controllers\Dashboard\SupervisorDashboardController;
+use App\Http\Controllers\Dashboard\TechnicalOfficerDashboardController;
 
 // Job History and Activity Logging Routes
 Route::middleware(['auth'])->group(function () {
@@ -467,28 +468,69 @@ Route::middleware(['auth'])->group(function () {
     // Job History Timeline
     Route::get('/jobs/{job}/history', [JobHistoryController::class, 'index'])
         ->name('jobs.history.index')
-        ->middleware('role.permission:11.23'); // Add this permission to your seeds
+        ->middleware('role.permission:11.23');
 
     // View specific activity details
     Route::get('/jobs/{job}/history/{activity}', [JobHistoryController::class, 'show'])
         ->name('jobs.history.show')
-        ->middleware('role.permission:11.24'); // Add this permission to your seeds
+        ->middleware('role.permission:11.24');
 
     // Export job history as PDF
     Route::get('/jobs/{job}/history/export/pdf', [JobHistoryController::class, 'exportPdf'])
         ->name('jobs.history.export.pdf')
-        ->middleware('role.permission:11.25'); // Add this permission to your seeds
+        ->middleware('role.permission:11.25');
 
     // Export job history as Word document
     Route::get('/jobs/{job}/history/export/word', [JobHistoryController::class, 'exportWord'])
         ->name('jobs.history.export.word')
-        ->middleware('role.permission:11.25'); // Same permission as PDF export
+        ->middleware('role.permission:11.25');
 
     // AJAX endpoint for timeline data (for visual timeline components)
     Route::get('/jobs/{job}/history/timeline-data', [JobHistoryController::class, 'getTimelineData'])
         ->name('jobs.history.timeline-data')
-        ->middleware('role.permission:11.23'); // Same as view permission
+        ->middleware('role.permission:11.23');
 
+});
+
+
+// notifications
+
+Route::middleware(['auth'])->prefix('api/notifications')->name('api.notifications.')->group(function () {
+    Route::get('/navbar', [NotificationController::class, 'getNavbarNotifications'])
+        ->name('navbar');
+
+    Route::get('/unread-count', [NotificationController::class, 'getUnreadCount'])
+        ->name('unread-count');
+
+    Route::post('/{notification}/read', [NotificationController::class, 'markAsRead'])
+        ->name('mark-read');
+
+    Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])
+        ->name('mark-all-read');
+
+    Route::delete('/{notification}', [NotificationController::class, 'destroy'])
+        ->name('delete');
+});
+
+// Notification web routes
+Route::middleware(['auth'])->prefix('notifications')->name('notifications.')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])
+        ->name('index');
+});
+
+// Job API routes for modal functionality
+Route::middleware(['auth'])->prefix('api/jobs')->name('api.jobs.')->group(function () {
+    Route::get('/{job}/details', [JobController::class, 'getJobDetails'])
+        ->name('details');
+
+    Route::post('/{job}/status', [JobController::class, 'updateStatus'])
+        ->name('update-status');
+});
+
+// Task API routes for modal functionality
+Route::middleware(['auth'])->prefix('api/tasks')->name('api.tasks.')->group(function () {
+    Route::post('/{task}/request-extension', [TaskExtensionController::class, 'store'])
+        ->name('request-extension');
 });
 
 

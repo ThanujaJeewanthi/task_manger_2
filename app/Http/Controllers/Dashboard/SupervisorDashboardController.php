@@ -18,6 +18,7 @@ use Carbon\Carbon;
 
 class SupervisorDashboardController extends Controller
 {
+
     public function index()
     {
         $companyId = Auth::user()->company_id;

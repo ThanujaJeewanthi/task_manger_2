@@ -81,6 +81,16 @@ class User extends Authenticatable
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    public function notifications()
+{
+    return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
+}
+
+public function unreadNotifications()
+{
+    return $this->hasMany(Notification::class)->whereNull('read_at')->orderBy('created_at', 'desc');
+}
+
     /**
      * Get users created by this user.
      */
