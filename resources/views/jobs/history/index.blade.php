@@ -9,7 +9,7 @@
 <div class="row mb-4">
     <div class="col-12">
         <div class="card">
-            <div class=" d-flex justify-content-between align-items-center mb-3" style="position: relative; z-index: 2000; ">
+            <div class="card-header d-flex justify-content-between align-items-center mb-3" style="position: relative; z-index: 2000; ">
                 <div>
                     <h4 class="mb-0">
                         <i class="fas fa-history text-primary"></i>
@@ -22,10 +22,10 @@
                         <i class="fas fa-arrow-left"></i> Back to Job
                     </a>
                     <div class="btn-group" role="group" style="position: relative;">
-                        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown">
+                        <a href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" class="btn btn-success">
                             <i class="fas fa-download"></i> Export
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" style="z-index: 3000; position: absolute;">
+                        </a>
+                        {{-- <ul class="dropdown-menu dropdown-menu-end" style="z-index: 3000; position: absolute;">
                             <li>
                                 <a class="dropdown-item mb-0" href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">
                                     <i class="fas fa-file-pdf text-sm"></i> Export as PDF
@@ -36,7 +36,7 @@
                                     <i class="fas fa-file-word text-sm"></i> Export as Word
                                 </a>
                             </li>
-                        </ul>
+                        </ul> --}}
                     </div>
                 </div>
             </div>

@@ -275,14 +275,26 @@ public function store(Request $request)
         $data['job_option_values'] = json_encode($jobOptionValues);
     }
 
-    Job::create($data);
-      // Log job creation
-        $job = Job::latest('id')->where('created_by', Auth::id())->first();
-            JobActivityLogger::logJobCreated($job, [
-                'photos_count' => count($photos),
-                'job_options' => $request->job_options ?? [],
-            ]);
+    $job = Job::create($data);
 
+// Log job creation with proper photo count
+$photosCount = 0;
+if ($request->hasFile('photos')) {
+    $photosCount = count($request->file('photos'));
+}
+
+JobActivityLogger::logJobCreated($job, [
+    'photos_count' => $photosCount,
+    'job_options' => $jobOptionValues,
+]);
+
+// After job creation and initial logging
+if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
+    $assignedUser = User::find($data['assigned_user_id']);
+    if ($assignedUser) {
+        JobActivityLogger::logJobAssigned($job, $assignedUser, 'primary');
+    }
+}
 
 
     return redirect()->route('jobs.index')->with('success', 'Job created successfully.');
@@ -409,6 +421,16 @@ public function store(Request $request)
                 JobActivityLogger::logJobCompleted($job, $request->completion_notes);
             }
 
+             JobActivityLogger::logJobUpdated($job, $oldValues, $data);
+
+        // Log assignment change if assigned user changed
+        if ($oldValues['assigned_user_id'] !== $job->assigned_user_id && $job->assigned_user_id) {
+            $assignedUser = User::find($job->assigned_user_id);
+            if ($assignedUser) {
+                JobActivityLogger::logJobAssigned($job, $assignedUser, 'primary');
+            }
+        }
+
             DB::commit();
 
             return redirect()->route('jobs.show', $job)
@@ -492,9 +514,23 @@ public function store(Request $request)
 
                 $assignedEmployees[] = $employee;
 
-                // Log individual task assignment
-                JobActivityLogger::logTaskAssigned($job, $task, $employee, $startDate, $endDate);
-            }
+                // After task creation, add logging
+      $assignedEmployees = Employee::whereIn('id', $request->employees)->get();
+         JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees);
+
+// Also log individual task assignments
+foreach ($request->employees as $index => $employeeId) {
+    $employee = Employee::find($employeeId);
+    if ($employee) {
+        JobActivityLogger::logTaskAssigned(
+            $job,
+            $task,
+            $employee,
+            $request->start_dates[$index] ?? null,
+            $request->end_dates[$index] ?? null
+        );
+    }
+
 
             // Update job with task creator
             $job->update([
@@ -510,13 +546,16 @@ public function store(Request $request)
             return redirect()->route('jobs.tasks.index', $job)
                 ->with('success', 'Task created and assigned successfully!');
 
-        } catch (\Exception $e) {
+        } }}
+
+        catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()
                 ->with('error', 'Failed to create task. Please try again.')
                 ->withInput();
         }
     }
+
     public function editTask(Job $job, Task $task)
     {
         if ($job->company_id !== Auth::user()->company_id) {
@@ -572,6 +611,9 @@ public function store(Request $request)
                 'updated_by' => Auth::id(),
             ]);
         }
+        // log to activity log
+        JobActivityLogger::logTaskUpdated($job, $task, $request->notes);
+
 
         return redirect()->route('jobs.show', $job)->with('success', 'Task updated successfully.');
     }
@@ -619,81 +661,159 @@ public function store(Request $request)
      * Store items added to a job
      */
 public function storeItems(Request $request, Job $job)
-    {
-        // Check company access
-        if ($job->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
+   {
 
-        $request->validate([
-            'items' => 'required|array|min:1',
-            'items.*.item_id' => 'nullable|exists:items,id',
-            'items.*.custom_item_description' => 'nullable|string|max:255',
-            'items.*.quantity' => 'required|numeric|min:0.01',
-            'items.*.notes' => 'nullable|string|max:500',
-            'items.*.issue_description' => 'nullable|string|max:500',
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
+    }
+
+    $request->validate([
+        'issue_description' => 'required|string|max:1000',
+        'items' => 'nullable|array',
+        'items.*.item_id' => 'nullable|exists:items,id',
+        'items.*.quantity' => 'nullable|numeric|min:0.01',
+        'items.*.notes' => 'nullable|string|max:500',
+        'new_items' => 'nullable|array',
+        'new_items.*.description' => 'nullable|string|max:500',
+        'new_items.*.quantity' => 'nullable|numeric|min:0.01',
+        'close_job' => 'nullable|boolean',
+        'request_approval_from' => 'nullable|exists:users,id',
+    ]);
+
+    // If closing job as minor issue
+    if ($request->has('close_job') && $request->close_job) {
+        $job->update([
+            'status' => 'completed',
+            'approval_status' => 'approved',
+            'approved_by' => Auth::id(),
+            'approved_at' => now(),
+            'approval_notes' => 'Closed as minor issue: ' . $request->issue_description,
+            'completed_date' => now(),
+            'updated_by' => Auth::id(),
         ]);
 
-        try {
-            DB::beginTransaction();
+        return redirect()->route('jobs.show', $job)->with('success', 'Job closed successfully as minor issue.');
+    }
 
-            foreach ($request->items as $itemData) {
-                $jobItem = JobItems::create([
-                    'job_id' => $job->id,
-                    'item_id' => $itemData['item_id'],
-                    'custom_item_description' => $itemData['custom_item_description'],
-                    'quantity' => $itemData['quantity'],
-                    'notes' => $itemData['notes'],
-                    'issue_description' => $itemData['issue_description'],
-                    'addition_stage' => 'job_approval',
-                    'added_by' => Auth::id(),
-                    'added_at' => now(),
-                    'created_by' => Auth::id(),
-                    'updated_by' => Auth::id(),
-                ]);
+    // Check if job is already in approval process
+    $isInApprovalProcess = $job->approval_status === 'requested';
 
-                // Get item details for logging
-                $item = null;
-                if ($itemData['item_id']) {
-                    $item = Item::find($itemData['item_id']);
+    // Get current job items to check for existing ones
+    $currentJobItems = DB::table('job_items')
+        ->where('job_id', $job->id)
+        ->where('active', true)
+        ->get()
+        ->keyBy('item_id');
+
+    // Store existing items
+    if ($request->has('items')) {
+        foreach ($request->items as $itemData) {
+            if (!empty($itemData['item_id']) && !empty($itemData['quantity'])) {
+
+                $itemId = $itemData['item_id'];
+
+                // Check if this item already exists for this job
+                if ($currentJobItems->has($itemId)) {
+                    // Update existing item: sum the quantities
+                    $existingItem = $currentJobItems->get($itemId);
+                    $newQuantity = $existingItem->quantity + $itemData['quantity'];
+
+                    DB::table('job_items')
+                        ->where('id', $existingItem->id)
+                        ->update([
+                            'quantity' => $newQuantity,
+                            'notes' => $itemData['notes'] ?? $existingItem->notes,
+                            'issue_description' => $request->issue_description,
+                            'added_by' => Auth::id(),
+                            'added_at' => now(),
+                            'updated_by' => Auth::id(),
+                            'updated_at' => now(),
+                        ]);
+                } else {
+
+                    DB::table('job_items')->insert([
+                        'job_id' => $job->id,
+                        'item_id' => $itemId,
+                        'quantity' => $itemData['quantity'],
+                        'notes' => $itemData['notes'] ?? null,
+                        'issue_description' => $request->issue_description,
+                        'added_by' => Auth::id(),
+                        'added_at' => now(),
+                        'addition_stage' => 'job_approval',
+                        'active' => true,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
                 }
-
-                $itemInfo = [
-                    'id' => $jobItem->id,
-                    'name' => $item ? $item->name : $itemData['custom_item_description'],
-                    'custom_item_description' => $itemData['custom_item_description'],
-                ];
-
-                // Log item addition
-                JobActivityLogger::logItemAdded(
-                    $job,
-                    $itemInfo,
-                    $itemData['quantity'],
-                    $itemData['notes']
-                );
             }
-
-            // Update job to require approval
-            $job->update([
-                'request_approval_from' => $this->getApprovalUserId(),
-                'approval_status' => 'requested',
-                'updated_by' => Auth::id(),
-            ]);
-
-            DB::commit();
-
-            return redirect()->route('jobs.show', $job)
-                ->with('success', 'Items added successfully and sent for approval!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Failed to add items. Please try again.')
-                ->withInput();
         }
     }
 
+    // Store new item descriptions (items not in inventory)
+    if ($request->has('new_items')) {
+        foreach ($request->new_items as $newItem) {
+            if (!empty($newItem['description']) && !empty($newItem['quantity'])) {
 
+
+
+                DB::table('job_items')->insert([
+                    'job_id' => $job->id,
+                    'item_id' => null, // null for custom items
+                    'custom_item_description' => $newItem['description'],
+                    'quantity' => $newItem['quantity'],
+                    'issue_description' => $request->issue_description,
+                    'added_by' => Auth::id(),
+                    'added_at' => now(),
+                    'addition_stage' => 'job_approval',
+                    'active' => true,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+    }
+
+    // Handle approval request logic
+    if ($request->has('request_approval_from') && $request->request_approval_from) {
+        // Only change approval status if not already in approval process
+        if (!$isInApprovalProcess) {
+            $job->update([
+                'approval_status' => 'requested',
+                'request_approval_from' => $request->request_approval_from,
+                'updated_by' => Auth::id(),
+            ]);
+
+            $message = 'Items added and approval requested successfully.';
+        } else {
+            // Job already in approval, just update the timestamp
+            $job->update([
+                'updated_by' => Auth::id(),
+            ]);
+
+            $message = 'Additional items added to existing approval request.';
+        }
+    } else {
+        // No approval requested, just update the job
+        $job->update([
+            'updated_by' => Auth::id(),
+        ]);
+
+        if ($isInApprovalProcess) {
+            $message = 'Additional items added. Job remains in approval process.';
+        } else {
+            $message = 'Items added to job successfully.';
+        }
+    }
+    // job activity log
+    JobActivityLogger::logJobItemsAdded($job, $request->items, $request->new_items, Auth::id());
+
+
+    return redirect()->route('jobs.show', $job)->with('success', $message);
+}
 
     /**
      * Show job approval interface

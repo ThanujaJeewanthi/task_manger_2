@@ -58,7 +58,8 @@ class EmployeeTaskController extends Controller
             // Auto-update job status
             $jobController = new JobController();
             $jobController->updateJobStatusBasedOnTasks($task->job);
-
+// After task status update, add:
+JobActivityLogger::logTaskStarted($job, $task, $employee);
             DB::commit();
             return redirect()->back()
                 ->with('success', 'Task started successfully');
