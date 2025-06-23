@@ -72,6 +72,63 @@ class JobActivityLogger
     }
 
     /**
+ * Log job update.
+ */
+public static function logJobUpdated(Job $job, array $oldValues, array $newValues, $notes = null)
+{
+    $changes = [];
+    $changedFields = [];
+
+    foreach ($newValues as $key => $newValue) {
+        if (isset($oldValues[$key]) && $oldValues[$key] != $newValue) {
+            $changes['old_' . $key] = $oldValues[$key];
+            $changes['new_' . $key] = $newValue;
+            $changedFields[] = $key;
+        }
+    }
+
+    if (empty($changedFields)) {
+        return null; // No changes to log
+    }
+
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'updated',
+        'activity_category' => 'job',
+        'priority_level' => 'medium',
+        'is_major_activity' => in_array('status', $changedFields) || in_array('assigned_user_id', $changedFields),
+        'description' => "Job updated - changed fields: " . implode(', ', $changedFields) . ($notes ? " - {$notes}" : ''),
+        'old_values' => array_filter($oldValues, fn($key) => in_array($key, $changedFields), ARRAY_FILTER_USE_KEY),
+        'new_values' => array_filter($newValues, fn($key) => in_array($key, $changedFields), ARRAY_FILTER_USE_KEY),
+        'metadata' => [
+            'changed_fields' => $changedFields,
+            'notes' => $notes,
+        ],
+    ]);
+}
+/**
+ * Log task start.
+ */
+public static function logTaskStarted(Job $job, $task, $employee)
+{
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'started',
+        'activity_category' => 'task',
+        'priority_level' => 'medium',
+        'is_major_activity' => false,
+        'description' => "Task '{$task->task}' started by {$employee->user->name}",
+        'affected_user_id' => $employee->user_id,
+        'new_values' => [
+            'started_by' => $employee->user->name,
+            'started_at' => now(),
+        ],
+        'related_model_type' => 'Task',
+        'related_model_id' => $task->id,
+        'related_entity_name' => $task->task,
+    ]);
+}
+    /**
      * Log job assignment.
      */
     public static function logJobAssigned(Job $job, $assignedUser, $assignmentType = 'primary')
@@ -143,6 +200,56 @@ class JobActivityLogger
             'metadata' => [
                 'approver_role' => $approver->userRole?->name,
                 'approval_notes' => $notes,
+            ],
+        ]);
+    }
+
+    public function logJobItemsAdded(Job $job, $items, $notes = null)
+    {
+        $itemNames = collect($items)->pluck('name')->join(', ');
+
+        return self::log([
+            'job_id' => $job->id,
+            'activity_type' => 'items_added',
+            'activity_category' => 'item',
+            'priority_level' => 'medium',
+            'is_major_activity' => true,
+            'description' => "Items added: {$itemNames}" . ($notes ? " - {$notes}" : ''),
+            'new_values' => [
+                'items' => $itemNames,
+                'notes' => $notes,
+            ],
+            'related_model_type' => 'JobItem',
+            'related_entity_name' => $itemNames,
+            'metadata' => [
+                'notes' => $notes,
+                'item_count' => count($items),
+            ],
+        ]);
+    }
+    public static function logTaskUpdated(Job $job, $task, $notes = null)
+    {
+        return self::log([
+            'job_id' => $job->id,
+            'activity_type' => 'task_updated',
+            'activity_category' => 'task',
+            'priority_level' => 'medium',
+            'is_major_activity' => true,
+            'description' => "Updated task '{$task->task}'" . ($notes ? " - {$notes}" : ''),
+            'old_values' => [
+                'task_name' => $task->getOriginal('task'),
+                'task_description' => $task->getOriginal('description'),
+            ],
+            'new_values' => [
+                'task_name' => $task->task,
+                'task_description' => $task->description,
+                'notes' => $notes,
+            ],
+            'related_model_type' => 'Task',
+            'related_model_id' => $task->id,
+            'related_entity_name' => $task->task,
+            'metadata' => [
+                'notes' => $notes,
             ],
         ]);
     }
