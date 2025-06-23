@@ -49,7 +49,7 @@ class JobController extends Controller
             break;
         case 'Employee':
 
-            $employeeId = auth()->user()->employee->id ?? null;
+            $employeeId = Auth::user()->employee->id ?? null;
 
 
                 $query->whereIn('id', function($q) use ($employeeId) {
@@ -986,7 +986,7 @@ public function updateJobStatusBasedOnTasks(Job $job)
         $job->update([
             'status' => $newStatus,
             'completed_date' => now(),
-            'updated_by' => auth()->id(),
+            'updated_by' => Auth::id(),
         ]);
     }
     // If at least one task is in progress, mark job as in_progress
@@ -994,7 +994,7 @@ public function updateJobStatusBasedOnTasks(Job $job)
         $newStatus = 'in_progress';
         $job->update([
             'status' => $newStatus,
-            'updated_by' => auth()->id(),
+             'updated_by' => Auth::id(),
         ]);
     }
 }
