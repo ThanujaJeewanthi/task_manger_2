@@ -36,7 +36,7 @@
                             Activity Details
                         </h4>
                         <small class="text-muted">
-                            {{ ucfirst(str_replace('_', ' ', $activity->activity_type)) }} -
+                            {{ ucfirst(str_replace('_', ' ', $activity->activity_type)) }} - 
                             {{ $activity->created_at->format('M d, Y H:i:s') }}
                         </small>
                     </div>
@@ -88,10 +88,10 @@
                                 <tr>
                                     <th>Category</th>
                                     <td>
-                                        <span class="badge badge-outline-{{
-                                            $activity->activity_category === 'job' ? 'primary' :
-                                            ($activity->activity_category === 'task' ? 'success' :
-                                            ($activity->activity_category === 'item' ? 'info' :
+                                        <span class="badge badge-outline-{{ 
+                                            $activity->activity_category === 'job' ? 'primary' : 
+                                            ($activity->activity_category === 'task' ? 'success' : 
+                                            ($activity->activity_category === 'item' ? 'info' : 
                                             ($activity->activity_category === 'approval' ? 'warning' : 'secondary')))
                                         }}">
                                             {{ ucfirst($activity->activity_category) }}
@@ -284,7 +284,7 @@
                         <strong>Job #{{ $job->id }}</strong>
                         <p class="text-muted mb-0">{{ $job->description }}</p>
                     </div>
-
+                    
                     <div class="job-details">
                         <div class="row text-center">
                             <div class="col-6">
@@ -391,12 +391,8 @@
                         <a href="{{ route('jobs.history.export.pdf', $job) }}?activity_id={{ $activity->id }}" class="btn btn-danger btn-sm">
                             <i class="fas fa-file-pdf"></i> Export as PDF
                         </a>
-                        <a href="{{ route('jobs.history.export.word', $job) }}?activity_id={{ $activity->id }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-file-word"></i> Export as Word
-                        </a>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.print()">
-                            <i class="fas fa-print"></i> Print Details
-                        </button>
+                        
+                        
                     </div>
                 </div>
             </div>
@@ -487,16 +483,16 @@
     .btn, .card-header {
         display: none !important;
     }
-
+    
     .card {
         border: none !important;
         box-shadow: none !important;
     }
-
+    
     .col-lg-4 {
         display: none !important;
     }
-
+    
     .col-lg-8 {
         width: 100% !important;
         max-width: 100% !important;
@@ -507,11 +503,11 @@
     .navigation-buttons {
         margin-bottom: 10px;
     }
-
+    
     .job-details .row {
         margin-bottom: 15px;
     }
-
+    
     .value-display .badge {
         font-size: 10px;
         padding: 2px 6px;
@@ -527,13 +523,13 @@ $(document).ready(function() {
     $('.value-display .badge').each(function(index) {
         $(this).delay(index * 100).fadeIn(500);
     });
-
+    
     // Add tooltips to badges
     $('.badge').tooltip({
         placement: 'top',
         trigger: 'hover'
     });
-
+    
     // Add confirmation for export actions
     $('a[href*="export"]').on('click', function(e) {
         const format = $(this).text().includes('PDF') ? 'PDF' : 'Word';
