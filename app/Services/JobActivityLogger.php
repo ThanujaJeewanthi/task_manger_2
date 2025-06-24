@@ -204,9 +204,34 @@ public static function logTaskStarted(Job $job, $task, $employee)
         ]);
     }
 
-    public function logJobItemsAdded(Job $job, $items, $notes = null)
+    public static function logTaskDeleted(Job $job, $task, $notes = null)
     {
-        $itemNames = collect($items)->pluck('name')->join(', ');
+        return self::log([
+            'job_id' => $job->id,
+            'activity_type' => 'deleted',
+            'activity_category' => 'task',
+            'priority_level' => 'medium',
+            'is_major_activity' => true,
+            'description' => "Task '{$task->task}' deleted" . ($notes ? " - {$notes}" : ''),
+            'old_values' => [
+                'task_name' => $task->task,
+                'task_description' => $task->description,
+            ],
+            'new_values' => [
+                'notes' => $notes,
+            ],
+            'related_model_type' => 'Task',
+            'related_model_id' => $task->id,
+            'related_entity_name' => $task->task,
+            'metadata' => [
+                'notes' => $notes,
+            ],
+        ]);
+    }
+    public static function logJobItemsAdded(Job $job, $items, $notes = null)
+    {
+        $itemNames = collect($items)->pluck('name')->filter()->values()->all();
+        $itemNamesString = implode(', ', $itemNames);
 
         return self::log([
             'job_id' => $job->id,
@@ -214,13 +239,13 @@ public static function logTaskStarted(Job $job, $task, $employee)
             'activity_category' => 'item',
             'priority_level' => 'medium',
             'is_major_activity' => true,
-            'description' => "Items added: {$itemNames}" . ($notes ? " - {$notes}" : ''),
+            'description' => "Items added: {$itemNamesString}" . ($notes ? " - " . (is_array($notes) ? json_encode($notes) : $notes) : ''),
             'new_values' => [
                 'items' => $itemNames,
                 'notes' => $notes,
             ],
             'related_model_type' => 'JobItem',
-            'related_entity_name' => $itemNames,
+            'related_entity_name' => $itemNamesString,
             'metadata' => [
                 'notes' => $notes,
                 'item_count' => count($items),
