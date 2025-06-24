@@ -272,7 +272,12 @@
                                                     <div class="badge-container">
                                                         @foreach($activity->old_values as $key => $value)
                                                             <span class="badge badge-light">
-                                                                {{ ucfirst(str_replace('_', ' ', $key)) }}: {{ is_array($value) ? implode(', ', $value) : $value }}
+                                                                {{ ucfirst(str_replace('_', ' ', $key)) }}:
+                    @if(is_array($value))
+                        {{ json_encode($value) }}
+                    @else
+                        {{ $value }}
+                    @endif
                                                             </span>
                                                         @endforeach
                                                     </div>
@@ -284,9 +289,14 @@
                                                     <strong>New values:</strong>
                                                     <div class="badge-container">
                                                         @foreach($activity->new_values as $key => $value)
-                                                            <span class="badge badge-success">
-                                                                {{ ucfirst(str_replace('_', ' ', $key)) }}: {{ is_array($value) ? implode(', ', $value) : $value }}
-                                                            </span>
+                                                            <span >
+                                                              {{ ucfirst(str_replace('_', ' ', $key)) }}:
+                    @if(is_array($value))
+                        {{ json_encode($value) }}
+                    @else
+                        {{ $value }}
+                    @endif
+                 </span>
                                                         @endforeach
                                                     </div>
                                                 </div>

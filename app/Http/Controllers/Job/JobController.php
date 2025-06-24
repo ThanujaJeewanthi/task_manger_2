@@ -378,69 +378,56 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
     }
 
    public function update(Request $request, Job $job)
-    {
-        // Check company access
-        if ($job->company_id !== Auth::user()->company_id) {
+    { if ($job->company_id !== Auth::user()->company_id) {
             abort(403);
         }
 
         $request->validate([
+
+            'job_type_id' => 'required|exists:job_types,id',
+            'client_id' => 'nullable|exists:clients,id',
+            'equipment_id' => 'nullable|exists:equipments,id',
+            'description' => 'nullable|string',
+            'references' => 'nullable|string',
             'status' => 'required|in:pending,in_progress,on_hold,completed,cancelled',
-            'completion_notes' => 'nullable|string|max:1000',
+            'priority' => 'required|in:1,2,3,4',
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date|after_or_equal:start_date',
+            'completed_date' => 'nullable|date',
+            'photos' => 'nullable|array',
+            'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        try {
-            DB::beginTransaction();
+        $data = $request->all();
+        $data['active'] = $request->has('is_active');
+        $data['updated_by'] = Auth::id();        $data['updated_by'] = Auth::id();
 
-            $oldStatus = $job->status;
-            $newStatus = $request->status;
-
-            // Update job
-            $updateData = [
-                'status' => $newStatus,
-                'updated_by' => Auth::id(),
-            ];
-
-            if ($newStatus === 'completed') {
-                $updateData['completed_date'] = now();
-                $updateData['completion_notes'] = $request->completion_notes;
+        // Handle photo uploads
+        if ($request->hasFile('photos')) {
+            // Delete old photos
+            if ($job->photos) {
+                $oldPhotos = json_decode($job->photos, true);
+                foreach ($oldPhotos as $oldPhoto) {
+                    Storage::disk('public')->delete($oldPhoto);
+                }
             }
 
-            $job->update($updateData);
-
-            // Log status change
-            JobActivityLogger::logJobStatusChanged(
-                $job,
-                $oldStatus,
-                $newStatus,
-                $request->completion_notes
-            );
-
-            // If job completed, log completion
-            if ($newStatus === 'completed') {
-                JobActivityLogger::logJobCompleted($job, $request->completion_notes);
+            $photos = [];
+            foreach ($request->file('photos') as $photo) {
+                $photos[] = $photo->store('job_photos', 'public');
             }
-
-             JobActivityLogger::logJobUpdated($job, $oldValues, $data);
-
-        // Log assignment change if assigned user changed
-        if ($oldValues['assigned_user_id'] !== $job->assigned_user_id && $job->assigned_user_id) {
-            $assignedUser = User::find($job->assigned_user_id);
-            if ($assignedUser) {
-                JobActivityLogger::logJobAssigned($job, $assignedUser, 'primary');
-            }
+            $data['photos'] = json_encode($photos);
         }
 
-            DB::commit();
+        $job->update($data);
+        // Log job update
+        // Capture old values before update for logging
+        $oldValues = $job->getOriginal();
 
-            return redirect()->route('jobs.show', $job)
-                ->with('success', 'Job status updated successfully!');
+        // Log job update with old and new values
+        JobActivityLogger::logJobUpdated($job, $oldValues, $data);
 
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Failed to update job status. Please try again.');
-        }
+        return redirect()->route('jobs.index')->with('success', 'Job updated successfully.');        return redirect()->route('jobs.index')->with('success', 'Job updated successfully.');
     }
     public function destroy(Job $job)
     {
@@ -453,7 +440,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
         return redirect()->route('jobs.index')->with('success', 'Job deleted successfully.');
     }
 
- public function createTask(Job $job)
+  public function createTask(Job $job)
     {
         if ($job->company_id !== Auth::user()->company_id) {
             abort(403);
@@ -464,96 +451,51 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
         return view('tasks.create', compact('job', 'employees'));
     }
 
-    public function storeTask(Request $request, Job $job)
+ public function storeTask(Request $request, Job $job)
     {
-        // Check company access
         if ($job->company_id !== Auth::user()->company_id) {
             abort(403);
         }
 
         $request->validate([
             'task' => 'required|string|max:255',
-            'description' => 'nullable|string|max:1000',
-            'employees' => 'required|array|min:1',
-            'employees.*' => 'exists:employees,id',
-            'start_dates' => 'required|array',
-            'start_dates.*' => 'required|date',
-            'end_dates' => 'required|array',
-            'end_dates.*' => 'required|date|after_or_equal:start_dates.*',
+            'description' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+           
+
+            'employee_ids' => 'required|array',
+            'employee_ids.*' => 'exists:employees,id',
+            'notes' => 'nullable|string',
         ]);
 
-        try {
-            DB::beginTransaction();
+        $task = Task::create([
 
-            // Create task
-            $task = Task::create([
-                'task' => $request->task,
-                'description' => $request->description,
-                'job_id' => $job->id,
+            'task' => $request->task,
+            'description' => $request->description,
+            'job_id'=> $job->id,
+           
+            'status' => 'pending',
+            'active' => $request->has('is_active'),
+            'created_by' => Auth::id(),
+        ]);
+
+        foreach ($request->employee_ids as $employeeId) {
+            $job->jobEmployees()->create([
+                'employee_id' => $employeeId,
+                'task_id' => $task->id,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'duration_in_days' => $request->start_date && $request->end_date ?
+                 Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
                 'status' => 'pending',
+                'notes' => $request->notes,
                 'created_by' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
-
-            // Assign employees to task
-            $assignedEmployees = [];
-            foreach ($request->employees as $index => $employeeId) {
-                $employee = Employee::find($employeeId);
-                $startDate = $request->start_dates[$index];
-                $endDate = $request->end_dates[$index];
-
-                JobEmployee::create([
-                    'job_id' => $job->id,
-                    'employee_id' => $employeeId,
-                    'task_id' => $task->id,
-                    'start_date' => $startDate,
-                    'end_date' => $endDate,
-                    'duration_in_days' => \Carbon\Carbon::parse($endDate)->diffInDays(\Carbon\Carbon::parse($startDate)) + 1,
-                    'status' => 'pending',
-                ]);
-
-                $assignedEmployees[] = $employee;
-
-                // After task creation, add logging
-      $assignedEmployees = Employee::whereIn('id', $request->employees)->get();
-         JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees);
-
-// Also log individual task assignments
-foreach ($request->employees as $index => $employeeId) {
-    $employee = Employee::find($employeeId);
-    if ($employee) {
-        JobActivityLogger::logTaskAssigned(
-            $job,
-            $task,
-            $employee,
-            $request->start_dates[$index] ?? null,
-            $request->end_dates[$index] ?? null
-        );
-    }
-
-
-            // Update job with task creator
-            $job->update([
-                'tasks_added_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
-
-            // Log task creation
-            JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees);
-
-            DB::commit();
-
-            return redirect()->route('jobs.tasks.index', $job)
-                ->with('success', 'Task created and assigned successfully!');
-
-        } }}
-
-        catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Failed to create task. Please try again.')
-                ->withInput();
         }
+ 
+        return redirect()->route('jobs.show', $job)->with('success', 'Task created and employees assigned successfully.');
     }
 
     public function editTask(Job $job, Task $task)
@@ -578,7 +520,7 @@ foreach ($request->employees as $index => $employeeId) {
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-            'status' => 'required|in:pending,in_progress,completed',
+           
             'employee_ids' => 'required|array',
             'employee_ids.*' => 'exists:employees,id',
             'notes' => 'nullable|string',
@@ -588,7 +530,7 @@ foreach ($request->employees as $index => $employeeId) {
             'task' => $request->task,
             'job_id'=>$job->id,
             'description' => $request->description,
-            'status' => $request->status,
+            'status' => 'pending',
             'active' => $request->has('is_active'),
             'updated_by' => Auth::id(),
         ]);
@@ -611,13 +553,10 @@ foreach ($request->employees as $index => $employeeId) {
                 'updated_by' => Auth::id(),
             ]);
         }
-        // log to activity log
-        JobActivityLogger::logTaskUpdated($job, $task, $request->notes);
-
 
         return redirect()->route('jobs.show', $job)->with('success', 'Task updated successfully.');
     }
-
+ 
     public function destroyTask(Job $job, Task $task)
     {
         if ($job->company_id !== Auth::user()->company_id) {
@@ -626,7 +565,8 @@ foreach ($request->employees as $index => $employeeId) {
 
         $task->update(['active' => false, 'updated_by' => Auth::id()]);
         $job->jobEmployees()->where('task_id', $task->id)->update(['active' => false, 'updated_by' => Auth::id()]);
-
+// log task deletion
+        JobActivityLogger::logTaskDeleted($job, $task);
         return redirect()->route('jobs.show', $job)->with('success', 'Task deleted successfully.');
     }
 
@@ -913,7 +853,7 @@ public function processApproval(Request $request, Job $job)
         // For example, find an engineer in the same company
         $companyId = Auth::user()->company_id;
 
-        $engineer = \App\Models\User::whereHas('userRole', function ($query) {
+        $engineer =User::whereHas('userRole', function ($query) {
                 $query->where('name', 'Engineer');
             })
             ->where('company_id', $companyId)
