@@ -551,4 +551,6 @@ public static function logTaskStarted(Job $job, $task, $employee)
                 ->pluck('count', 'activity_category'),
         ];
     }
+
+    
 }

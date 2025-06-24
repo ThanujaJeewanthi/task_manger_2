@@ -1,49 +1,35 @@
-{{-- resources/views/jobs/history/index.blade.php --}}
 @extends('layouts.app')
 
 @section('title', 'Job History - Job #' . $job->id)
 
 @section('content')
 <div class="container-fluid">
-<!-- Job Header -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center mb-3" style="position: relative; z-index: 2000; ">
-                <div>
-                    <h4 class="mb-0">
-                        <i class="fas fa-history text-primary"></i>
-                        Job History - Job #{{ $job->id }}
-                    </h4>
-                    <small class="text-muted ">{{ $job->description }}</small>
-                </div>
-                <div class="btn-group">
-                    <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left"></i> Back to Job
-                    </a>
-                    <div class="btn-group" role="group" style="position: relative;">
-                        <a href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" class="btn btn-success">
-                            <i class="fas fa-download"></i> Export
+    <!-- Job Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="d-flex justify-content-between align-items-center p-3">
+                    <div>
+                        <h4 class="mb-0">
+                            <i class="fas fa-history text-primary"></i>
+                            Job History - Job #{{ $job->id }}
+                        </h4>
+                        <small class="text-muted">{{ $job->description }}</small>
+                    </div>
+                    <div class="btn-group">
+                        <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Job
                         </a>
-                        {{-- <ul class="dropdown-menu dropdown-menu-end" style="z-index: 3000; position: absolute;">
-                            <li>
-                                <a class="dropdown-item mb-0" href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">
-                                    <i class="fas fa-file-pdf text-sm"></i> Export as PDF
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item mb-0" href="{{ route('jobs.history.export.word', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}">
-                                    <i class="fas fa-file-word text-sm"></i> Export as Word
-                                </a>
-                            </li>
-                        </ul> --}}
+                        <div class="btn-group" role="group">
+                            <a href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" class="btn btn-success">
+                                <i class="fas fa-download"></i> Export
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
-
 
     <!-- Job Summary and Statistics -->
     <div class="row mb-4">
@@ -61,12 +47,12 @@
                         </div>
                         <div class="col-md-6">
                             <p><strong>Status:</strong>
-                                <span class="badge text-white" style="background-color: {{ $job->status_color }};">
+                                <span class="badge badge-{{ $job->status === 'completed' ? 'success' : ($job->status === 'cancelled' ? 'danger' : 'warning') }}">
                                     {{ ucfirst($job->status) }}
                                 </span>
                             </p>
                             <p><strong>Priority:</strong>
-                                <span class="badge text-white" style="background-color: {{ $job->priority_color }};">
+                                <span class="badge badge-{{ $job->priority == 1 ? 'danger' : ($job->priority == 2 ? 'warning' : 'info') }}">
                                     Priority {{ $job->priority }}
                                 </span>
                             </p>
@@ -272,13 +258,13 @@
                                                     <div class="badge-container">
                                                         @foreach($activity->old_values as $key => $value)
                                                             <span class="badge badge-light">
-                                                                {{ ucfirst(str_replace('_', ' ', $key)) }}:
+                                                               {{ ucfirst(str_replace('_', ' ', $key)) }}:
                     @if(is_array($value))
                         {{ json_encode($value) }}
                     @else
                         {{ $value }}
                     @endif
-                                                            </span>
+                </span>
                                                         @endforeach
                                                     </div>
                                                 </div>
@@ -289,14 +275,14 @@
                                                     <strong>New values:</strong>
                                                     <div class="badge-container">
                                                         @foreach($activity->new_values as $key => $value)
-                                                            <span >
-                                                              {{ ucfirst(str_replace('_', ' ', $key)) }}:
+                                                            <span class="badge badge-success">
+                                                             {{ ucfirst(str_replace('_', ' ', $key)) }}:
                     @if(is_array($value))
                         {{ json_encode($value) }}
                     @else
                         {{ $value }}
                     @endif
-                 </span>
+                  </span>
                                                         @endforeach
                                                     </div>
                                                 </div>
@@ -461,7 +447,7 @@ $(document).ready(function() {
 
     // Smooth scroll to timeline when filters applied
     @if(request()->hasAny(['category', 'type', 'user_id', 'date_from', 'date_to', 'major_only']))
-        setTimeout(function() {
+        setTimeout(function() {Add commentMore actions
             $('html, body').animate({
                 scrollTop: $('.timeline').offset().top - 100
             }, 500);
