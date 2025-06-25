@@ -227,50 +227,50 @@
                             </div>
                             <div class="card-body">
                                 <!-- Update Existing Items (only show if items exist and not in approval) -->
-                                @if($jobItems->count() > 0 && $job->approval_status !== 'requested')
-                                <div class="mb-4">
-                                    <h6 class="text-primary">
-                                        <i class="fas fa-edit"></i> Update Existing Items
-                                    </h6>
-                                    <div class="alert alert-info">
-                                        <small>You can modify the quantities and notes for items already added to this job.</small>
-                                    </div>
-                                    @foreach($jobItems as $index => $jobItem)
-                                        @if($jobItem->pivot->item_id)
-                                            <div class="row mb-2 align-items-center border-bottom pb-2">
-                                                <div class="col-md-5">
-                                                    <strong>{{ $jobItem->name }}</strong>
-                                                    @if($jobItem->sku)
-                                                        <br><small class="text-muted">SKU: {{ $jobItem->sku }}</small>
-                                                    @endif
-                                                    <input type="hidden" name="items[{{ $index }}][item_id]" value="{{ $jobItem->pivot->item_id }}">
-                                                </div>
-                                                <div class="col-md-2">
-                                                    <label class="small text-muted">Quantity</label>
-                                                    <input type="number"
-                                                           class="form-control form-control-sm"
-                                                           name="items[{{ $index }}][quantity]"
-                                                           value="{{ $jobItem->pivot->quantity }}"
-                                                           min="0.01"
-                                                           step="0.01">
-                                                </div>
-                                                <div class="col-md-4">
-                                                    <label class="small text-muted">Notes</label>
-                                                    <input type="text"
-                                                           class="form-control form-control-sm"
-                                                           name="items[{{ $index }}][notes]"
-                                                           value="{{ $jobItem->pivot->notes }}"
-                                                           placeholder="Add notes...">
-                                                </div>
-                                                <div class="col-md-1 text-center">
-                                                    <i class="fas fa-edit text-primary"></i>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endforeach
-                                    <hr>
-                                </div>
-                                @endif
+                       @if($jobItems->count() > 0 && $job->approval_status !== 'requested')
+<div class="mb-4">
+    <h6 class="text-primary">
+        <i class="fas fa-edit"></i> Update Existing Items
+    </h6>
+    <div class="alert alert-info">
+        <small>You can modify the quantities and notes for items already added to this job.</small>
+    </div>
+    @foreach($jobItems as $index => $jobItem)
+        @if($jobItem->item_id) {{-- Only show items from inventory, not custom items --}}
+            <div class="row mb-2 align-items-center border-bottom pb-2">
+                <div class="col-md-5">
+                    <strong>{{ $jobItem->item->name }}</strong>
+                    @if($jobItem->item->sku)
+                        <br><small class="text-muted">SKU: {{ $jobItem->item->sku }}</small>
+                    @endif
+                    <input type="hidden" name="items[{{ $index }}][item_id]" value="{{ $jobItem->item_id }}">
+                </div>
+                <div class="col-md-2">
+                    <label class="small text-muted">Quantity</label>
+                    <input type="number"
+                           class="form-control form-control-sm"
+                           name="items[{{ $index }}][quantity]"
+                           value="{{ $jobItem->quantity }}"
+                           min="0.01"
+                           step="0.01">
+                </div>
+                <div class="col-md-4">
+                    <label class="small text-muted">Notes</label>
+                    <input type="text"
+                           class="form-control form-control-sm"
+                           name="items[{{ $index }}][notes]"
+                           value="{{ $jobItem->notes }}"
+                           placeholder="Add notes...">
+                </div>
+                <div class="col-md-1 text-center">
+                    <i class="fas fa-edit text-primary"></i>
+                </div>
+            </div>
+        @endif
+    @endforeach
+    <hr>
+</div>
+@endif
 
                                 <!-- Add New Items from Inventory -->
                                 <div class="mb-4">

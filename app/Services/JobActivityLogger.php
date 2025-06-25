@@ -235,15 +235,23 @@ public static function logTaskStarted(Job $job, $task, $employee)
     // items are added in different scenarios ,first one is when the assigned technical officer adds items and  second one is when the engineer edits
     // items, in both cases the called function is this and entries added to the database are different
     $itemNames = collect($items)->pluck('name')->join(', ');
-
+if (is_array($notes)) {
+    // If $notes is an array of arrays or non-string values, flatten and stringify
+    $notesString = collect($notes)->flatten()->map(function ($item) {
+        return is_scalar($item) ? (string)$item : json_encode($item);
+    })->implode(', ');
+} else {
+    $notesString = (string)$notes;
+}
     return self::log([
         'job_id' => $job->id,
         'activity_type' => 'items_added',
         'activity_category' => 'item',
         'priority_level' => 'medium',
         'is_major_activity' => true,
-        'description' => "Items added: {$itemNames}" . ($notes ? " - {$notes}" : ''),
-        'new_values' => [
+'description' => "Items added: " . $itemNames . ($notesString ? " - {$notesString}" : ''),
+
+    'new_values' => [
             'items' => $itemNames,
             'notes' => $notes,
         ],
