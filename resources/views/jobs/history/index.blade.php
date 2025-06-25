@@ -42,12 +42,12 @@
                                 </div>
                                 <div class="col-md-4">
                                     <p class="mb-2"><strong>Status:</strong>
-                                        <span class="badge badge-{{ $job->status === 'completed' ? 'success' : ($job->status === 'cancelled' ? 'danger' : 'warning') }}">
+                                        <span class="text-muted">
                                             {{ ucfirst($job->status) }}
                                         </span>
                                     </p>
                                     <p class="mb-2"><strong>Priority:</strong>
-                                        <span class="badge badge-{{ $job->priority == 1 ? 'danger' : ($job->priority == 2 ? 'warning' : 'info') }}">
+                                        <span class="text-muted">
                                             Priority {{ $job->priority }}
                                         </span>
                                     </p>
@@ -85,7 +85,7 @@
             <div class="card">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">
-                        <i class="fas fa-filter text-primary"></i> Filters & Search
+                       </i> Filters & Search
                     </h5>
                 </div>
                 <div class="card-body">
@@ -167,7 +167,7 @@
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-timeline text-primary"></i> Activity Timeline
+                             Activity Timeline
                         </h5>
                         <div class="text-muted small">
                             Showing {{ $activities->firstItem() ?? 0 }} - {{ $activities->lastItem() ?? 0 }} of {{ $activities->total() }} activities
@@ -230,136 +230,172 @@
                                             <i class="{{ $activity->activity_icon ?? 'fas fa-circle' }}"></i>
                                         @endif
                                     </div>
+<div class="timeline-content">
+    <div class="timeline-card {{ $activity->is_major_activity ? 'major-card' : '' }}">
+        <div class="timeline-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <h6 class="timeline-title mb-1">
+                        {{ ucfirst(str_replace('_', ' ', $activity->activity_type)) }}
+                        @if($activity->is_major_activity)
+                            <span class="text-dark badge-sm ms-2">
+                                <i class="fas fa-star"></i> Major
+                            </span>
+                        @endif
+                        <span class="text-dark badge-sm ms-1">
+                            {{ ucfirst($activity->priority_level ?? 'normal') }}
+                        </span>
+                    </h6>
+                    <div class="timeline-meta">
+                        <span class="text-muted small">
+                            <i class="fas fa-clock"></i>
+                            {{ $activity->created_at->format('H:i:s') }}
+                            <span class="ms-2">({{ $activity->created_at->diffForHumans() }})</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="timeline-actions">
+                    <a href="{{ route('jobs.history.show', [$job, $activity]) }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
 
-                                    <div class="timeline-content">
-                                        <div class="timeline-card {{ $activity->is_major_activity ? 'major-card' : '' }}">
-                                            <div class="timeline-header">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div class="flex-grow-1">
-                                                        <h6 class="timeline-title mb-1">
-                                                            {{ ucfirst(str_replace('_', ' ', $activity->activity_type)) }}
-                                                            @if($activity->is_major_activity)
-                                                                <span class="badge badge-warning badge-sm ms-2">
-                                                                    <i class="fas fa-star"></i> Major
-                                                                </span>
-                                                            @endif
-                                                            <span class="badge {{ $activity->priority_badge ?? 'badge-secondary' }} badge-sm ms-1">
-                                                                {{ ucfirst($activity->priority_level ?? 'normal') }}
-                                                            </span>
-                                                        </h6>
-                                                        <div class="timeline-meta">
-                                                            <span class="text-muted small">
-                                                                <i class="fas fa-clock"></i>
-                                                                {{ $activity->created_at->format('H:i:s') }}
-                                                                <span class="ms-2">({{ $activity->created_at->diffForHumans() }})</span>
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <div class="timeline-actions">
-                                                        <a href="{{ route('jobs.history.show', [$job, $activity]) }}" class="btn btn-outline-primary btn-sm">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-                                                    </div>
-                                                </div>
+        <div class="timeline-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="mb-2">{{ $activity->description }}</p>
+
+                    @if($activity->old_values || $activity->new_values)
+                        <div class="activity-changes">
+                            @if($activity->old_values)
+                                <div class="changes-section mb-2">
+                                    <small class="text-muted d-block">Previous Values:</small>
+                                    <div class="change-details">
+                                        @php
+                                            $oldValues = is_array($activity->old_values) ? $activity->old_values : (json_decode($activity->old_values, true) ?? []);
+                                            $flatOldValues = [];
+                                            foreach ($oldValues as $key => $value) {
+                                                if (is_array($value)) {
+                                                    foreach ($value as $subKey => $subValue) {
+                                                        $flatOldValues[$subKey] = $subValue;
+                                                    }
+                                                } else {
+                                                    $flatOldValues[$key] = $value;
+                                                }
+                                            }
+                                            $sortedOldKeys = array_keys($flatOldValues);
+                                            sort($sortedOldKeys);
+                                        @endphp
+                                        @foreach($sortedOldKeys as $key)
+                                            <div class="change-row">
+                                                <span class="change-key">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
+                                                <span class="change-value">
+                                                    @php
+                                                        $value = $flatOldValues[$key];
+                                                        if (is_array($value)) {
+                                                            echo implode(', ', array_map(function($v) {
+                                                                return is_string($v) ? htmlspecialchars($v ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false) : json_encode($v);
+                                                            }, $value));
+                                                        } else {
+                                                            echo htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false);
+                                                        }
+                                                    @endphp
+                                                </span>
                                             </div>
-
-                                            <div class="timeline-body">
-                                                <div class="row">
-                                                    <div class="col-md-8">
-                                                        <p class="mb-2">{{ $activity->description }}</p>
-
-                                                        @if($activity->old_values || $activity->new_values)
-                                                            <div class="activity-changes">
-                                                                @if($activity->old_values)
-                                                                    <div class="changes-section mb-2">
-                                                                        <small class="text-muted d-block">Previous Values:</small>
-                                                                        <div class="badge-container">
-                                                                            @foreach(json_decode($activity->old_values, true) ?? [] as $key => $value)
-                    <span class="badge-success me-1 mb-1">
-                      {{ ucfirst(str_replace('_', ' ', $key)) }}:
-                      @if(is_array($value))
-                        @foreach($value as $subKey => $subValue)
-                          {{ ucfirst(str_replace('_', ' ', $subKey)) }}: {{ is_array($subValue) ? json_encode($subValue) : $subValue }}@if(!$loop->last), @endif
-                        @endforeach
-                      @else
-                        {{ $value }}
-                      @endif
-                    </span>
-                                                                            @endforeach
-                                                                        </div>
-                                                                    </div>
-                                                                @endif
-
-                                                                @if($activity->new_values)
-                                                                    <div class="changes-section">
-                                                                        <small class="text-muted d-block">New Values:</small>
-                                                                        <div class="badge-container">
-                                                                            @php
-                                                                                $newValues = is_array($activity->new_values) ? $activity->new_values : (json_decode($activity->new_values, true) ?? []);
-                                                                            @endphp
-                                                                            @foreach($newValues as $key => $value)
-                                                                               <span class=" badge-success me-1 mb-1">
-                      {{ ucfirst(str_replace('_', ' ', $key)) }}:
-                      @if(is_array($value))
-                        @foreach($value as $subKey => $subValue)
-                          {{ ucfirst(str_replace('_', ' ', $subKey)) }}: {{ is_array($subValue) ? json_encode($subValue) : $subValue }}@if(!$loop->last), @endif
-                        @endforeach
-                      @else
-                        {{ $value }}
-                      @endif
-                    </span>
-                                                                            @endforeach
-                                                                        </div>
-                                                                    </div>
-                                                                @endif
-                                                            </div>
-                                                        @endif
-
-                                                        @if($activity->related_entity_name)
-                                                            <div class="mt-2">
-                                                                <small class="text-info">
-                                                                    <i class="fas fa-link"></i>
-                                                                    Related: {{ $activity->related_entity_name }}
-                                                                </small>
-                                                            </div>
-                                                        @endif
-                                                    </div>
-
-                                                    <div class="col-md-4">
-                                                        <div class="activity-meta">
-                                                            <div class="meta-item">
-                                                                <small class="text-muted d-block">Performed by:</small>
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="avatar-sm me-2">
-                                                                        {{ substr($activity->user->name ?? 'S', 0, 1) }}
-                                                                    </div>
-                                                                    <div>
-                                                                        <div class="fw-medium">{{ $activity->user->name ?? 'System' }}</div>
-                                                                        @if($activity->user_role)
-                                                                            <small class="text-muted">{{ $activity->user_role }}</small>
-                                                                        @endif
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            @if($activity->affected_user_id)
-                                                                <div class="meta-item mt-2">
-                                                                    <small class="text-muted d-block">Affected user:</small>
-                                                                    <div class="fw-medium">{{ $activity->affectedUser->name ?? 'Unknown' }}</div>
-                                                                </div>
-                                                            @endif
-
-                                                            <div class="meta-item mt-2">
-                                                                <span class="badge badge-outline-{{ $activity->activity_category === 'job' ? 'primary' : ($activity->activity_category === 'task' ? 'success' : 'info') }}">
-                                                                    {{ ucfirst($activity->activity_category) }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                        @endforeach
                                     </div>
+                                </div>
+                            @endif
+
+                            @if($activity->new_values)
+                                <div class="changes-section">
+                                    {{-- <small class="text-muted d-block">New Values:</small> --}}
+                                    <div class="change-details">
+                                        @php
+                                            $newValues = is_array($activity->new_values) ? $activity->new_values : (json_decode($activity->new_values, true) ?? []);
+                                            $flatNewValues = [];
+                                            foreach ($newValues as $key => $value) {
+                                                if (is_array($value)) {
+                                                    foreach ($value as $subKey => $subValue) {
+                                                        $flatNewValues[$subKey] = $subValue;
+                                                    }
+                                                } else {
+                                                    $flatNewValues[$key] = $value;
+                                                }
+                                            }
+                                            $sortedNewKeys = array_keys($flatNewValues);
+                                            sort($sortedNewKeys);
+                                        @endphp
+                                        @foreach($sortedNewKeys as $key)
+                                            <div class="change-row">
+                                                <span class="change-key">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
+                                                <span class="change-value">
+                                                    @php
+                                                        $value = $flatNewValues[$key];
+                                                        if (is_array($value)) {
+                                                            echo implode(', ', array_map(function($v) {
+                                                                return is_string($v) ? htmlspecialchars($v ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false) : json_encode($v);
+                                                            }, $value));
+                                                        } else {
+                                                            echo htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8', false);
+                                                        }
+                                                    @endphp
+                                                </span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    @if($activity->related_entity_name)
+                        <div class="mt-2">
+                            <small class="text-info">
+                                <i class="fas fa-link"></i>
+                                Related: {{ $activity->related_entity_name }}
+                            </small>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="col-md-4">
+                    <div class="activity-meta">
+                        <div class="meta-item">
+                            <small class="text-muted d-block">Performed by:</small>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-sm me-2">
+                                    {{ substr($activity->user->name ?? 'S', 0, 1) }}
+                                </div>
+                                <div>
+                                    <div class="fw-medium">{{ $activity->user->name ?? 'System' }}</div>
+                                    @if($activity->user_role)
+                                        <small class="text-muted">{{ $activity->user_role }}</small>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+
+                        @if($activity->affected_user_id)
+                            <div class="meta-item mt-2">
+                                <small class="text-muted d-block">Affected user:</small>
+                                <div class="fw-medium">{{ $activity->affectedUser->name ?? 'Unknown' }}</div>
+                            </div>
+                        @endif
+
+                        <div class="meta-item mt-2">
+                            <span class="badge badge-outline-{{ $activity->activity_category === 'job' ? 'primary' : ($activity->activity_category === 'task' ? 'success' : 'info') }}">
+                                {{ ucfirst($activity->activity_category) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
                                 </div>
                             @endforeach
 

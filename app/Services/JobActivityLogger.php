@@ -228,30 +228,35 @@ public static function logTaskStarted(Job $job, $task, $employee)
             ],
         ]);
     }
-    public static function logJobItemsAdded(Job $job, $items, $notes = null)
-    {
-        $itemNames = collect($items)->pluck('name')->filter()->values()->all();
-        $itemNamesString = implode(', ', $itemNames);
 
-        return self::log([
-            'job_id' => $job->id,
-            'activity_type' => 'items_added',
-            'activity_category' => 'item',
-            'priority_level' => 'medium',
-            'is_major_activity' => true,
-            'description' => "Items added: {$itemNamesString}" . ($notes ? " - " . (is_array($notes) ? json_encode($notes) : $notes) : ''),
-            'new_values' => [
-                'items' => $itemNames,
-                'notes' => $notes,
-            ],
-            'related_model_type' => 'JobItem',
-            'related_entity_name' => $itemNamesString,
-            'metadata' => [
-                'notes' => $notes,
-                'item_count' => count($items),
-            ],
-        ]);
-    }
+
+   public static function logJobItemsAdded(Job $job, $items, $notes = null)
+{
+    // items are added in different scenarios ,first one is when the assigned technical officer adds items and  second one is when the engineer edits
+    // items, in both cases the called function is this and entries added to the database are different
+    $itemNames = collect($items)->pluck('name')->join(', ');
+
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'items_added',
+        'activity_category' => 'item',
+        'priority_level' => 'medium',
+        'is_major_activity' => true,
+        'description' => "Items added: {$itemNames}" . ($notes ? " - {$notes}" : ''),
+        'new_values' => [
+            'items' => $itemNames,
+            'notes' => $notes,
+        ],
+        'related_model_type' => 'JobItem',
+        'related_model_id' => null, // No specific item ID for bulk addition
+        'related_entity_name' => $itemNames,
+        'metadata' => [
+            'item_count' => count($items),
+            'notes' => $notes,
+        ],
+    ]);
+}
+
     public static function logTaskUpdated(Job $job, $task, $notes = null)
     {
         return self::log([
@@ -552,5 +557,5 @@ public static function logTaskStarted(Job $job, $task, $employee)
         ];
     }
 
-    
+
 }
