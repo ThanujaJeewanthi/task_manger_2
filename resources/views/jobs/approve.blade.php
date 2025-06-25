@@ -276,27 +276,24 @@
                             </div>
                         </div>
 
-                        <!-- Action Buttons -->
-                        <div class="card mb-4">
-                            <div class="card-body text-center">
-                                <form class="row">
-                                    {{-- form submission for approving or rejecting --}}
-                                    <form method="POST" action="{{ route('jobs.items.process-approval', $job) }}" id="approval-form">
-                                        @csrf
-                                        <input type="hidden" name="action" value="">
-                                        <button type="submit" class="btn btn-sm btn-success  me-2" value="approve">
-                                            <i class="fas fa-check"></i> Approve Job
-                                        </button>
-                                        <button type="submit" class="btn btn-sm btn-danger " value="reject">
-                                            <i class="fas fa-times"></i> Reject Job
-                                        </button>
-                                        <button type="submit" class="btn btn-sm btn-secondary " value="back">
-                                            <i class="fas fa-arrow-left"></i> Back to Jobs
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- Action Buttons -->
+<div class="card mb-4">
+    <div class="card-body text-center">
+        <div class="row justify-content-center">
+            <div class="col-auto">
+                <button type="submit" name="action" value="approve" class="btn btn-sm btn-success me-2">
+                    <i class="fas fa-check"></i> Approve Job
+                </button>
+                <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger me-2">
+                    <i class="fas fa-times"></i> Reject Job
+                </button>
+                <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Jobs
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 
                         <!-- Back Button -->
                         <div class="text-center">

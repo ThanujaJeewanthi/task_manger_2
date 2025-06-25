@@ -462,7 +462,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-           
+
 
             'employee_ids' => 'required|array',
             'employee_ids.*' => 'exists:employees,id',
@@ -474,7 +474,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
             'task' => $request->task,
             'description' => $request->description,
             'job_id'=> $job->id,
-           
+
             'status' => 'pending',
             'active' => $request->has('is_active'),
             'created_by' => Auth::id(),
@@ -494,7 +494,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
                 'updated_by' => Auth::id(),
             ]);
         }
- 
+
         return redirect()->route('jobs.show', $job)->with('success', 'Task created and employees assigned successfully.');
     }
 
@@ -520,7 +520,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
             'description' => 'nullable|string',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
-           
+
             'employee_ids' => 'required|array',
             'employee_ids.*' => 'exists:employees,id',
             'notes' => 'nullable|string',
@@ -556,7 +556,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
 
         return redirect()->route('jobs.show', $job)->with('success', 'Task updated successfully.');
     }
- 
+
     public function destroyTask(Job $job, Task $task)
     {
         if ($job->company_id !== Auth::user()->company_id) {
@@ -792,61 +792,156 @@ public function storeItems(Request $request, Job $job)
      */
 
 public function processApproval(Request $request, Job $job)
-    {
-        // Check company access and permissions
-        if ($job->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
-        $request->validate([
-            'action' => 'required|in:approve,reject',
-            'approval_notes' => 'nullable|string|max:1000',
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            $action = $request->action;
-
-            if ($action === 'approve') {
-                $job->update([
-                    'approval_status' => 'approved',
-                    'approved_by' => Auth::id(),
-                    'approved_at' => now(),
-                    'approval_notes' => $request->approval_notes,
-                    'updated_by' => Auth::id(),
-                ]);
-
-                // Log approval
-                JobActivityLogger::logJobApproval($job, 'approved', $request->approval_notes);
-
-                $message = 'Job approved successfully! You can now add tasks.';
-            } else {
-                $job->update([
-                    'approval_status' => 'rejected',
-                    'rejected_by' => Auth::id(),
-                    'rejected_at' => now(),
-                    'rejection_notes' => $request->approval_notes,
-                    'updated_by' => Auth::id(),
-                ]);
-
-                // Log rejection
-                JobActivityLogger::logJobApproval($job, 'rejected', $request->approval_notes);
-
-                $message = 'Job rejected successfully.';
-            }
-
-            DB::commit();
-
-            return redirect()->route('jobs.index')->with('success', $message);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Failed to process approval. Please try again.');
-        }
+{
+    // Check company access and permissions
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
     }
 
+    $request->validate([
+        'action' => 'required|in:approve,reject',
+        'approval_notes' => 'nullable|string|max:1000',
+        // Add validation for item edits
+        'items' => 'nullable|array',
+        'items.*.quantity' => 'nullable|numeric|min:0.01',
+        'items.*.notes' => 'nullable|string|max:500',
+        'additional_items' => 'nullable|array',
+        'additional_items.*.item_id' => 'nullable|exists:items,id',
+        'additional_items.*.quantity' => 'nullable|numeric|min:0.01',
+        'additional_items.*.notes' => 'nullable|string|max:500',
+        'new_items' => 'nullable|array',
+        'new_items.*.description' => 'nullable|string|max:500',
+        'new_items.*.quantity' => 'nullable|numeric|min:0.01',
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $action = $request->action;
+
+        // Process item edits if provided (regardless of approve/reject)
+        if ($request->has('items')) {
+            foreach ($request->items as $jobItemId => $itemData) {
+                if (!empty($itemData['quantity'])) {
+                    DB::table('job_items')
+                        ->where('id', $jobItemId)
+                        ->where('job_id', $job->id)
+                        ->where('active', true)
+                        ->update([
+                            'quantity' => $itemData['quantity'],
+                            'notes' => $itemData['notes'] ?? null,
+                            'updated_by' => Auth::id(),
+                            'updated_at' => now(),
+                        ]);
+                }
+            }
+        }
+
+        // Add additional items from inventory
+        if ($request->has('additional_items')) {
+            foreach ($request->additional_items as $itemData) {
+                if (!empty($itemData['item_id']) && !empty($itemData['quantity'])) {
+                    // Check if this item already exists for this job
+                    $existingJobItem = DB::table('job_items')
+                        ->where('job_id', $job->id)
+                        ->where('item_id', $itemData['item_id'])
+                        ->where('active', true)
+                        ->first();
+
+                    if ($existingJobItem) {
+                        // Update existing item: sum the quantities
+                        $newQuantity = $existingJobItem->quantity + $itemData['quantity'];
+                        DB::table('job_items')
+                            ->where('id', $existingJobItem->id)
+                            ->update([
+                                'quantity' => $newQuantity,
+                                'notes' => $itemData['notes'] ?? $existingJobItem->notes,
+                                'updated_by' => Auth::id(),
+                                'updated_at' => now(),
+                            ]);
+                    } else {
+                        // Create new job item
+                        DB::table('job_items')->insert([
+                            'job_id' => $job->id,
+                            'item_id' => $itemData['item_id'],
+                            'quantity' => $itemData['quantity'],
+                            'notes' => $itemData['notes'] ?? null,
+                            'issue_description' => 'Added during approval process',
+                            'added_by' => Auth::id(),
+                            'added_at' => now(),
+                            'addition_stage' => 'job_approval',
+                            'active' => true,
+                            'created_by' => Auth::id(),
+                            'updated_by' => Auth::id(),
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Add new items (not in inventory)
+        if ($request->has('new_items')) {
+            foreach ($request->new_items as $newItem) {
+                if (!empty($newItem['description']) && !empty($newItem['quantity'])) {
+                    DB::table('job_items')->insert([
+                        'job_id' => $job->id,
+                        'item_id' => null, // null for custom items
+                        'custom_item_description' => $newItem['description'],
+                        'quantity' => $newItem['quantity'],
+                        'issue_description' => 'Added during approval process',
+                        'added_by' => Auth::id(),
+                        'added_at' => now(),
+                        'addition_stage' => 'job_approval',
+                        'active' => true,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
+
+        if ($action === 'approve') {
+            $job->update([
+                'approval_status' => 'approved',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'approval_notes' => $request->approval_notes,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Log approval
+            JobActivityLogger::logJobApproval($job, 'approved', $request->approval_notes);
+
+            $message = 'Job approved successfully! You can now add tasks.';
+        } else {
+            $job->update([
+                'approval_status' => 'rejected',
+                'rejected_by' => Auth::id(),
+                'rejected_at' => now(),
+                'rejection_notes' => $request->approval_notes,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Log rejection
+            JobActivityLogger::logJobApproval($job, 'rejected', $request->approval_notes);
+
+            $message = 'Job rejected successfully.';
+        }
+
+        DB::commit();
+
+        return redirect()->route('jobs.index')->with('success', $message);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->back()
+            ->with('error', 'Failed to process approval. Please try again.');
+    }
+}
      private function getApprovalUserId()
     {
         // This should implement your business logic for determining who should approve
