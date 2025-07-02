@@ -402,8 +402,8 @@ body.modal-open {
                                             $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
                                             $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
                                         @endphp
-                                        <span class="badge bg-{{ $priorityColors[$job->priority] }}">
-                                            {{ $priorityLabels[$job->priority] }}
+                                  <span class="badge bg-{{ $priorityColors[$job->priority] ?? 'secondary' }}">
+                                            {{ $priorityLabels[$job->priority] ?? 'Unknown' }}
                                         </span>
                                     </td>
                                     <td>{{ $job->created_at->format('M d, H:i') }}</td>
@@ -484,8 +484,8 @@ body.modal-open {
                                                 </span>
                                             </td>
                                             <td>
-                                                <span class="badge bg-{{ $priorityColors[$job->priority] }}">
-                                                    {{ $priorityLabels[$job->priority] }}
+                                                <span class="badge bg-{{ $priorityColors[$job->priority] ?? 'secondary' }}">
+                                                    {{ $priorityLabels[$job->priority] ?? 'Unknown' }}
                                                 </span>
                                             </td>
                                             <td>{{ $job->updated_at->format('M d, H:i') }}</td>
