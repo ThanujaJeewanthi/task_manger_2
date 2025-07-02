@@ -134,17 +134,16 @@
                                 <div class="card-body">
                                     <ul class="mb-0">
                                         <li class="text-sm">Extension requests require approval from your supervisor or technical officer.</li>
-                                       
                                     </ul>
                                 </div>
                             </div>
 
                             <!-- Submit Buttons -->
                             <div class="form-group mt-4">
-                                <button type="submit" class="btn btn-primary ">
+                                <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-paper-plane"></i> Submit Extension Request
                                 </button>
-                                <a href="{{ route('employee.dashboard') }}" class="btn btn-secondary  ms-2">
+                                <a href="{{ route('employee.dashboard') }}" class="btn btn-secondary ms-2">
                                     <i class="fas fa-times"></i> Cancel
                                 </a>
                             </div>
@@ -156,10 +155,13 @@
     </div>
 </div>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
     const currentEndDate = new Date('{{ $jobEmployee->end_date ? $jobEmployee->end_date->format("Y-m-d") : "" }}');
+    let daysDifference = 0;
 
     $('#requested_end_date').change(function() {
         const requestedDate = new Date($(this).val());
@@ -167,10 +169,8 @@ $(document).ready(function() {
         const extensionText = $('#extension-days-text');
 
         if ($(this).val() && requestedDate > currentEndDate) {
-            // Calculate difference in days
             const timeDifference = requestedDate.getTime() - currentEndDate.getTime();
-            const daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
-
+            daysDifference = Math.ceil(timeDifference / (1000 * 3600 * 24));
             extensionText.text(`Extension period: ${daysDifference} ${daysDifference === 1 ? 'day' : 'days'}`);
             extensionInfo.show();
         } else {
@@ -178,37 +178,40 @@ $(document).ready(function() {
         }
     });
 
-    // Form validation
     $('#extension-request-form').submit(function(e) {
-        const requestedDate = new Date($('#requested_end_date').val());
+        e.preventDefault();
+
+        const requestedDateVal = $('#requested_end_date').val();
+        const requestedDate = new Date(requestedDateVal);
         const reason = $('#reason').val().trim();
 
-        if (!$('#requested_end_date').val()) {
-            alert('Please select a new end date.');
-            e.preventDefault();
+        if (!requestedDateVal) {
+            Swal.fire('Validation Error', 'Please select a new end date.', 'warning');
             return false;
         }
 
         if (requestedDate <= currentEndDate) {
-            alert('New end date must be after the current end date.');
-            e.preventDefault();
+            Swal.fire('Validation Error', 'New end date must be after the current end date.', 'error');
             return false;
         }
 
         if (reason.length < 10) {
-            alert('Please provide a more detailed reason (at least 10 characters).');
-            e.preventDefault();
+            Swal.fire('Validation Error', 'Please provide a more detailed reason (at least 10 characters).', 'warning');
             return false;
         }
 
-        // Confirmation
-        const daysDifference = Math.ceil((requestedDate.getTime() - currentEndDate.getTime()) / (1000 * 3600 * 24));
-        if (!confirm(`Are you sure you want to request a ${daysDifference} day extension? This will require approval from your supervisor.`)) {
-            e.preventDefault();
-            return false;
-        }
-
-        return true;
+        Swal.fire({
+            title: 'Confirm Extension',
+            text: `Are you sure you want to request a ${daysDifference} day extension? This will require approval from your supervisor.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, submit',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $('#extension-request-form')[0].submit();
+            }
+        });
     });
 });
 </script>
