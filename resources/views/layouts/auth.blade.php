@@ -58,8 +58,10 @@
     </div>
     <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const successAlert = document.querySelector('.alert-success');
-    const errorAlert = document.querySelector('.alert-danger');
+    // Target only session-based alerts (success/error messages)
+    // Exclude dashboard alerts which have the 'dashboard-alert' class
+    const successAlert = document.querySelector('.alert-success:not(.dashboard-alert)');
+    const errorAlert = document.querySelector('.alert-danger:not(.dashboard-alert)');
 
     function dismissAlert(alert) {
         if (alert) {
@@ -70,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Only apply auto-dismiss to session alerts, not dashboard alerts
     if (successAlert) {
         successAlert.classList.add('show');
         setTimeout(() => dismissAlert(successAlert), 4000);

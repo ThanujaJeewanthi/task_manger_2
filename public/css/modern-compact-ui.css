@@ -6,7 +6,7 @@
     --primary-light: #3b82f6;
     --primary-dark: #1e40af;
     --primary-darker: #1e3a8a;
-    
+
     /* Blue Status Colors */
     --blue-lightest: #dbeafe;
     --blue-lighter: #93c5fd;
@@ -16,32 +16,32 @@
     --blue-darker: #1d4ed8;
     --blue-darkest: #1e40af;
     --blue-navy: #1e3a8a;
-    
+
     /* Accent Colors (minimal use) */
     --danger-color: #18a3ad;
     --critical-color: #000000;
     --white-color: #ffffff;
-    
+
     /* Text Colors */
     --text-primary: #1e293b;
     --text-secondary: #64748b;
     --text-muted: #94a3b8;
     --text-white: #ffffff;
-    
+
     /* Background Colors */
     --bg-primary: #ffffff;
     --bg-secondary: #f8fafc;
     --bg-tertiary: #f1f5f9;
-    
+
     /* Border Colors */
     --border-color: #e2e8f0;
     --border-light: #f1f5f9;
-    
+
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    
+
     /* Border Radius */
     --radius-sm: 0.375rem;
     --radius-md: 0.5rem;
@@ -867,4 +867,72 @@ min-width: 220px;
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--blue-medium);
+}
+
+/* alert dashboard fix */
+
+/* Add this CSS to your existing public/css/modern-compact-ui.css or styles.css */
+
+/* Fade-out animation for alerts */
+.fade-out {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+/* Dashboard alert specific styles */
+.dashboard-alert {
+    /* Ensure dashboard alerts have a subtle persistent styling */
+    border-radius: var(--radius-md, 8px);
+    border-left: 4px solid;
+    animation: slideInAlert 0.3s ease-out;
+    position: relative;
+}
+
+/* Dashboard alerts should not have the auto-fade behavior */
+.dashboard-alert.alert-warning {
+    background: rgba(255, 193, 7, 0.1);
+    color: #755906;
+    border-left-color: #ff6207;
+}
+
+.dashboard-alert.alert-info {
+    background: rgba(13, 202, 240, 0.1);
+    color: #055160;
+    border-left-color: #0dcaf0;
+}
+
+.dashboard-alert.alert-danger {
+    background: rgba(220, 53, 69, 0.1);
+    color: #721c24;
+    border-left-color: #dc3545;
+}
+
+.dashboard-alert.alert-success {
+    background: rgba(25, 135, 84, 0.1);
+    color: #0f5132;
+    border-left-color: #198754;
+}
+
+/* Animation for dashboard alerts appearing */
+@keyframes slideInAlert {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Session-based alerts (those that should fade) */
+.alert:not(.dashboard-alert) {
+    animation: slideInAlert 0.3s ease-out;
+}
+
+/* Show class for session alerts */
+.alert.show {
+    opacity: 1;
+    transform: translateY(0);
 }
