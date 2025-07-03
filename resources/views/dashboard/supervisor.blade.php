@@ -100,28 +100,30 @@ body.modal-open {
             </div>
 
             <!-- Alerts Section -->
-            @if(count($alerts) > 0)
-            <div class="card mb-3">
-                <div class="card-header">
-                    <div class="d-component-title">
-                        <span>Supervisor Alerts</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        @foreach($alerts as $alert)
-                        <div class="col-md-6 mb-2">
-                            <div class="alert alert-{{ $alert['type'] }} mb-0">
-                                <i class="{{ $alert['icon'] }}"></i>
-                                <strong>{{ $alert['count'] }}</strong> - {{ $alert['message'] }}
-                                <small class="d-block mt-1">{{ $alert['action'] }}</small>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
+             @if(count($alerts) > 0)
+<div class="card mb-3">
+    <div class="card-header">
+        <div class="d-component-title">
+            <span>Alerts & Notifications</span>
+
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            @foreach($alerts as $alert)
+            <div class="col-md-6 mb-2">
+
+                <div class="alert alert-{{ $alert['type'] }} dashboard-alert mb-0">
+                    <i class="{{ $alert['icon'] }}"></i>
+                    <strong>{{ $alert['count'] }}</strong> - {{ $alert['message'] }}
+                    <small class="d-block mt-1">{{ $alert['action'] }}</small>
                 </div>
             </div>
-            @endif
+            @endforeach
+        </div>
+    </div>
+</div>
+@endif
 
             <!-- Quick Management Section -->
             <div class="card mb-3">
