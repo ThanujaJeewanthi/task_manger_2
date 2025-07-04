@@ -170,9 +170,7 @@ body.modal-open {
                                         <button class="btn btn-sm btn-outline-warning" onclick="showBulkAssignModal()">
                                             <i class="fas fa-users"></i> Bulk Assign
                                         </button>
-                                        <button class="btn btn-sm btn-outline-warning" onclick="showWorkloadBalance()">
-                                            <i class="fas fa-balance-scale"></i> Balance Workload
-                                        </button>
+
                                     </div>
                                 </div>
                             </div>
@@ -189,9 +187,7 @@ body.modal-open {
                                         <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-success">
                                             <i class="fas fa-list"></i> View Team
                                         </a>
-                                        <button class="btn btn-sm btn-success" onclick="showTeamPerformance()">
-                                            <i class="fas fa-chart-line"></i> Performance
-                                        </button>
+
                                         <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-success">
                                             <i class="fas fa-handshake"></i> Manage Clients
                                         </a>
@@ -336,9 +332,7 @@ body.modal-open {
                                                 <span class="badge bg-{{ $workloadColor }}">{{ $officer->active_jobs_count }}</span>
                                             </td>
                                             <td>
-                                                <button class="btn btn-sm btn-primary" onclick="assignJobToOfficer({{ $officer->id }})">
-                                                    <i class="fas fa-plus"></i>
-                                                </button>
+
                                                 <button class="btn btn-sm btn-info" onclick="viewOfficerJobs({{ $officer->id }})">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
@@ -842,10 +836,7 @@ function toggleSelectAll() {
     checkboxes.forEach(cb => cb.checked = selectAll.checked);
 }
 
-function assignJobToOfficer(officerId) {
-    // Implementation for assigning any available job to specific officer
-    alert(`Assign job to officer ${officerId} - Feature to be implemented`);
-}
+
 
 function viewOfficerJobs(officerId) {
     window.location.href = `/jobs?assigned_user_id=${officerId}`;
@@ -858,20 +849,12 @@ function showAssignmentQueue() {
     }
 }
 
-function showWorkloadBalance() {
-    // Implementation for workload balancing interface
-    alert('Workload Balance - Feature to be implemented');
-}
 
 function showQuickJobModal() {
     // Implementation for quick job creation
     window.location.href = '{{ route("jobs.create") }}';
 }
 
-function showTeamPerformance() {
-    // Implementation for team performance analytics
-    alert('Team Performance Analytics - Feature to be implemented');
-}
 
 function generateJobReport() {
     if (confirm('Generate job report for your jobs?')) {

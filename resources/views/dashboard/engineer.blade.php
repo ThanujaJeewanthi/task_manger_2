@@ -164,9 +164,7 @@
                                         <a href="{{ route('employees.index') }}" class="btn btn-sm bg-card text-light">
                                             <i class="fas fa-list"></i> View Employees
                                         </a>
-                                        <button class="btn btn-sm bg-card text-light" onclick="showEmployeePerformance()">
-                                            <i class="fas fa-chart-line"></i> Performance
-                                        </button>
+
                                     </div>
                                 </div>
                             </div>
@@ -804,10 +802,6 @@ function submitQuickApproval() {
     });
 }
 
-function showEmployeePerformance() {
-    // Implementation for showing detailed employee performance
-    alert('Employee Performance Analytics - Feature to be implemented');
-}
 
 // Auto-refresh dashboard data every 5 minutes
 setInterval(function() {

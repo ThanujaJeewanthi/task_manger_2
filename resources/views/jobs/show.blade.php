@@ -369,7 +369,10 @@
                             </div>
                         @endif
 
-  <!-- Tasks Card -->
+                        {{-- if tasks exist for this job --}}
+@if($job->jobEmployees->count() > 0)
+
+                        <!-- Tasks Card -->
 <div class="d-component-container mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5>Tasks</h5>
@@ -504,6 +507,7 @@
         </table>
     </div>
 </div>
+@endif
                         </div>
 
 

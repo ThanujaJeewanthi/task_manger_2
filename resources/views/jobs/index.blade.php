@@ -151,18 +151,18 @@
                                             <td>{{ $job->due_date ? $job->due_date->format('Y-m-d') : 'N/A' }}</td>
                                                                                         <td>
                                                                                             <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
-                                                                                                <i class="fas fa-eye"></i> View
+                                                                                               </i> View
                                                                                             </a>
                                                                                             {{-- if the job is not completed or closed --}}
                                                                                             @if ($job->status !== 'completed' && $job->status !== 'closed')
                                                                                             <a href="{{ route('jobs.edit', $job) }}" class="btn btn-sm btn-info">
-                                                                                                <i class="fas fa-edit"></i> Edit
+                                                                                              </i> Edit
                                                                                             </a>
                                                                                             <form action="{{ route('jobs.destroy', $job) }}" method="POST" class="d-inline">
                                                                                                 @csrf
                                                                                                 @method('DELETE')
                                                                                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this job?')">
-                                                                                                    <i class="fas fa-trash"></i> Delete
+                                                                                                    </i> Delete
                                                                                                 </button>
                                                                                             </form>
                                                                                             @endif
