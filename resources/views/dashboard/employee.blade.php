@@ -728,10 +728,7 @@ function quickStatusUpdate() {
     showTaskStatusModal();
 }
 
-function showTaskManager() {
-    // Implementation for task management interface
-    alert('Task Manager - Feature to be implemented');
-}
+
 
 function showPendingTasks() {
     // Filter and show only pending tasks
@@ -743,21 +740,13 @@ function showOverdueTasks() {
     filterTasksByStatus('overdue');
 }
 
-function showTimeTracker() {
-    // Implementation for time tracking
-    alert('Time Tracker - Feature to be implemented');
-}
+
 
 function viewMyProfile() {
     window.location.href = '{{ route("profile") }}';
 }
 
-function requestHelp() {
-    // Implementation for help requests
-    if (confirm('Do you need help with a specific task or general assistance?')) {
-        alert('Help request system - Feature to be implemented');
-    }
-}
+
 
 function downloadWorkReport() {
     // Implementation for downloading work reports

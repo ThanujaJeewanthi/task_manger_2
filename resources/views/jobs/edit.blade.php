@@ -86,23 +86,7 @@
                             </div>
 
                             <div class="row">
-                                <!-- Status Field -->
-                                <div class="col-md-4">
-                                    <div class="form-group mb-4">
-                                        <label for="status">Status</label>
-                                        <select class="form-control @error('status') is-invalid @enderror" id="status" name="status" required>
 
-                                            <option value="pending" {{ old('status', $job->status) == 'pending' ? 'selected' : '' }}>Pending</option>
-                                            <option value="in_progress" {{ old('status', $job->status) == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                                            <option value="on_hold" {{ old('status', $job->status) == 'on_hold' ? 'selected' : '' }}>On Hold</option>
-                                            <option value="completed" {{ old('status', $job->status) == 'completed' ? 'selected' : '' }}>Completed</option>
-                                            <option value="cancelled" {{ old('status', $job->status) == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                        </select>
-                                        @error('status')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
 
                                 <!-- Priority Field -->
                                 <div class="col-md-4">
@@ -144,16 +128,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Completed Date Field -->
-                                <div class="col-md-4">
-                                    <div class="form-group mb-4">
-                                        <label for="completed_date">Completed Date</label>
-                                        <input type="date" class="form-control @error('completed_date') is-invalid @enderror" id="completed_date" name="completed_date" value="{{ old('completed_date', $job->completed_date ? $job->completed_date->format('Y-m-d') : '') }}">
-                                        @error('completed_date')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
+
+
                             </div>
 
                             <!-- Current Photos Display -->

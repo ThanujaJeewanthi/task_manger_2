@@ -663,9 +663,7 @@ function addItemsToJob(jobId) {
 }
 
 function requestApproval() {
-    // Implementation for requesting approval
-    alert('Request Approval - Feature to be implemented');
-}
+
 
 function generateWorkReport() {
     // Implementation for generating work reports

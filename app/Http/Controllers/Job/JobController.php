@@ -389,11 +389,11 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
             'equipment_id' => 'nullable|exists:equipments,id',
             'description' => 'nullable|string',
             'references' => 'nullable|string',
-            'status' => 'required|in:pending,in_progress,on_hold,completed,cancelled',
+
             'priority' => 'required|in:1,2,3,4',
             'start_date' => 'nullable|date',
             'due_date' => 'nullable|date|after_or_equal:start_date',
-            'completed_date' => 'nullable|date',
+
             'photos' => 'nullable|array',
             'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
@@ -494,7 +494,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
                 'updated_by' => Auth::id(),
             ]);
         }
-        
+
         // log task creation
         JobActivityLogger::logTaskCreated($job, $task, $request->employee_ids, Auth::id());
 
