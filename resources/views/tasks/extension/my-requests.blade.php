@@ -51,6 +51,7 @@
 
                     <!-- Extension Requests Table -->
                     <div class="table-responsive table-compact">
+
                         <table class="table table-bordered align-middle">
                             <thead>
                                 <tr>

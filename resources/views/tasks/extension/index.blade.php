@@ -2,26 +2,61 @@
 
 @section('content')
 <style>
-    /* Table styles */
-    .table-compact td {
-        padding: 0.5rem;
+    .consistent-ui * {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* Smaller buttons for Approve/Reject */
+    .consistent-ui .btn-action-xs {
+        font-size: 0.68rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        min-height: 24px;
+        line-height: 1.2;
+    }
+
+    /* Larger font for table columns */
+    .consistent-ui .table th,
+    .consistent-ui .table td {
+        font-size: 0.9rem!important;
+        padding: 0.4rem 0.3rem;
         vertical-align: middle;
+        text-align: center;
+    }
+    .consistent-ui .table td.text-left {
+        text-align: left;
     }
 
-    .btn-group-vertical .btn {
-        font-size: 0.8rem;
+    /* Uniform badge size */
+    .consistent-ui .badge {
+        font-size: 0.75rem;
+        font-weight: 500;
+        padding: 0.3rem 0.5rem;
+        border-radius: 0.5rem;
+        min-width: 60px;
+        display: inline-block;
     }
 
-    .fs-6 {
-        font-size: 1rem !important;
+    /* Reduce paddings in forms and cards */
+    .consistent-ui .form-control,
+    .consistent-ui .form-select {
+        font-size: 0.875rem;
+        padding: 0.3rem 0.5rem;
+        border-radius: 0.3rem;
+        min-height: 30px;
     }
-
-    .bg-light tr {
-        background-color: transparent !important;
+    .consistent-ui .form-label {
+        font-size: 0.85rem;
+        margin-bottom: 0.2rem;
     }
-
-    .alert {
-        margin-bottom: 1rem;
+    .consistent-ui .card-header,
+    .consistent-ui .card-body {
+        padding: 0.8rem 1rem;
+    }
+    .consistent-ui .alert {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.8rem;
+        margin-bottom: 0.7rem;
     }
 
     /* Loading button styles */
@@ -29,7 +64,6 @@
         position: relative;
         color: transparent !important;
     }
-
     .btn-loading::after {
         content: "";
         position: absolute;
@@ -40,46 +74,42 @@
         right: 0;
         bottom: 0;
         margin: auto;
-        border: 4px solid transparent;
+        border: 2px solid transparent;
         border-top-color: #ffffff;
         border-radius: 50%;
         animation: button-loading-spinner 1s ease infinite;
     }
-
     @keyframes button-loading-spinner {
-        from {
-            transform: rotate(0turn);
-        }
-        to {
-            transform: rotate(1turn);
-        }
+        from { transform: rotate(0turn);}
+        to { transform: rotate(1turn);}
     }
 </style>
 
-<div class="container-fluid">
+<div class="container-fluid consistent-ui">
     <div class="row">
         <div class="col-md-12">
-            <div class="card table-card mb-3">
+            <div class="card mb-3">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-component-title">
-                            <span>Task Extension Requests</span>
-                            <small class="text-muted">Review and approve employee extension requests</small>
+                        <div>
+                            <span style="font-size:1.125rem;font-weight:600;">Task Extension Requests</span>
+                            <br>
+                            <small class="text-muted" style="font-size:0.875rem;">Review and approve employee extension requests</small>
                         </div>
-                        <a href="{{ route('supervisor.dashboard') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        <a href="{{ route('supervisor.dashboard') }}" class="btn btn-secondary btn-lg">
+                        Back to Dashboard
                         </a>
                     </div>
                 </div>
 
                 <div class="card-body">
                     @if (session('success'))
-                        <div class="alert alert-success mt-3">
+                        <div class="alert alert-success">
                             {{ session('success') }}
                         </div>
                     @endif
                     @if (session('error'))
-                        <div class="alert alert-danger mt-3">
+                        <div class="alert alert-danger">
                             {{ session('error') }}
                         </div>
                     @endif
@@ -89,7 +119,7 @@
                         <div class="row g-3 align-items-end">
                             <div class="col-md-3">
                                 <label for="status" class="form-label">Status</label>
-                                <select name="status" id="status" class="form-control form-control-sm">
+                                <select name="status" id="status" class="form-control">
                                     <option value="">All Statuses</option>
                                     <option value="pending" {{ request('status', 'pending') == 'pending' ? 'selected' : '' }}>Pending</option>
                                     <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
@@ -107,7 +137,7 @@
                                     $pendingCount = $extensionRequests->where('status', 'pending')->count();
                                 @endphp
                                 @if($pendingCount > 0)
-                                    <span class="badge bg-warning fs-6">
+                                    <span class="badge bg-warning">
                                         {{ $pendingCount }} Pending Review{{ $pendingCount > 1 ? 's' : '' }}
                                     </span>
                                 @endif
@@ -116,8 +146,8 @@
                     </form>
 
                     <!-- Extension Requests Table -->
-                    <div class="table-responsive table-compact">
-                        <table class="table table-bordered">
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
                             <thead>
                                 <tr>
                                     <th style="width: 8%;">Job ID</th>
@@ -135,17 +165,17 @@
                                 @forelse ($extensionRequests as $request)
                                     <tr>
                                         <td>
-                                            <a href="{{ route('jobs.show', $request->job) }}" class="text-primary">
+                                            <a href="{{ route('jobs.show', $request->job) }}" class="text-primary fw-bold">
                                                 {{ $request->job->id }}
                                             </a>
                                         </td>
-                                        <td>
+                                        <td class="text-left">
                                             <strong>{{ Str::limit($request->task->task, 30) }}</strong>
                                             @if($request->task->description)
                                                 <br><small class="text-muted">{{ Str::limit($request->task->description, 40) }}</small>
                                             @endif
                                         </td>
-                                        <td>
+                                        <td class="text-left">
                                             <div class="d-flex align-items-center">
                                                 <div>
                                                     <strong>{{ $request->employee->user->name ?? $request->employee->name }}</strong>
@@ -179,14 +209,14 @@
                                         </td>
                                         <td>
                                             @if($request->status === 'pending')
-                                                <div class="btn-group-vertical" role="group">
+                                                <div class="d-flex gap-2">
                                                     <!-- Approval Form -->
                                                     <form method="POST" action="/extension-requests/{{ $request->id }}/approve"
-                                                          onsubmit="return handleApproval(event, this)" class="mb-1">
+                                                          onsubmit="return handleApproval(event, this)">
                                                         @csrf
                                                         <input type="hidden" name="review_notes" id="approve_notes_{{ $request->id }}">
-                                                        <button type="submit" class="btn btn-success btn-sm">
-                                                            <i class="fas fa-check"></i> Approve
+                                                        <button type="submit" class="btn btn-success btn-action-xs w-100">
+                                                          Approve
                                                         </button>
                                                     </form>
 
@@ -195,20 +225,20 @@
                                                           onsubmit="return handleRejection(event, this)">
                                                         @csrf
                                                         <input type="hidden" name="review_notes" id="reject_notes_{{ $request->id }}">
-                                                        <button type="submit" class="btn btn-danger btn-sm">
-                                                            <i class="fas fa-times"></i> Reject
+                                                        <button type="submit" class="btn btn-danger btn-action-xs w-100">
+                                                          Reject
                                                         </button>
                                                     </form>
                                                 </div>
                                             @else
-                                                <a href="{{ route('tasks.extension.show', $request) }}" class="btn btn-info btn-sm">
-                                                    <i class="fas fa-eye"></i> View
+                                                <a href="{{ route('tasks.extension.show', $request) }}" class="btn btn-info btn-action-xs">
+                                                   View
                                                 </a>
                                             @endif
                                         </td>
                                     </tr>
-                                    <tr class="bg-light">
-                                        <td colspan="9">
+                                    <tr style="background-color: #f6f8fa;">
+                                        <td colspan="9" class="text-left">
                                             <div class="row">
                                                 <div class="col-md-8">
                                                     <small>
