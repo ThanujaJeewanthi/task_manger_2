@@ -29,69 +29,8 @@ Usage: @include('components.employee-task-buttons', ['task' => $task, 'jobEmploy
     </div>
 @endif
 
-<!-- Task Start Modal -->
-<div class="modal fade" id="startTaskModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Start Task</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to start this task?</p>
-                <p class="text-muted">Starting this task will mark it as "In Progress" and update the job status if needed.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmStartTask">
-                    <i class="fas fa-play"></i> Start Task
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Task Complete Modal -->
-<div class="modal fade" id="completeTaskModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Complete Task</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="completeTaskForm">
-                <div class="modal-body">
-                    <p>Are you sure you want to mark this task as completed?</p>
-
-                    <div class="form-group">
-                        <label for="completion_notes">Completion Notes (Optional)</label>
-                        <textarea class="form-control" id="completion_notes" name="completion_notes" rows="3"
-                                  placeholder="Add any notes about task completion..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check"></i> Complete Task
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-let currentTaskId = null;
 
-function startTask(taskId) {
-    currentTaskId = taskId;
-    new bootstrap.Modal(document.getElementById('startTaskModal')).show();
-}
-
-function completeTask(taskId) {
-    currentTaskId = taskId;
-    new bootstrap.Modal(document.getElementById('completeTaskModal')).show();
-}
 
 // Start Task Confirmation
 document.getElementById('confirmStartTask').addEventListener('click', function() {

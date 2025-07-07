@@ -281,82 +281,71 @@
     </div>
 </div>
 
-<!-- Approval Modal -->
-<div class="modal fade" id="approvalModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Approve Extension Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('tasks.extension.approve', $extensionRequest) }}">
-                @csrf
-                <div class="modal-body">
-                    <div class="alert alert-success">
-                        <i class="fas fa-check-circle"></i>
-                        <strong>Confirm Approval</strong>
-                        <p class="mb-0">This will extend the task deadline and update the job if necessary.</p>
-                    </div>
-                    <div class="form-group">
-                        <label for="approve_notes">Approval Notes (Optional)</label>
-                        <textarea class="form-control" name="review_notes" rows="3"
-                                  placeholder="Add any notes for the employee..."></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check"></i> Approve Extension
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Rejection Modal -->
-<div class="modal fade" id="rejectionModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Reject Extension Request</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('tasks.extension.reject', $extensionRequest) }}">
-                @csrf
-                <div class="modal-body">
-                    <div class="alert alert-danger">
-                        <i class="fas fa-times-circle"></i>
-                        <strong>Confirm Rejection</strong>
-                        <p class="mb-0">The employee will be notified of the rejection.</p>
-                    </div>
-                    <div class="form-group">
-                        <label for="reject_notes">Rejection Reason <span class="text-danger">*</span></label>
-                        <textarea class="form-control" name="review_notes" rows="3"
-                                  placeholder="Explain why the extension is being rejected..." required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-times"></i> Reject Extension
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
 <script>
 function approveRequest() {
-    const modal = new bootstrap.Modal(document.getElementById('approvalModal'));
-    modal.show();
+    const requestId = '{{ $extensionRequest->id }}';
+
+    ModernModal.confirm({
+        title: 'Approve Extension Request',
+        type: 'form',
+        confirmText: 'Approve Extension',
+        confirmClass: 'btn-success',
+        formFields: [
+            {
+                type: 'textarea',
+                name: 'review_notes',
+                label: 'Approval Notes',
+                placeholder: 'Add any notes about the approval...'
+            }
+        ],
+        onConfirm: async (formData) => {
+            const response = await apiClient.post(`/task-extensions/${requestId}/approve`, formData.data);
+
+            if (response.success) {
+                await ModernModal.success(response.message);
+                TaskManager.refreshPage();
+            } else {
+                throw new Error(response.message || 'Failed to approve extension');
+            }
+
+            return response;
+        }
+    });
 }
 
 function rejectRequest() {
-    const modal = new bootstrap.Modal(document.getElementById('rejectionModal'));
-    modal.show();
+    const requestId = '{{ $extensionRequest->id }}';
+
+    ModernModal.confirm({
+        title: 'Reject Extension Request',
+        type: 'form',
+        confirmText: 'Reject Extension',
+        confirmClass: 'btn-danger',
+        formFields: [
+            {
+                type: 'textarea',
+                name: 'review_notes',
+                label: 'Rejection Reason',
+                placeholder: 'Explain why the extension is being rejected...',
+                required: true
+            }
+        ],
+        onConfirm: async (formData) => {
+            const response = await apiClient.post(`/task-extensions/${requestId}/reject`, formData.data);
+
+            if (response.success) {
+                await ModernModal.success(response.message);
+                TaskManager.refreshPage();
+            } else {
+                throw new Error(response.message || 'Failed to reject extension');
+            }
+
+            return response;
+        }
+    });
 }
 </script>
 

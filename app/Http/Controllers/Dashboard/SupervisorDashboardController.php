@@ -2,19 +2,20 @@
 
 namespace App\Http\Controllers\Dashboard;
 
-use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use App\Models\Job;
+use App\Models\Item;
 use App\Models\Task;
+use App\Models\User;
 use App\Models\Client;
+use App\Models\JobType;
 use App\Models\Employee;
 use App\Models\Equipment;
-use App\Models\Item;
-use App\Models\JobType;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
+use App\Services\JobActivityLogger;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 
 class SupervisorDashboardController extends Controller
 {
@@ -420,5 +421,24 @@ class SupervisorDashboardController extends Controller
             'technical_officers' => $technicalOfficers
         ]);
     }
+
+    public function getAssignmentUsers()
+{
+    $users = User::whereHas('userRole', function($query) {
+        $query->whereIn('name', ['Technical Officer', 'Employee']);
+    })->select('id', 'name', 'user_role_id')
+    ->with('userRole:id,name')
+    ->get()
+    ->map(function($user) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'role' => $user->userRole->name ?? 'Unknown'
+        ];
+    });
+
+    return response()->json(['users' => $users]);
+}
+
 }
 

@@ -645,148 +645,83 @@ body.modal-open {
     </div>
 </div>
 
-<!-- Job Assignment Modal -->
-<div class="modal fade " id="assignJobModal" tabindex="-1" style="z-index: 1250;">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Assign Job to Technical Officer</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="assignJobForm">
-                    <input type="hidden" id="assignJobId" name="job_id">
-                    <div class="mb-3">
-                        <label for="assignedUserId" class="form-label">Technical Officer</label>
-                        <select class="form-control" id="assignedUserId" name="assigned_user_id" required>
-                            <option value="">Select Technical Officer</option>
-                            @foreach($technicalOfficers as $officer)
-                            <option value="{{ $officer->id }}" data-workload="{{ $officer->active_jobs_count }}">
-                                {{ $officer->name }} ({{ $officer->active_jobs_count }} active jobs)
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="jobPriority" class="form-label">Priority</label>
-                        <select class="form-control" id="jobPriority" name="priority" required>
-                            <option value="1">High</option>
-                            <option value="2" selected>Medium</option>
-                            <option value="3">Low</option>
-                            <option value="4">Very Low</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="jobDueDate" class="form-label">Due Date</label>
-                        <input type="date" class="form-control" id="jobDueDate" name="due_date" min="{{ date('Y-m-d', strtotime('+1 day')) }}">
-                    </div>
-                    <div class="mb-3">
-                        <label for="assignmentNotes" class="form-label">Assignment Notes</label>
-                        <textarea class="form-control" id="assignmentNotes" name="assignment_notes" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitJobAssignment()">Assign Job</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Bulk Assignment Modal -->
-<div class="modal fade" id="bulkAssignModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Bulk Assign Jobs</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="bulkAssignForm">
-                    <div class="mb-3">
-                        <label for="bulkAssignedUserId" class="form-label">Technical Officer</label>
-                        <select class="form-control" id="bulkAssignedUserId" name="assigned_user_id" required>
-                            <option value="">Select Technical Officer</option>
-                            @foreach($technicalOfficers as $officer)
-                            <option value="{{ $officer->id }}">
-                                {{ $officer->name }} ({{ $officer->active_jobs_count }} active jobs)
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="bulkJobPriority" class="form-label">Priority for All Jobs</label>
-                        <select class="form-control" id="bulkJobPriority" name="priority" required>
-                            <option value="1">High</option>
-                            <option value="2" selected>Medium</option>
-                            <option value="3">Low</option>
-                            <option value="4">Very Low</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <p class="text-muted">
-                            <span id="selectedJobsCount">0</span> job(s) selected for bulk assignment
-                        </p>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitBulkAssignment()">Assign Selected Jobs</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
-function showAssignModal(jobId) {
-    document.getElementById('assignJobId').value = jobId;
-    new bootstrap.Modal(document.getElementById('assignJobModal')).show();
+
+
+// Modern Job Assignment using new modal system
+async function assignJob(jobId) {
+    try {
+        // Get available users for assignment
+        const response = await apiClient.get('/supervisor/assignment-users');
+        const users = response.users.map(user => ({
+            value: user.id,
+            text: `${user.name} (${user.role})`
+        }));
+
+        await TaskManager.assignJob(jobId, { users });
+    } catch (error) {
+        TaskManager.showError('Failed to load assignment options: ' + error.message);
+    }
 }
 
-function showBulkAssignModal() {
+function bulkAssignJobs() {
     const selectedJobs = getSelectedJobs();
     if (selectedJobs.length === 0) {
-        alert('Please select at least one job for bulk assignment.');
+        TaskManager.showError('Please select at least one job for bulk assignment.');
         return;
     }
-    document.getElementById('selectedJobsCount').textContent = selectedJobs.length;
-    new bootstrap.Modal(document.getElementById('bulkAssignModal')).show();
-}
 
-function submitJobAssignment() {
-    const form = document.getElementById('assignJobForm');
-    const formData = new FormData(form);
-    const jobId = formData.get('job_id');
+    ModernModal.confirm({
+        title: 'Bulk Job Assignment',
+        message: `Assign ${selectedJobs.length} selected jobs?`,
+        type: 'form',
+        confirmText: 'Assign All',
+        formFields: [
+            {
+                type: 'select',
+                name: 'assigned_user_id',
+                label: 'Assign To',
+                required: true,
+                options: [] // Will be populated dynamically
+            },
+            {
+                type: 'select',
+                name: 'priority',
+                label: 'Priority for All Jobs',
+                required: true,
+                value: '2',
+                options: [
+                    { value: '1', text: 'High' },
+                    { value: '2', text: 'Medium' },
+                    { value: '3', text: 'Low' },
+                    { value: '4', text: 'Very Low' }
+                ]
+            }
+        ],
+        onConfirm: async (formData) => {
+            const response = await apiClient.post('/supervisor/jobs/bulk-assign', {
+                ...formData.data,
+                job_ids: selectedJobs
+            });
 
-    fetch(`/supervisor/jobs/${jobId}/assign`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            assigned_user_id: formData.get('assigned_user_id'),
-            priority: formData.get('priority'),
-            due_date: formData.get('due_date'),
-            assignment_notes: formData.get('assignment_notes')
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('assignJobModal')).hide();
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            alert('Error assigning job: ' + data.message);
+            if (response.success) {
+                await ModernModal.success(response.message);
+                TaskManager.refreshPage();
+            } else {
+                throw new Error(response.message || 'Failed to assign jobs');
+            }
+
+            return response;
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error assigning job');
     });
 }
+
+function getSelectedJobs() {
+    const checkboxes = document.querySelectorAll('input[name="selected_jobs[]"]:checked');
+    return Array.from(checkboxes).map(cb => cb.value);
+}
+
 
 function submitBulkAssignment() {
     const selectedJobs = getSelectedJobs();

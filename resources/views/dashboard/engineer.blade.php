@@ -536,7 +536,7 @@
                 </div>
 
                 <!-- Employee Performance -->
-                <div class="col-md-4">
+                {{-- <div class="col-md-4">
                     <div class="card mb-3">
                         <div class="card-header">
                             <div class="d-component-title">
@@ -574,7 +574,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> --}}
             </div>
 
             <!-- Active Tasks and Upcoming Deadlines -->
@@ -684,37 +684,6 @@
     </div>
 </div>
 
-<!-- Quick Approval Modal -->
-<div class="modal fade" id="quickApprovalModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Quick Job Approval</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="quickApprovalForm">
-                    <input type="hidden" id="approvalJobId" name="job_id">
-                    <div class="mb-3">
-                        <label for="approvalAction" class="form-label">Action</label>
-                        <select class="form-control" id="approvalAction" name="action" required>
-                            <option value="approve">Approve</option>
-                            <option value="reject">Reject</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="approvalNotes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="approvalNotes" name="approval_notes" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitQuickApproval()">Submit</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 
 
@@ -766,41 +735,30 @@ function quickReject(jobId) {
     new bootstrap.Modal(document.getElementById('quickApprovalModal')).show();
 }
 
-function showQuickApprovalModal() {
-    // Show modal with all pending approvals for quick processing
-    new bootstrap.Modal(document.getElementById('quickApprovalModal')).show();
+// Modern Approval Management using new modal system
+function approveJob(jobId) {
+    TaskManager.approveJob(jobId);
 }
 
-function submitQuickApproval() {
-    const form = document.getElementById('quickApprovalForm');
-    const formData = new FormData(form);
-    const jobId = formData.get('job_id');
+function addTask(jobId) {
+    // Navigate to add task page with proper job context
+    window.location.href = `/jobs/${jobId}/tasks/create`;
+}
 
-    fetch(`/engineer/jobs/${jobId}/approve`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            action: formData.get('action'),
-            approval_notes: formData.get('approval_notes')
+function assignEmployee(taskId) {
+    // Navigate to assign employee page
+    window.location.href = `/tasks/${taskId}/assign`;
+}
+
+// Auto-refresh dashboard data every 5 minutes
+setInterval(function() {
+    fetch('/engineer/dashboard/quick-stats')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Dashboard stats updated:', data);
         })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('quickApprovalModal')).hide();
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            alert('Error processing approval: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error processing approval');
-    });
-}
+        .catch(error => console.log('Auto-refresh failed:', error));
+}, 300000); // 5 minutes
 
 
 // Auto-refresh dashboard data every 5 minutes

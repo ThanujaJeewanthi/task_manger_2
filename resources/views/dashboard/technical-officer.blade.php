@@ -286,14 +286,7 @@
                                         <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        @if($job->status != 'completed')
-                                        <button class="btn btn-sm btn-success" onclick="updateJobStatusModal({{ $job->id }})">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-warning" onclick="addItemsToJob({{ $job->id }})">
-                                            <i class="fas fa-box"></i>
-                                        </button>
-                                        @endif
+
                                     </td>
                                 </tr>
                                 @empty
@@ -490,123 +483,30 @@
     </div>
 </div>
 
-<!-- Job Status Update Modal -->
-<div class="modal fade" id="jobStatusModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Update Job Status</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="jobStatusForm">
-                    <input type="hidden" id="jobId" name="job_id">
-                    <div class="mb-3">
-                        <label for="jobStatus" class="form-label">Status</label>
-                        <select class="form-control" id="jobStatus" name="status" required>
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="on_hold">On Hold</option>
-                            <option value="completed">Completed</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="jobNotes" class="form-label">Notes</label>
-                        <textarea class="form-control" id="jobNotes" name="notes" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitJobStatus()">Update Status</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Complete Job Modal -->
-<div class="modal fade" id="completeJobModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Complete Job</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="completeJobForm">
-                    <input type="hidden" id="completeJobId" name="job_id">
-                    <div class="mb-3">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="isMinorIssue" name="is_minor_issue">
-                            <label class="form-check-label" for="isMinorIssue">
-                                This is a minor issue (complete without items/approval)
-                            </label>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label for="completionNotes" class="form-label">Completion Notes</label>
-                        <textarea class="form-control" id="completionNotes" name="completion_notes" rows="3"
-                                  placeholder="Describe what was completed or the issue resolved..."></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-success" onclick="submitCompleteJob()">Complete Job</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
-function updateJobStatusModal(jobId) {
-    document.getElementById('jobId').value = jobId;
-    new bootstrap.Modal(document.getElementById('jobStatusModal')).show();
-}
+// Modern Job Management using new modal system
 
-function completeJobModal() {
-    // Show modal to select a job to complete
+
+function completeJob(jobId) {
     const activeJobs = {!! json_encode($myAssignedJobs->where('status', '!=', 'completed')->pluck('id', 'id')) !!};
     if (Object.keys(activeJobs).length === 0) {
-        alert('No active jobs to complete.');
+        TaskManager.showError('No active jobs to complete.');
         return;
     }
-
-    // For simplicity, we'll show the modal. In a real implementation,
-    // you might want to show a dropdown to select the job first
-    new bootstrap.Modal(document.getElementById('completeJobModal')).show();
+    TaskManager.completeJob(jobId);
 }
 
-function submitJobStatus() {
-    const form = document.getElementById('jobStatusForm');
-    const formData = new FormData(form);
-    const jobId = formData.get('job_id');
-
-    fetch(`/technicalofficer/jobs/${jobId}/status`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            status: formData.get('status'),
-            notes: formData.get('notes')
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('jobStatusModal')).hide();
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            alert('Error updating job status: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error updating job status');
-    });
+function addJobItems() {
+    const activeJobs = {!! json_encode($myAssignedJobs->where('status', '!=', 'completed')->pluck('id')) !!};
+    if (activeJobs.length === 0) {
+        TaskManager.showError('No active jobs to add items to.');
+        return;
+    }
+    // Navigate to add items page
+    window.location.href = '/job-items/create';
 }
+
 
 function submitCompleteJob() {
     const form = document.getElementById('completeJobForm');
@@ -639,10 +539,7 @@ function submitCompleteJob() {
     });
 }
 
-function updateJobStatus() {
-    // Show job selection for status update
-    alert('Select a job from "My Assigned Jobs" table and click the edit button to update its status.');
-}
+
 
 function addJobItems() {
     // Navigate to add items page
