@@ -22,55 +22,50 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row g-3">
                         <!-- Overview Cards -->
-                        <div class="col-md-2">
-                            <div class="card bg-card text-white mb-3">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_jobs'] }}</h5>
                                     <small>Total Jobs</small>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-md-2">
-                            <div class="card bg-card text-white mb-3">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['jobs_pending_approval'] }}</h5>
                                     <small>Pending Approval</small>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-md-2">
-                            <div class="card bg-card text-white mb-3">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['jobs_approved_by_me'] }}</h5>
                                     <small>Approved by Me</small>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-md-2">
-                            <div class="card bg-card text-white mb-3">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_employees'] }}</h5>
                                     <small>Employees</small>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-md-2">
-                            <div class="card bg-card text-white mb-3">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_equipment'] }}</h5>
                                     <small>Equipment</small>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-md-2">
-                            <div class="card bg-card text-white mb-3">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['maintenance_equipment'] }}</h5>
                                     <small>Maintenance</small>
@@ -114,10 +109,10 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row g-3">
                         <!-- Job Approval -->
-                        <div class="col-md-3">
-                            <div class="card mb-3">
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="card h-100">
                                 <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Job Approvals</h6>
                                 </div>
@@ -135,8 +130,8 @@
                         </div>
 
                         <!-- Task Management -->
-                        <div class="col-md-3">
-                            <div class="card mb-3">
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="card h-100">
                                 <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-tasks"></i> Task Management</h6>
                                 </div>
@@ -154,8 +149,8 @@
                         </div>
 
                         <!-- Employee Management -->
-                        <div class="col-md-3">
-                            <div class="card mb-3">
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="card h-100">
                                 <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-users"></i> Employee Management</h6>
                                 </div>
@@ -164,15 +159,14 @@
                                         <a href="{{ route('employees.index') }}" class="btn btn-sm bg-card text-light">
                                             <i class="fas fa-list"></i> View Employees
                                         </a>
-
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Equipment Management -->
-                        <div class="col-md-3">
-                            <div class="card ">
+                        <div class="col-12 col-sm-6 col-lg-3">
+                            <div class="card h-100">
                                 <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-tools"></i> Equipment Management</h6>
                                 </div>
@@ -181,7 +175,7 @@
                                         <a href="{{ route('equipments.index') }}" class="btn btn-sm bg-card text-light">
                                             <i class="fas fa-list"></i> All Equipment
                                         </a>
-                                        <a href="{{ route('equipments.index', ['status' => 'maintenance']) }}" class="btn btn-sm  bg-card  text-light">
+                                        <a href="{{ route('equipments.index', ['status' => 'maintenance']) }}" class="btn btn-sm bg-card text-light">
                                             <i class="fas fa-wrench"></i> Maintenance ({{ $stats['maintenance_equipment'] }})
                                         </a>
                                     </div>
