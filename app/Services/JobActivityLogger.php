@@ -318,7 +318,7 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => true,
-            'description' => "Updated task '{$task->task}'" . ($notes ? " - {$notes}" : ''),
+            'description' => "Updated task '{$task->task}'" . ($notes ? " - " . (is_array($notes) ? json_encode($notes) : $notes) : ''),
             'old_values' => [
                 'task_name' => $task->getOriginal('task'),
                 'task_description' => $task->getOriginal('description'),

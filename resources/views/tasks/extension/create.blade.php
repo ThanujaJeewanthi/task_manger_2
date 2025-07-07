@@ -159,17 +159,28 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+// SweetAlert2 consistent UI defaults
+const swalDefaults = {
+    customClass: {
+        popup: 'swal2-consistent-ui',
+        confirmButton: 'btn btn-success btn-action-xs',
+        cancelButton: 'btn btn-secondary btn-action-xs',
+        denyButton: 'btn btn-danger btn-action-xs',
+        input: 'form-control',
+        title: '',
+        htmlContainer: '',
+    },
+    buttonsStyling: false,
+    background: '#fff',
+    width: 420,
+    showClass: { popup: 'swal2-show' },
+    hideClass: { popup: 'swal2-hide' },
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+};
+
 $(document).ready(function() {
     const currentEndDate = new Date('{{ $jobEmployee->end_date ? $jobEmployee->end_date->format("Y-m-d") : "" }}');
     let daysDifference = 0;
-
-    // Set SweetAlert2 to match Bootstrap font size
-    const swalCustomClasses = {
-        popup: 'swal2-bootstrap-font',
-        title: 'swal2-bootstrap-title',
-        confirmButton: 'swal2-bootstrap-btn',
-        cancelButton: 'swal2-bootstrap-btn'
-    };
 
     $('#requested_end_date').change(function() {
         const requestedDate = new Date($(this).val());
@@ -195,90 +206,80 @@ $(document).ready(function() {
 
         if (!requestedDateVal) {
             Swal.fire({
-                title: 'Missing Date',
-                text: 'Please select a new end date.',
+                ...swalDefaults,
                 icon: 'warning',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'OK',
-                customClass: swalCustomClasses
+                title: '<span style="font-size:1.05rem;font-weight:600;">Missing Date</span>',
+                html: '<div style="font-size:0.95rem;">Please select a new end date.</div>',
+                confirmButtonText: 'OK'
             });
             return false;
         }
 
         if (requestedDate <= currentEndDate) {
             Swal.fire({
-                title: 'Invalid Date',
-                text: 'New end date must be after the current end date.',
+                ...swalDefaults,
                 icon: 'error',
-                confirmButtonColor: '#d33',
-                confirmButtonText: 'Got it',
-                customClass: swalCustomClasses
+                title: '<span style="font-size:1.05rem;font-weight:600;">Invalid Date</span>',
+                html: '<div style="font-size:0.95rem;">New end date must be after the current end date.</div>',
+                confirmButtonText: 'Got it'
             });
             return false;
         }
 
         if (reason.length < 10) {
             Swal.fire({
-                title: 'Validation Error',
-                text: 'Please provide a more detailed reason (at least 10 characters).',
+                ...swalDefaults,
                 icon: 'warning',
-                customClass: swalCustomClasses
+                title: '<span style="font-size:1.05rem;font-weight:600;">Validation Error</span>',
+                html: '<div style="font-size:0.95rem;">Please provide a more detailed reason (at least 10 characters).</div>',
+                confirmButtonText: 'OK'
             });
             return false;
         }
 
         Swal.fire({
-            title: 'Confirm Extension',
-            text: `Are you sure you want to request a ${daysDifference} day extension? This will require approval from your supervisor.`,
+            ...swalDefaults,
             icon: 'question',
+            title: '<span style="font-size:1.05rem;font-weight:600;">Confirm Extension</span>',
+            html: `<div style="font-size:0.95rem;">Are you sure you want to request a <b>${daysDifference} day${daysDifference === 1 ? '' : 's'}</b> extension?<br>This will require approval from your supervisor.</div>`,
             showCancelButton: true,
             confirmButtonText: 'Yes, submit',
-            cancelButtonText: 'Cancel',
-            customClass: swalCustomClasses
+            cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
                 $('#extension-request-form')[0].submit();
             }
         });
     });
+
+    // Fade out alerts after a few seconds
+    $('.alert').each(function() {
+        setTimeout(() => {
+            $(this).fadeTo(500, 0).slideUp(500, function() {
+                $(this).remove();
+            });
+        }, 5000);
+    });
 });
 </script>
 
 <style>
-/* Match Bootstrap font and button sizes for SweetAlert2 popups */
-.swal2-bootstrap-font {
+.swal2-consistent-ui {
     font-size: 1rem !important;
-    font-family: inherit !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
     padding: 1.1rem 1.1rem !important;
 }
-.swal2-bootstrap-title {
-    font-size: 1.25rem !important;
-    font-weight: 500 !important;
-}
-.swal2-bootstrap-btn {
-    font-size: 1rem !important;
-    padding: 0.5rem 1.25rem !important;
+.btn-action-xs {
+    font-size: 0.98rem !important;
+    padding: 0.45rem 1.1rem !important;
     border-radius: 0.25rem !important;
 }
-
-.btn-lg, .swal2-bootstrap-btn.swal2-confirm, .swal2-bootstrap-btn.swal2-cancel {
-    padding: 0.65rem 1.2rem;
-    font-size: 1.1rem;
+.swal2-consistent-ui .swal2-title {
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
 }
-
-.card-title {
-    margin-bottom: 1rem;
-    color: #495057;
-}
-
-.alert-info {
-    background-color: #e3f2fd;
-    border-color: #1976d2;
-    color: #1565c0;
-}
-
-.form-text {
-    font-size: 0.875rem;
+.swal2-consistent-ui .swal2-html-container {
+    font-size: 0.98rem !important;
 }
 </style>
 @endsection

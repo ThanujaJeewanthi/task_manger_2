@@ -287,76 +287,98 @@
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-// Handle approval with confirmation
+const swalDefaults = {
+    customClass: {
+        popup: 'swal2-consistent-ui',
+        confirmButton: 'btn btn-success btn-action-xs',
+        cancelButton: 'btn btn-secondary btn-action-xs',
+        denyButton: 'btn btn-danger btn-action-xs',
+        input: 'form-control',
+        title: '',
+        htmlContainer: '',
+    },
+    buttonsStyling: false,
+    background: '#fff',
+    width: 420,
+    showClass: { popup: 'swal2-show' },
+    hideClass: { popup: 'swal2-hide' },
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+};
+
+// Approval handler
 function handleApproval(event, form) {
     event.preventDefault();
-
     const requestId = form.action.split('/').slice(-2, -1)[0];
     const submitBtn = form.querySelector('button[type="submit"]');
 
-    // Show confirmation with optional notes
-    const confirmed = confirm('Are you sure you want to approve this extension request?\n\nThis will update the task deadline and potentially the job deadline.');
-
-    if (confirmed) {
-        // Optional: Ask for approval notes
-        const notes = prompt('Add approval notes (optional):');
-
-        if (notes !== null) { // User didn't cancel
-            document.getElementById(`approve_notes_${requestId}`).value = notes || '';
-
-            // Add loading state
+    Swal.fire({
+        ...swalDefaults,
+        icon: 'question',
+        title: '<span style="font-size:1.05rem;font-weight:600;">Approve Extension Request?</span>',
+        html: `<div style="font-size:0.92rem;">This will update the task deadline and potentially the job deadline.<br><br>
+            <label for="swal-approve-notes" style="font-size:0.85rem;font-weight:500;">Approval Notes (optional):</label>
+            <textarea id="swal-approve-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: 'Approve',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        preConfirm: () => {
+            return document.getElementById('swal-approve-notes').value;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(`approve_notes_${requestId}`).value = result.value || '';
             submitBtn.classList.add('btn-loading');
             submitBtn.disabled = true;
-
-            // Submit the form
             form.submit();
         }
-    }
+    });
 
     return false;
 }
 
-// Handle rejection with required reason
+// Rejection handler
 function handleRejection(event, form) {
     event.preventDefault();
-
     const requestId = form.action.split('/').slice(-2, -1)[0];
     const submitBtn = form.querySelector('button[type="submit"]');
 
-    // Show confirmation
-    const confirmed = confirm('Are you sure you want to reject this extension request?\n\nThe employee will be notified of the rejection.');
-
-    if (confirmed) {
-        // Require rejection reason
-        let reason = '';
-        while (reason.trim().length < 10) {
-            reason = prompt('Please provide a detailed reason for rejection (minimum 10 characters):');
-
-            if (reason === null) { // User canceled
+    Swal.fire({
+        ...swalDefaults,
+        icon: 'warning',
+        title: '<span style="font-size:1.05rem;font-weight:600;">Reject Extension Request?</span>',
+        html: `<div style="font-size:0.92rem;">The employee will be notified of the rejection.<br><br>
+            <label for="swal-reject-notes" style="font-size:0.85rem;font-weight:500;">Rejection Reason <span class="text-danger">*</span></label>
+            <textarea id="swal-reject-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Please provide a detailed reason (min 10 characters)"></textarea>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: 'Reject',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        preConfirm: () => {
+            const reason = document.getElementById('swal-reject-notes').value;
+            if (!reason || reason.trim().length < 10) {
+                Swal.showValidationMessage('Please provide a more detailed reason (at least 10 characters).');
                 return false;
             }
-
-            if (reason.trim().length < 10) {
-                alert('Please provide a more detailed reason (at least 10 characters).');
-            }
+            return reason;
         }
-
-        document.getElementById(`reject_notes_${requestId}`).value = reason;
-
-        // Add loading state
-        submitBtn.classList.add('btn-loading');
-        submitBtn.disabled = true;
-
-        // Submit the form
-        form.submit();
-    }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(`reject_notes_${requestId}`).value = result.value;
+            submitBtn.classList.add('btn-loading');
+            submitBtn.disabled = true;
+            form.submit();
+        }
+    });
 
     return false;
 }
 
-// Show success/error messages for a few seconds
+// Fade out alerts after a few seconds
 document.addEventListener('DOMContentLoaded', function() {
     const alerts = document.querySelectorAll('.alert');
     alerts.forEach(function(alert) {
@@ -366,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 alert.remove();
             }, 500);
-        }, 5000); // Hide after 5 seconds
+        }, 5000);
     });
 });
 
@@ -375,4 +397,5 @@ function confirmBulkAction(action, count) {
     return confirm(`Are you sure you want to ${action} ${count} selected request${count > 1 ? 's' : ''}?`);
 }
 </script>
+
 @endsection

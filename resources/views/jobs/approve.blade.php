@@ -309,7 +309,26 @@
 </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+const swalDefaults = {
+    customClass: {
+        popup: 'swal2-consistent-ui',
+        confirmButton: 'btn btn-success btn-action-xs',
+        cancelButton: 'btn btn-secondary btn-action-xs',
+        denyButton: 'btn btn-danger btn-action-xs',
+        input: 'form-control',
+        title: '',
+        htmlContainer: '',
+    },
+    buttonsStyling: false,
+    background: '#fff',
+    width: 420,
+    showClass: { popup: 'swal2-show' },
+    hideClass: { popup: 'swal2-hide' },
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+};
+
 $(document).ready(function() {
     let additionalItemIndex = 1;
     let newItemIndex = 1;
@@ -380,28 +399,79 @@ $(document).ready(function() {
         $(this).closest('.row').remove();
     });
 
-    // Confirmation for approval/rejection
-    $('#approval-form').submit(function(e) {
-        const action = $('button[type="submit"]:focus').val() || $('input[name="action"]:checked').val();
-
-        if (action === 'approve') {
-            if (!confirm('Are you sure you want to approve this job? You will be redirected to add tasks.')) {
-                e.preventDefault();
-                return false;
-            }
-        } else if (action === 'reject') {
-            if (!confirm('Are you sure you want to reject this job? This action cannot be undone easily.')) {
-                e.preventDefault();
-                return false;
-            }
-        }
-    });
-
     // Store which button was clicked
     $('button[type="submit"]').click(function() {
         $('input[name="action"]').remove();
         $(this).after('<input type="hidden" name="action" value="' + $(this).val() + '">');
     });
+
+    // SweetAlert2 confirmation for approval/rejection
+    $('#approval-form').on('submit', function(e) {
+        const $form = $(this);
+        const action = $('input[name="action"]').val();
+
+        if (action === 'approve') {
+            e.preventDefault();
+            Swal.fire({
+                ...swalDefaults,
+                icon: 'question',
+                title: '<span style="font-size:1.05rem;font-weight:600;">Approve Job?</span>',
+                html: `<div style="font-size:0.92rem;">Are you sure you want to approve this job? You will be redirected to add tasks.<br><br>
+                    <label for="swal-approve-notes" style="font-size:0.85rem;font-weight:500;">Approval Notes (optional):</label>
+                    <textarea id="swal-approve-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes...">${$('[name="approval_notes"]').val() || ''}</textarea>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Approve',
+                cancelButtonText: 'Cancel',
+                focusConfirm: false,
+                preConfirm: () => {
+                    return document.getElementById('swal-approve-notes').value;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('[name="approval_notes"]').val(result.value || '');
+                    $form.off('submit').submit();
+                }
+            });
+            return false;
+        } else if (action === 'reject') {
+            e.preventDefault();
+            Swal.fire({
+                ...swalDefaults,
+                icon: 'warning',
+                title: '<span style="font-size:1.05rem;font-weight:600;">Reject Job?</span>',
+                html: `<div style="font-size:0.92rem;">Are you sure you want to reject this job? This action cannot be undone easily.<br><br>
+                    <label for="swal-reject-notes" style="font-size:0.85rem;font-weight:500;">Rejection Reason <span class="text-danger">*</span></label>
+                    <textarea id="swal-reject-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Please provide a detailed reason (min 10 characters)">${$('[name="approval_notes"]').val() || ''}</textarea>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Reject',
+                cancelButtonText: 'Cancel',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const reason = document.getElementById('swal-reject-notes').value;
+                    if (!reason || reason.trim().length < 10) {
+                        Swal.showValidationMessage('Please provide a more detailed reason (at least 10 characters).');
+                        return false;
+                    }
+                    return reason;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('[name="approval_notes"]').val(result.value);
+                    $form.off('submit').submit();
+                }
+            });
+            return false;
+        }
+    });
+
+    // Fade out alerts after a few seconds
+    setTimeout(function() {
+        $('.alert').fadeTo(500, 0).slideUp(500, function(){
+            $(this).remove();
+        });
+    }, 5000);
 });
 </script>
 
