@@ -40,10 +40,10 @@ body.modal-open {
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <!-- Overview Cards -->
-                        <div class="col-md-2">
-                            <div class="card bg-primary text-white mb-3">
+                    <div class="row g-3">
+                         <!-- Overview Cards -->
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_jobs'] }}</h5>
                                     <small>Total Jobs</small>
@@ -51,7 +51,7 @@ body.modal-open {
                             </div>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
                             <div class="card bg-success text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['jobs_created_by_me'] }}</h5>
@@ -133,10 +133,10 @@ body.modal-open {
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
                         <!-- Job Creation & Assignment -->
-                        <div class="col-md-3">
-                            <div class="card border-primary">
+                        <div class="col d-flex">
+                            <div class="card border-primary flex-fill h-100">
                                 <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0"><i class="fas fa-briefcase"></i> Job Management</h6>
                                 </div>
@@ -157,8 +157,8 @@ body.modal-open {
                         </div>
 
                         <!-- Assignment Management -->
-                        <div class="col-md-3">
-                            <div class="card border-warning">
+                        <div class="col d-flex">
+                            <div class="card border-warning flex-fill h-100">
                                 <div class="card-header bg-warning text-white">
                                     <h6 class="mb-0"><i class="fas fa-user-tag"></i> Job Assignment</h6>
                                 </div>
@@ -170,15 +170,14 @@ body.modal-open {
                                         <button class="btn btn-sm btn-outline-warning" onclick="showBulkAssignModal()">
                                             <i class="fas fa-users"></i> Bulk Assign
                                         </button>
-
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Team Management -->
-                        <div class="col-md-3">
-                            <div class="card border-success">
+                        <div class="col d-flex">
+                            <div class="card border-success flex-fill h-100">
                                 <div class="card-header bg-success text-white">
                                     <h6 class="mb-0"><i class="fas fa-users"></i> Team Management</h6>
                                 </div>
@@ -187,7 +186,6 @@ body.modal-open {
                                         <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-success">
                                             <i class="fas fa-list"></i> View Team
                                         </a>
-
                                         <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-success">
                                             <i class="fas fa-handshake"></i> Manage Clients
                                         </a>
@@ -197,8 +195,8 @@ body.modal-open {
                         </div>
 
                         <!-- Reports & Analytics -->
-                        <div class="col-md-3">
-                            <div class="card border-info">
+                        <div class="col d-flex">
+                            <div class="card border-info flex-fill h-100">
                                 <div class="card-header bg-info text-white">
                                     <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Reports & Analytics</h6>
                                 </div>
