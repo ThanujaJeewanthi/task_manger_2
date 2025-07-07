@@ -4,6 +4,16 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
+             {{-- error or success message --}}
+                @if(session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
+                    </div>
+                @elseif(session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                @endif
             <!-- Header Section -->
             <div class="card mb-3">
                 <div class="card-header">
@@ -342,7 +352,7 @@
                                         <button class="btn btn-sm btn-primary" onclick="viewJobDetails({{ $job->id }})">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                       
+
                                     </td>
                                 </tr>
                                 @empty
@@ -357,9 +367,11 @@
             </div>
 
             <!-- My Active Tasks -->
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card mb-3">
+            <div class="row align-items-stretch">
+
+
+                <div class="col-md-8 d-flex flex-column">
+                    <div class="card mb-3 flex-fill h-100">
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>My Active Tasks</span>
@@ -455,37 +467,37 @@
                                                 @endforeach
                                             </td> --}}
                                             <td>
-    @foreach($task->jobEmployees as $assignment)
-        @if($assignment->employee_id == $employee->id)
-            <!-- Task Action Buttons for Employees -->
-            @if($task->status === 'pending')
-                <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Are you sure you want to start this task?')">
-                        <i class="fas fa-play"></i> Start
-                    </button>
-                </form>
-            @elseif($task->status === 'in_progress')
-               <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to complete this task?')">
-                        <i class="fas fa-check"></i> Complete
-                    </button>
-                </form>
-                <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
-                    <i class="fas fa-clock"></i>
-                </a>
-            @elseif($task->status === 'completed')
-                <span class="badge bg-success">
-                    <i class="fas fa-check-circle"></i> Done
-                </span>
-            @else
-                <span class="badge bg-secondary">{{ ucfirst($task->status) }}</span>
-            @endif
-            @break
-        @endif
-    @endforeach
-</td>
+            @foreach($task->jobEmployees as $assignment)
+                @if($assignment->employee_id == $employee->id)
+                    <!-- Task Action Buttons for Employees -->
+                    @if($task->status === 'pending')
+                        <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Are you sure you want to start this task?')">
+                                <i class="fas fa-play"></i> Start
+                            </button>
+                        </form>
+                    @elseif($task->status === 'in_progress')
+                       <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to complete this task?')">
+                                <i class="fas fa-check"></i> Complete
+                            </button>
+                        </form>
+                        <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
+                            <i class="fas fa-clock"></i>
+                        </a>
+                    @elseif($task->status === 'completed')
+                        <span class="badge bg-success">
+                            <i class="fas fa-check-circle"></i> Done
+                        </span>
+                    @else
+                        <span class="badge bg-secondary">{{ ucfirst($task->status) }}</span>
+                    @endif
+                    @break
+                @endif
+            @endforeach
+            </td>
                                         </tr>
                                         @empty
                                         <tr>
@@ -500,8 +512,8 @@
                 </div>
 
                 <!-- Recent Completed Tasks -->
-                <div class="col-md-4">
-                    <div class="card mb-3">
+                <div class="col-md-4 d-flex flex-column">
+                    <div class="card mb-3 flex-fill h-100">
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>Recently Completed</span>
