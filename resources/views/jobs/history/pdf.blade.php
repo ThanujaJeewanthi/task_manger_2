@@ -813,8 +813,8 @@
                                 <div class="changes-header">Changes Made</div>
                                 <div class="changes-content">
                                     @php
-                                        $oldValues = json_decode($activity->old_values, true) ?? [];
-                                        $newValues = json_decode($activity->new_values, true) ?? [];
+                                       $oldValues = is_string($activity->old_values) ? json_decode($activity->old_values, true) ?? [] : ($activity->old_values ?? []);
+$newValues = is_string($activity->new_values) ? json_decode($activity->new_values, true) ?? [] : ($activity->new_values ?? []);
                                         $allKeys = array_unique(array_merge(array_keys($oldValues), array_keys($newValues)));
                                     @endphp
 

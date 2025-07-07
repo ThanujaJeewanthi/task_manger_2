@@ -25,6 +25,7 @@
                             <a href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" class="btn btn-success">
                                 <i class="fas fa-download"></i> Export PDF
                             </a>
+                          
                         </div>
                     </div>
                 </div>

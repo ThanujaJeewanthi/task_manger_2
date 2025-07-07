@@ -702,4 +702,7 @@ class JobHistoryController extends Controller
 
         return implode(' | ', $formatted);
     }
+
+
+   
 }
