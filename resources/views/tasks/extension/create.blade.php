@@ -178,6 +178,28 @@ $(document).ready(function() {
         }
     });
 
+    function showCustomAlert(type, message) {
+        // Remove any previous alert
+        $('.custom-alert').remove();
+        // Bootstrap alert classes
+        let alertClass = 'alert-info';
+        if (type === 'error') alertClass = 'alert-danger';
+        if (type === 'warning') alertClass = 'alert-warning';
+        if (type === 'success') alertClass = 'alert-success';
+
+        const alertHtml = `
+            <div class="alert ${alertClass} custom-alert d-flex align-items-center mt-3" role="alert" style="z-index:9999;">
+                <i class="fas fa-info-circle me-2"></i>
+                <div>${message}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+        // Insert alert at the top of the form
+        $('#extension-request-form').prepend(alertHtml);
+        // Auto-dismiss after 4 seconds
+        setTimeout(() => { $('.custom-alert').fadeOut(400, function() { $(this).remove(); }); }, 4000);
+    }
+
     $('#extension-request-form').submit(function(e) {
         e.preventDefault();
 
@@ -186,32 +208,51 @@ $(document).ready(function() {
         const reason = $('#reason').val().trim();
 
         if (!requestedDateVal) {
-            Swal.fire('Validation Error', 'Please select a new end date.', 'warning');
+            showCustomAlert('warning', 'Please select a new end date.');
             return false;
         }
 
         if (requestedDate <= currentEndDate) {
-            Swal.fire('Validation Error', 'New end date must be after the current end date.', 'error');
+            showCustomAlert('error', 'New end date must be after the current end date.');
             return false;
         }
 
         if (reason.length < 10) {
-            Swal.fire('Validation Error', 'Please provide a more detailed reason (at least 10 characters).', 'warning');
+            showCustomAlert('warning', 'Please provide a more detailed reason (at least 10 characters).');
             return false;
         }
 
-        Swal.fire({
-            title: 'Confirm Extension',
-            text: `Are you sure you want to request a ${daysDifference} day extension? This will require approval from your supervisor.`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Yes, submit',
-            cancelButtonText: 'Cancel'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $('#extension-request-form')[0].submit();
-            }
+        // Confirmation using Bootstrap modal style
+        if ($('#customConfirmModal').length) $('#customConfirmModal').remove();
+        const confirmModal = `
+            <div class="modal fade" id="customConfirmModal" tabindex="-1" aria-labelledby="customConfirmModalLabel" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="customConfirmModalLabel"><i class="fas fa-question-circle"></i> Confirm Extension</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    Are you sure you want to request a <strong>${daysDifference} day</strong> extension? This will require approval from your supervisor.
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirmExtensionBtn">Yes, submit</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+        `;
+        $('body').append(confirmModal);
+        const modal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
+        modal.show();
+
+        $('#confirmExtensionBtn').off('click').on('click', function() {
+            modal.hide();
+            $('#extension-request-form')[0].submit();
         });
+
+        return false;
     });
 });
 </script>
@@ -235,6 +276,14 @@ $(document).ready(function() {
 
 .form-text {
     font-size: 0.875rem;
+}
+
+/* Custom alert styling */
+.custom-alert {
+    position: relative;
+    border-radius: 0.4rem;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 </style>
 @endsection

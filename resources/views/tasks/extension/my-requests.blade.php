@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('content')
@@ -52,7 +51,7 @@
 
                     <!-- Extension Requests Table -->
                     <div class="table-responsive table-compact">
-                        <table class="table table-bordered">
+                        <table class="table table-bordered align-middle">
                             <thead>
                                 <tr>
                                     <th style="width: 10%;">Job ID</th>
@@ -69,40 +68,42 @@
                                 @forelse ($extensionRequests as $request)
                                     <tr>
                                         <td>
-                                            <a href="{{ route('jobs.show', $request->job) }}" class="text-primary">
+                                            <a href="{{ route('jobs.show', $request->job) }}" class="text-primary text-decoration-none">
                                                 {{ $request->job->id }}
                                             </a>
                                         </td>
                                         <td>
-                                            <strong>{{ Str::limit($request->task->task, 40) }}</strong>
+                                            <span class="fw-semibold">{{ Str::limit($request->task->task, 40) }}</span>
                                             @if($request->task->description)
-                                                <br><small class="text-muted">{{ Str::limit($request->task->description, 50) }}</small>
+                                                <br>
+                                                <span class="text-muted">{{ Str::limit($request->task->description, 50) }}</span>
                                             @endif
                                         </td>
                                         <td>
-                                            <span class="badge bg-secondary">
+                                            <span class="badge bg-secondary fw-normal">
                                                 {{ $request->current_end_date->format('Y-m-d') }}
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-primary">
+                                            <span class="badge bg-primary fw-normal">
                                                 {{ $request->requested_end_date->format('Y-m-d') }}
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">
+                                            <span class="badge bg-info fw-normal">
                                                 {{ $request->extension_days }} {{ $request->extension_days == 1 ? 'day' : 'days' }}
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $request->status_badge }}">
+                                            <span class="badge bg-{{ $request->status_badge }} fw-normal">
                                                 {{ ucfirst($request->status) }}
                                             </span>
                                         </td>
                                         <td>
                                             @if($request->reviewedBy)
-                                                {{ $request->reviewedBy->name }}
-                                                <br><small class="text-muted">{{ $request->reviewed_at->format('M d, Y') }}</small>
+                                                <span>{{ $request->reviewedBy->name }}</span>
+                                                <br>
+                                                <span class="text-muted">{{ $request->reviewed_at->format('M d, Y') }}</span>
                                             @else
                                                 <span class="text-muted">Pending</span>
                                             @endif
@@ -112,7 +113,7 @@
                                     @if($request->reason)
                                         <tr class="bg-light">
                                             <td colspan="8">
-                                                <small>
+                                                <span>
                                                     <strong>Reason:</strong> {{ $request->reason }}
                                                     @if($request->review_notes)
                                                         <br><strong>Review Notes:</strong>
@@ -120,7 +121,7 @@
                                                             {{ $request->review_notes }}
                                                         </span>
                                                     @endif
-                                                </small>
+                                                </span>
                                             </td>
                                         </tr>
                                     @endif
@@ -153,7 +154,7 @@
                                 <div class="row text-center">
                                     <div class="col-md-3">
                                         <div class="stat-item">
-                                            <span class="badge bg-warning fs-6">
+                                            <span class="badge bg-warning">
                                                 {{ $extensionRequests->where('status', 'pending')->count() }}
                                             </span>
                                             <small class="d-block text-muted">Pending</small>
@@ -161,7 +162,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="stat-item">
-                                            <span class="badge bg-success fs-6">
+                                            <span class="badge bg-success">
                                                 {{ $extensionRequests->where('status', 'approved')->count() }}
                                             </span>
                                             <small class="d-block text-muted">Approved</small>
@@ -169,7 +170,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="stat-item">
-                                            <span class="badge bg-danger fs-6">
+                                            <span class="badge bg-danger">
                                                 {{ $extensionRequests->where('status', 'rejected')->count() }}
                                             </span>
                                             <small class="d-block text-muted">Rejected</small>
@@ -177,7 +178,7 @@
                                     </div>
                                     <div class="col-md-3">
                                         <div class="stat-item">
-                                            <span class="badge bg-primary fs-6">
+                                            <span class="badge bg-primary">
                                                 {{ $extensionRequests->count() }}
                                             </span>
                                             <small class="d-block text-muted">Total</small>
@@ -204,23 +205,26 @@
 </div>
 
 <style>
-.table-compact td {
-    padding: 0.5rem;
+.table-compact td, .table-compact th {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.75rem;
     vertical-align: middle;
 }
-
+.table-compact .fw-semibold {
+    font-weight: 500;
+    font-size: 0.7rem;
+}
+.table-compact .text-muted {
+    font-size: 0.7rem;
+}
+.badge {
+    font-size: 0.7rem;
+    font-weight: 400;
+    padding: 0.45em 0.7em;
+}
 .stat-item {
     padding: 0.5rem;
 }
-
-.fs-6 {
-    font-size: 1rem !important;
-}
-
-.badge {
-    font-size: 0.85rem;
-}
-
 .bg-light tr {
     background-color: transparent !important;
 }

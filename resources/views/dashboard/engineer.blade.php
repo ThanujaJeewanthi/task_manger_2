@@ -117,7 +117,7 @@
                     <div class="row">
                         <!-- Job Approval -->
                         <div class="col-md-3">
-                            <div class="card ">
+                            <div class="card mb-3">
                                 <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Job Approvals</h6>
                                 </div>
@@ -136,7 +136,7 @@
 
                         <!-- Task Management -->
                         <div class="col-md-3">
-                            <div class="card ">
+                            <div class="card mb-3">
                                 <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-tasks"></i> Task Management</h6>
                                 </div>
@@ -155,7 +155,7 @@
 
                         <!-- Employee Management -->
                         <div class="col-md-3">
-                            <div class="card ">
+                            <div class="card mb-3">
                                 <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-users"></i> Employee Management</h6>
                                 </div>
@@ -192,45 +192,46 @@
                 </div>
             </div>
 
-            <div class="row">
+            <!-- Job Status Overview and Equipment Status Row - FIXED LAYOUT -->
+            <div class="row g-0 mb-3">
                 <!-- Job Status Overview -->
-                <div class="col-md-8">
-                    <div class="card  mb-3">
+                <div class="col-12 col-lg-8 pe-lg-2">
+                    <div class="card h-100">
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>Job Status Overview</span>
                             </div>
                         </div>
-                        <div class="card-body ">
-                            <div class="row mb-3">
-                                <div class="col-md-3 mb-2 px-2">
-                                    <div class="card bg-card">
-                                        <div class="card-body text-center">
-                                            <h4 class="text-warning text-light">{{ $jobStats['pending_jobs'] }}</h4>
+                        <div class="card-body">
+                            <div class="row g-2 mb-3">
+                                <div class="col-6 col-md-3">
+                                    <div class="card bg-card h-100">
+                                        <div class="card-body text-center p-2">
+                                            <h4 class="text-warning text-light mb-1">{{ $jobStats['pending_jobs'] }}</h4>
                                             <small class="text-light">Pending Jobs</small>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 mb-2 px-2">
-                                    <div class="card bg-card">
-                                        <div class="card-body text-center">
-                                            <h4 class="text-primary text-light">{{ $jobStats['in_progress_jobs'] }}</h4>
+                                <div class="col-6 col-md-3">
+                                    <div class="card bg-card h-100">
+                                        <div class="card-body text-center p-2">
+                                            <h4 class="text-primary text-light mb-1">{{ $jobStats['in_progress_jobs'] }}</h4>
                                             <small class="text-light">In Progress</small>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 mb-2 px-2">
-                                    <div class="card bg-card">
-                                        <div class="card-body text-center">
-                                            <h4 class="text-success text-light">{{ $jobStats['completed_jobs'] }}</h4>
+                                <div class="col-6 col-md-3">
+                                    <div class="card bg-card h-100">
+                                        <div class="card-body text-center p-2">
+                                            <h4 class="text-success text-light mb-1">{{ $jobStats['completed_jobs'] }}</h4>
                                             <small class="text-light">Completed</small>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-3 mb-2 px-2">
-                                    <div class="card bg-card">
-                                        <div class="card-body text-center">
-                                            <h4 class="text-danger text-light">{{ $jobStats['overdue_jobs'] }}</h4>
+                                <div class="col-6 col-md-3">
+                                    <div class="card bg-card h-100">
+                                        <div class="card-body text-center p-2">
+                                            <h4 class="text-danger text-light mb-1">{{ $jobStats['overdue_jobs'] }}</h4>
                                             <small class="text-light">Overdue</small>
                                         </div>
                                     </div>
@@ -240,15 +241,15 @@
                             <!-- Jobs by Priority -->
                             <div class="mb-3">
                                 <h6>Priority Distribution</h6>
-                                <div class="row">
+                                <div class="row g-2">
                                     @foreach($jobsByPriority as $priority => $count)
-                                    <div class="col-md-3">
+                                    <div class="col-6 col-md-3">
                                         @php
                                             $priorityColors = ['High' => 'danger', 'Medium' => 'warning', 'Low' => 'info', 'Very Low' => 'secondary'];
                                         @endphp
-                                        <div class="card bg-card  ">
-                                            <div class="card-body text-center">
-                                                <h5 class="text-light">{{ $count }}</h5>
+                                        <div class="card bg-card h-100">
+                                            <div class="card-body text-center p-2">
+                                                <h5 class="text-light mb-1">{{ $count }}</h5>
                                                 <small class="text-light">{{ $priority }} Priority</small>
                                             </div>
                                         </div>
@@ -258,22 +259,22 @@
                             </div>
 
                             <!-- Task Statistics -->
-                            <div class="row">
-                                <div class="col-md-4">
+                            <div class="row g-2">
+                                <div class="col-4">
                                     <div class="text-center">
-                                        <h5 class="text-warning">{{ $taskStats['pending_tasks'] }}</h5>
+                                        <h5 class="text-warning mb-1">{{ $taskStats['pending_tasks'] }}</h5>
                                         <small>Pending Tasks</small>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-4">
                                     <div class="text-center">
-                                        <h5 class="text-primary">{{ $taskStats['in_progress_tasks'] }}</h5>
+                                        <h5 class="text-primary mb-1">{{ $taskStats['in_progress_tasks'] }}</h5>
                                         <small>In Progress Tasks</small>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-4">
                                     <div class="text-center">
-                                        <h5 class="text-success">{{ $taskStats['completed_tasks'] }}</h5>
+                                        <h5 class="text-success mb-1">{{ $taskStats['completed_tasks'] }}</h5>
                                         <small>Completed Tasks</small>
                                     </div>
                                 </div>
@@ -283,8 +284,8 @@
                 </div>
 
                 <!-- Equipment Status -->
-                <div class="col-md-4">
-                    <div class="card mb-3">
+                <div class="col-12 col-lg-4 ps-lg-2 mt-3 mt-lg-0">
+                    <div class="card h-100">
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>Equipment Status</span>
@@ -379,83 +380,79 @@
             @endif
 
             @if($jobsAwaitingReview->count() > 0)
-<div class="row mb-4">
-    <div class="col-md-12">
-        <div class="card mb-3">
-            <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div class="d-component-title">
-                        <span>
-                            <i class="fas fa-check-double text-info"></i>
-                            Completed Jobs Awaiting Review
-                            <span class="badge bg-info">{{ $jobsAwaitingReview->count() }}</span>
-                        </span>
-                    </div>
-                    <a href="{{ route('jobs.index', ['status' => 'completed']) }}" class="btn btn-sm btn-outline-info">
-                        View All Completed Jobs
-                    </a>
-                </div>
+<div class="card mb-3">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="d-component-title">
+                <span>
+                    <i class="fas fa-check-double text-info"></i>
+                    Completed Jobs Awaiting Review
+                    <span class="badge bg-info">{{ $jobsAwaitingReview->count() }}</span>
+                </span>
             </div>
-            <div class="card-body">
-                <div class="table-responsive table-compact">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Job ID</th>
-                                <th>Job Type</th>
-                                <th>Client</th>
-                                <th>Completed Date</th>
-                                <th>Priority</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($jobsAwaitingReview as $job)
-                            <tr>
-                                <td>
-                                    <a href="{{ route('jobs.show', $job) }}" class="text-decoration-none">
-                                        #{{ $job->id }}
-                                    </a>
-                                </td>
-                                <td>
-                                    <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
-                                        {{ $job->jobType->name }}
-                                    </span>
-                                </td>
-                                <td>{{ $job->client->name ?? 'N/A' }}</td>
-                                <td>{{ $job->completed_date ? $job->completed_date->format('M d, Y') : 'N/A' }}</td>
-                                <td>
-                                    @php
-                                        $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
-                                        $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
-                                    @endphp
-                                    <span class="badge bg-{{ $priorityColors[$job->priority] }}">
-                                        {{ $priorityLabels[$job->priority] }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary" title="View Job">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('jobs.review', $job) }}" class="btn btn-sm btn-success" title="Review & Close">
-                                        <i class="fas fa-clipboard-check"></i> Review
-                                    </a>
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+            <a href="{{ route('jobs.index', ['status' => 'completed']) }}" class="btn btn-sm btn-outline-info">
+                View All Completed Jobs
+            </a>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive table-compact">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Job ID</th>
+                        <th>Job Type</th>
+                        <th>Client</th>
+                        <th>Completed Date</th>
+                        <th>Priority</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($jobsAwaitingReview as $job)
+                    <tr>
+                        <td>
+                            <a href="{{ route('jobs.show', $job) }}" class="text-decoration-none">
+                                #{{ $job->id }}
+                            </a>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
+                                {{ $job->jobType->name }}
+                            </span>
+                        </td>
+                        <td>{{ $job->client->name ?? 'N/A' }}</td>
+                        <td>{{ $job->completed_date ? $job->completed_date->format('M d, Y') : 'N/A' }}</td>
+                        <td>
+                            @php
+                                $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
+                                $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
+                            @endphp
+                            <span class="badge bg-{{ $priorityColors[$job->priority] }}">
+                                {{ $priorityLabels[$job->priority] }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary" title="View Job">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{{ route('jobs.review', $job) }}" class="btn btn-sm btn-success" title="Review & Close">
+                                <i class="fas fa-clipboard-check"></i> Review
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 @endif
 
-            <!-- Recent Jobs and Employee Performance -->
-            <div class="row">
-                <div class="col-md-8">
-                    <div class="card mb-3">
+            <!-- Recent Jobs and Active Tasks/Upcoming Deadlines Row - FIXED LAYOUT -->
+            <div class="row g-0 mb-3">
+                <div class="col-12 col-xl-8 pe-xl-2">
+                    <div class="card h-100">
                         <div class="card-header">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-component-title">
@@ -535,159 +532,206 @@
                     </div>
                 </div>
 
-                <!-- Employee Performance -->
-                {{-- <div class="col-md-4">
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Employee Performance</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-compact">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Employee</th>
-                                            <th>Completed</th>
-                                            <th>Active</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($employeePerformance as $employee)
-                                        <tr>
-                                            <td>{{ $employee->name }}</td>
-                                            <td>
-                                                <span class="badge bg-success">{{ $employee->completed_tasks_this_month }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-primary">{{ $employee->total_active_tasks }}</span>
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            <td colspan="3" class="text-center">No employees found</td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div> --}}
-            </div>
+                <!-- Active Tasks and Upcoming Deadlines Combined Column -->
+                <div class="col-12 col-xl-4 ps-xl-2 mt-3 mt-xl-0">
+                    <div class="row g-0 h-100">
 
-            <!-- Active Tasks and Upcoming Deadlines -->
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Active Tasks</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-compact">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Task</th>
-                                            <th>Job</th>
-                                            <th>Assigned To</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($activeTasks as $task)
-                                        <tr>
-                                            <td>{{ Str::limit($task->task, 30) }}</td>
-                                            <td>{{ $task->job->id }}</td>
-                                            <td>
-                                                @foreach($task->jobEmployees as $assignment)
-                                                <small class="badge bg-info">{{ $assignment->employee->name ?? 'N/A' }}</small>
-                                                @endforeach
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
-                                                    {{ ucfirst(str_replace('_', ' ', $task->status)) }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center">No active tasks</td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Upcoming Deadlines -->
-                <div class="col-md-6">
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Upcoming Deadlines (Next 7 Days)</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-compact">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Job #</th>
-                                            <th>Client</th>
-                                            <th>Due Date</th>
-                                            <th>Priority</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($upcomingDeadlines as $job)
-                                        <tr>
-                                            <td>
-                                                <a href="{{ route('jobs.show', $job) }}">{{ $job->id }}</a>
-                                            </td>
-                                            <td>{{ $job->client->name ?? 'N/A' }}</td>
-                                            <td>
-                                                @php
-                                                    $daysUntilDue = \Carbon\Carbon::now()->diffInDays($job->due_date);
-                                                    $textClass = $daysUntilDue <= 1 ? 'text-danger' : ($daysUntilDue <= 3 ? 'text-warning' : 'text-primary');
+                        <!-- Upcoming Deadlines -->
+                        <div class="col-12">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <div class="d-component-title">
+                                        <span>Upcoming Deadlines (Next 7 Days)</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive table-compact">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Job #</th>
+                                                    <th>Client</th>
+                                                    <th>Due Date</th>
+                                                    <th>Priority</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($upcomingDeadlines as $job)
+                                                <tr>
+                                                    <td>
+                                                        <a href="{{ route('jobs.show', $job) }}">{{ $job->id }}</a>
+                                                    </td>
+                                                    <td>{{ $job->client->name ?? 'N/A' }}</td>
+                                                    <td>
+                                                        @php
+                                                            $daysUntilDue = \Carbon\Carbon::now()->diffInDays($job->due_date);
+                                                            $textClass = $daysUntilDue <= 1 ? 'text-danger' : ($daysUntilDue <= 3 ? 'text-warning' : 'text-primary');
+                                                        @endphp
+                                                        <span class="{{ $textClass }}">{{ $job->due_date->format('M d') }}</span>
+                                                    </td>
+                                                    <td>
+                                                         @php
+                                                    $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
+                                                    $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
                                                 @endphp
-                                                <span class="{{ $textClass }}">{{ $job->due_date->format('M d') }}</span>
-                                            </td>
-                                            <td>
-                                                 @php
-                                            $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
-                                            $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
-                                        @endphp
-                                                <span class="badge bg-{{ $priorityColors[$job->priority] }}">
-                                                    {{ $priorityLabels[$job->priority] }}
-                                                </span>
-                                            </td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center">No upcoming deadlines</td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
+                                                        <span class="badge bg-{{ $priorityColors[$job->priority] }}">
+                                                            {{ $priorityLabels[$job->priority] }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center">No upcoming deadlines</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+     <!-- Active Tasks -->
+        <div class="row g-0 mb-3">
+                        <div class="col-12 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <div class="d-component-title">
+                                        <span>Active Tasks</span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive table-compact">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Task</th>
+                                                    <th>Job</th>
+                                                    <th>Assigned To</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @forelse($activeTasks as $task)
+                                                <tr>
+                                                    <td>{{ Str::limit($task->task, 30) }}</td>
+                                                    <td>{{ $task->job->id }}</td>
+                                                    <td>
+                                                        @foreach($task->jobEmployees as $assignment)
+                                                        <small class="badge bg-info">{{ $assignment->employee->name ?? 'N/A' }}</small>
+                                                        @endforeach
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
+                                                            {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                @empty
+                                                <tr>
+                                                    <td colspan="4" class="text-center">No active tasks</td>
+                                                </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+   </div>
         </div>
     </div>
 </div>
 
+<style>
+/* Custom CSS for gapless card layout */
+.row.g-0 {
+    --bs-gutter-x: 0;
+    --bs-gutter-y: 0;
+}
 
+.row.g-2 {
+    --bs-gutter-x: 0.5rem;
+    --bs-gutter-y: 0.5rem;
+}
 
+/* Ensure equal height for cards in the same row */
+.h-100 {
+    height: 100% !important;
+}
 
-    <script>
+/* Responsive spacing adjustments */
+.pe-lg-2 {
+    padding-right: 0.5rem !important;
+}
+
+.ps-lg-2 {
+    padding-left: 0.5rem !important;
+}
+
+.pe-xl-2 {
+    padding-right: 0.5rem !important;
+}
+
+.ps-xl-2 {
+    padding-left: 0.5rem !important;
+}
+
+@media (max-width: 991.98px) {
+    .pe-lg-2 {
+        padding-right: 0 !important;
+    }
+
+    .ps-lg-2 {
+        padding-left: 0 !important;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .pe-xl-2 {
+        padding-right: 0 !important;
+    }
+
+    .ps-xl-2 {
+        padding-left: 0 !important;
+    }
+}
+
+/* Compact card body for small cards */
+.card-body.p-2 {
+    padding: 0.5rem !important;
+}
+
+/* Ensure tables fill the card properly */
+.table-responsive {
+    margin-bottom: 0;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 576px) {
+    .card-body {
+        padding: 0.75rem !important;
+    }
+
+    .table-sm th,
+    .table-sm td {
+        padding: 0.25rem !important;
+        font-size: 0.75rem !important;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.75rem !important;
+    }
+}
+</style>
+
+<script>
 function updateNotificationCounts() {
     fetch('/api/engineer/notification-counts')
         .then(response => response.json())
