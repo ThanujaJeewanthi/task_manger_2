@@ -67,6 +67,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/supervisor/dashboard', [SupervisorDashboardController::class, 'index'])
         ->name('supervisor.dashboard')
         ->middleware('role.permission:1.7');
+
+    Route::get('/supervisor/assignment-users', [SupervisorDashboardController::class, 'getAssignmentUsers'])
+    ->name('supervisor.assignment-users')
+    ->middleware('role.permission:1.7');
+
+
 });
 
 // API routes for dashboard functionality

@@ -342,11 +342,7 @@
                                         <button class="btn btn-sm btn-primary" onclick="viewJobDetails({{ $job->id }})">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        @if($job->status != 'completed')
-                                        <button class="btn btn-sm btn-success" onclick="updateJobStatus({{ $job->id }})">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        @endif
+                                       
                                     </td>
                                 </tr>
                                 @empty
@@ -704,11 +700,6 @@ function viewTaskDetails(taskId) {
     alert('Task details view - to be implemented');
 }
 
-function updateJobStatus(jobId) {
-    // Implementation for updating job status
-    alert('Job status update - to be implemented');
-}
-
 function markTaskComplete() {
     const activeTasks = document.querySelectorAll('#task-row-[id] .btn-success');
     if (activeTasks.length === 0) {
@@ -795,44 +786,33 @@ function showTaskStatusModal() {
 }
 
 
-// Task Management Functions
-let currentTaskId = null;
-let currentTaskName = '';
-
+// Modern Task Management using new modal system
 function startTask(taskId, taskName) {
-    currentTaskId = taskId;
-    currentTaskName = taskName;
-
-    if (confirm(`Are you sure you want to start the task: "${taskName}"?\n\nThis will mark it as "In Progress".`)) {
-        fetch(`/tasks/${taskId}/start`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('success', data.message);
-                setTimeout(() => location.reload(), 1500);
-            } else {
-                showAlert('error', data.message || 'Failed to start task');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'Failed to start task');
-        });
-    }
+    TaskManager.startTask(taskId, taskName);
 }
 
 function completeTask(taskId, taskName) {
-    currentTaskId = taskId;
-    currentTaskName = taskName;
+    TaskManager.completeTask(taskId, taskName);
+}
 
-    // Show completion modal
-    showCompleteTaskModal();
+function requestExtension(taskId, currentDeadline) {
+    TaskManager.requestExtension(taskId, currentDeadline);
+}
+
+function filterTasks(status) {
+    const rows = document.querySelectorAll('#tasksTable tbody tr');
+    rows.forEach(row => {
+        if (status === 'all') {
+            row.style.display = '';
+        } else {
+            const statusBadge = row.querySelector('.badge');
+            if (statusBadge && statusBadge.textContent.toLowerCase().includes(status)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
 }
 
 function showCompleteTaskModal() {
