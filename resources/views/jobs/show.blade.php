@@ -459,16 +459,96 @@
                                     @if($task->status === 'pending')
                                         <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
                                             @csrf
-                                            <button type="submit" class="btn btn-primary btn-sm" onclick="return confirm('Are you sure you want to start this task?')">
+                                            <button type="button" class="btn btn-primary btn-sm"
+                                                onclick="showStartTaskSwal(this)">
                                                 <i class="fas fa-play"></i> Start
                                             </button>
+                                            <script>
+                                            function showStartTaskSwal(btn) {
+                                                const swalDefaults = {
+                                                    customClass: {
+                                                        popup: 'swal2-consistent-ui',
+                                                        confirmButton: 'btn btn-success btn-action-xs',
+                                                        cancelButton: 'btn btn-secondary btn-action-xs',
+                                                        denyButton: 'btn btn-danger btn-action-xs',
+                                                        input: 'form-control',
+                                                        title: '',
+                                                        htmlContainer: '',
+                                                    },
+                                                    buttonsStyling: false,
+                                                    background: '#fff',
+                                                    width: 420,
+                                                    showClass: { popup: 'swal2-show' },
+                                                    hideClass: { popup: 'swal2-hide' },
+                                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                                                };
+                                                Swal.fire({
+                                                    ...swalDefaults,
+                                                    icon: 'question',
+                                                    title: '<span style="font-size:1.05rem;font-weight:600;">Start this task?</span>',
+                                                    html: `<div style="font-size:0.92rem;">Are you sure you want to start this task?</div>`,
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Start',
+                                                    cancelButtonText: 'Cancel',
+                                                    focusConfirm: false,
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        // Find the parent form and submit
+                                                        let form = btn.closest('form');
+                                                        if(form) {
+                                                            btn.disabled = true;
+                                                            form.submit();
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            </script>
                                         </form>
                                     @elseif($task->status === 'in_progress')
                                         <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
                                             @csrf
-                                            <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Are you sure you want to complete this task?')">
+                                            <button type="button" class="btn btn-success btn-sm" onclick="showCompleteTaskSwal(this)">
                                                 <i class="fas fa-check"></i> Complete
                                             </button>
+                                            <script>
+                                            function showCompleteTaskSwal(btn) {
+                                                const swalDefaults = {
+                                                    customClass: {
+                                                        popup: 'swal2-consistent-ui',
+                                                        confirmButton: 'btn btn-success btn-action-xs',
+                                                        cancelButton: 'btn btn-secondary btn-action-xs',
+                                                        denyButton: 'btn btn-danger btn-action-xs',
+                                                        input: 'form-control',
+                                                        title: '',
+                                                        htmlContainer: '',
+                                                    },
+                                                    buttonsStyling: false,
+                                                    background: '#fff',
+                                                    width: 420,
+                                                    showClass: { popup: 'swal2-show' },
+                                                    hideClass: { popup: 'swal2-hide' },
+                                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                                                };
+                                                Swal.fire({
+                                                    ...swalDefaults,
+                                                    icon: 'question',
+                                                    title: '<span style="font-size:1.05rem;font-weight:600;">Complete this task?</span>',
+                                                    html: `<div style="font-size:0.92rem;">Are you sure you want to complete this task?</div>`,
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Complete',
+                                                    cancelButtonText: 'Cancel',
+                                                    focusConfirm: false,
+                                                }).then((result) => {
+                                                    if (result.isConfirmed) {
+                                                        let form = btn.closest('form');
+                                                        if(form) {
+                                                            btn.disabled = true;
+                                                            form.submit();
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            </script>
                                         </form>
                                         <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
                                             <i class="fas fa-clock"></i>
