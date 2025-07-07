@@ -397,7 +397,7 @@ Route::middleware(['auth'])->group(function () {
 
     // View own extension requests
     Route::get('/my-extension-requests', [TaskExtensionController::class, 'myRequests'])
-        ->name('tasks.extension.my-requests')
+        ->name(name: 'tasks.extension.my-requests')
         ->middleware('role.permission:12.2');
 });
 

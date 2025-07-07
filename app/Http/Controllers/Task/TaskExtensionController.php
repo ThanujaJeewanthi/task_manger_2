@@ -9,7 +9,6 @@ use App\Models\Employee;
 use App\Models\JobEmployee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-
 use App\Services\JobActivityLogger;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -93,83 +92,107 @@ class TaskExtensionController extends Controller
             return redirect()->back()->with('error', 'You already have a pending extension request for this task.');
         }
 
-        // $job= $task->job;
-
-        return view('tasks.extension.create', compact('task', 'jobEmployee', 'employee','job'));
+        return view('tasks.extension.create', compact('task', 'jobEmployee', 'employee', 'job'));
     }
 
     /**
-     * Store task extension request
+     * Store task extension request (THIS IS THE METHOD THAT HANDLES THE FORM SUBMISSION)
      */
     public function requestTaskExtension(Request $request, Task $task)
     {
-       $request->validate([
-          'requested_end_date' => 'required|date|after:today',
-          'reason' => 'required|string|max:1000',
-          'justification' => 'nullable|string|max:1000',
-       ]);
+        // Validate the request
+        $request->validate([
+            'requested_end_date' => 'required|date|after:today',
+            'reason' => 'required|string|max:1000',
+            'justification' => 'nullable|string|max:1000',
+        ]);
 
-       try {
-          DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-          $job = Job::findOrFail($task->job_id);
-          $employee = Employee::where('user_id', Auth::id())->first();
+            $job = Job::findOrFail($task->job_id);
+            $employee = Employee::where('user_id', Auth::id())->first();
 
-          if (!$employee) {
-             throw new \Exception('Employee record not found.');
-          }
+            if (!$employee) {
+                throw new \Exception('Employee record not found.');
+            }
 
-          // Get current end date
-          $jobEmployee = JobEmployee::where('task_id', $task->id)
-             ->where('employee_id', $employee->id)
-             ->first();
+            // Get current end date
+            $jobEmployee = JobEmployee::where('task_id', $task->id)
+                ->where('employee_id', $employee->id)
+                ->first();
 
-          if (!$jobEmployee) {
-             throw new \Exception('Task assignment not found.');
-          }
+            if (!$jobEmployee) {
+                throw new \Exception('Task assignment not found.');
+            }
 
-          $currentEndDate = $jobEmployee->end_date;
-          $requestedEndDate = $request->requested_end_date;
-          $extensionDays = Carbon::parse((string)$requestedEndDate)->diffInDays(Carbon::parse((string)$currentEndDate));
+            // Check for duplicate request again (to prevent race conditions)
+            $existingRequest = TaskExtensionRequest::where('task_id', $task->id)
+                ->where('employee_id', $employee->id)
+                ->where('status', 'pending')
+                ->first();
 
-          // Create extension request
-          TaskExtensionRequest::create([
-             'job_id' => $job->id,
-             'task_id' => $task->id,
-             'employee_id' => $employee->id,
-             'requested_by' => Auth::id(),
-             'current_end_date' => $currentEndDate,
-             'requested_end_date' => $requestedEndDate,
-             'extension_days' => $extensionDays,
-             'reason' => $request->reason,
-             'justification' => $request->justification,
-             'status' => 'pending',
-             'created_by' => Auth::id(),
-             'updated_by' => Auth::id(),
-          ]);
+            if ($existingRequest) {
+                DB::rollBack();
+                return redirect()->route('tasks.extension.create', $task)
+                    ->with('error', 'You already have a pending extension request for this task.');
+            }
 
-  
-          // Log extension request
-          JobActivityLogger::logTaskExtensionRequested(
-             $job,
-             $task,
-             $employee,
-             $currentEndDate,
-             $requestedEndDate,
-             $request->reason
-          );
-          DB::commit();
+            $currentEndDate = $jobEmployee->end_date;
+            $requestedEndDate = $request->requested_end_date;
 
-          return redirect()->back()
-             ->with('success', 'Extension request submitted successfully!');
+            // Calculate extension days correctly
+            $extensionDays = Carbon::parse($requestedEndDate)->diffInDays(Carbon::parse($currentEndDate));
 
-       } catch (\Exception $e) {
-          DB::rollBack();
-          Log::error('Task extension request failed: ' . $e->getMessage(), ['exception' => $e]);
-          return redirect()->back()
-             ->with('error', 'Failed to submit extension request. Please try again. Error: ' . $e->getMessage())
-             ->withInput();
-       }
+            // Create extension request
+            $extensionRequest = TaskExtensionRequest::create([
+                'job_id' => $job->id,
+                'task_id' => $task->id,
+                'employee_id' => $employee->id,
+                'requested_by' => Auth::id(),
+                'current_end_date' => $currentEndDate,
+                'requested_end_date' => $requestedEndDate,
+                'extension_days' => $extensionDays,
+                'reason' => $request->reason,
+                'justification' => $request->justification,
+                'status' => 'pending',
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Log extension request - wrap in try-catch to prevent blocking
+            try {
+                JobActivityLogger::logTaskExtensionRequested(
+                    $job,
+                    $task,
+                    $employee,
+                    $currentEndDate,
+                    $requestedEndDate,
+                    $request->reason
+                );
+            } catch (\Exception $logError) {
+                Log::warning('Failed to log task extension request: ' . $logError->getMessage());
+                // Don't fail the entire request if logging fails
+            }
+
+            DB::commit();
+
+            // FIXED: Redirect to employee dashboard or back to task view instead of same page
+            return redirect()->route('employee.dashboard')
+                ->with('success', 'Extension request submitted successfully! Your request is pending approval.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Task extension request failed: ' . $e->getMessage(), [
+                'task_id' => $task->id,
+                'user_id' => Auth::id(),
+                'exception' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('tasks.extension.create', $task)
+                ->with('error', 'Failed to submit extension request. Please try again.')
+                ->withInput();
+        }
     }
 
     /**
@@ -208,17 +231,15 @@ class TaskExtensionController extends Controller
     }
 
     /**
-     * Approve extension request
+     * Approve extension request (FOR ENGINEERS/SUPERVISORS)
      */
     public function approve(Request $request, TaskExtensionRequest $extensionRequest)
     {
-
         return $this->processRequest($request, $extensionRequest, 'approved');
-
     }
 
     /**
-     * Reject extension request
+     * Reject extension request (FOR ENGINEERS/SUPERVISORS)
      */
     public function reject(Request $request, TaskExtensionRequest $extensionRequest)
     {
@@ -226,12 +247,11 @@ class TaskExtensionController extends Controller
     }
 
     /**
-     * Process extension request (approve/reject)
+     * Process extension request (approve/reject) - FOR ENGINEERS/SUPERVISORS
      */
-   public function processTaskExtension(Request $request, TaskExtensionRequest $extensionRequest)
+    private function processRequest(Request $request, TaskExtensionRequest $extensionRequest, $status)
     {
         $request->validate([
-            'action' => 'required|in:approve,reject',
             'review_notes' => 'nullable|string|max:1000',
         ]);
 
@@ -241,25 +261,29 @@ class TaskExtensionController extends Controller
             $job = $extensionRequest->job;
             $task = $extensionRequest->task;
             $employee = $extensionRequest->employee;
-            $action = $request->action;
+
+            // Check if request can be processed
+            if ($extensionRequest->status !== 'pending') {
+                return redirect()->back()->with('error', 'This request has already been processed.');
+            }
 
             // Update extension request
             $extensionRequest->update([
-                'status' => $action === 'approve' ? 'approved' : 'rejected',
+                'status' => $status,
                 'reviewed_by' => Auth::id(),
                 'reviewed_at' => now(),
                 'review_notes' => $request->review_notes,
                 'updated_by' => Auth::id(),
             ]);
 
-            if ($action === 'approve') {
-                // Update task deadline
+            if ($status === 'approved') {
+                // Update task deadline in JobEmployee
                 JobEmployee::where('task_id', $task->id)
                     ->where('employee_id', $employee->id)
                     ->update([
                         'end_date' => $extensionRequest->requested_end_date,
-                        'duration_in_days' => \Carbon\Carbon::parse($extensionRequest->requested_end_date)
-                            ->diffInDays(\Carbon\Carbon::parse($extensionRequest->current_end_date)) + 1,
+                        'duration_in_days' => Carbon::parse($extensionRequest->requested_end_date)
+                            ->diffInDays(Carbon::parse($extensionRequest->current_end_date)) + 1,
                         'updated_by' => Auth::id(),
                     ]);
 
@@ -272,18 +296,22 @@ class TaskExtensionController extends Controller
                 }
             }
 
-            // Log extension processing
-            JobActivityLogger::logTaskExtensionProcessed(
-                $job,
-                $task,
-                $employee,
-                $action === 'approve' ? 'approved' : 'rejected',
-                $request->review_notes
-            );
+            // Log extension processing - wrap in try-catch
+            try {
+                JobActivityLogger::logTaskExtensionProcessed(
+                    $job,
+                    $task,
+                    $employee,
+                    $status,
+                    $request->review_notes
+                );
+            } catch (\Exception $logError) {
+                Log::warning('Failed to log task extension processing: ' . $logError->getMessage());
+            }
 
             DB::commit();
 
-            $message = $action === 'approve'
+            $message = $status === 'approved'
                 ? 'Task extension approved successfully!'
                 : 'Task extension rejected.';
 
@@ -292,9 +320,29 @@ class TaskExtensionController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Failed to process extension request: ' . $e->getMessage(), [
+                'extension_request_id' => $extensionRequest->id,
+                'status' => $status,
+                'user_id' => Auth::id()
+            ]);
+
             return redirect()->back()
                 ->with('error', 'Failed to process extension request. Please try again.');
         }
+    }
+
+    /**
+     * Process extension request with action parameter (ALTERNATIVE METHOD - NOT USED IN YOUR ROUTES)
+     */
+    public function processTaskExtension(Request $request, TaskExtensionRequest $extensionRequest)
+    {
+        $request->validate([
+            'action' => 'required|in:approve,reject',
+            'review_notes' => 'nullable|string|max:1000',
+        ]);
+
+        $status = $request->action === 'approve' ? 'approved' : 'rejected';
+        return $this->processRequest($request, $extensionRequest, $status);
     }
 
     /**
@@ -332,9 +380,13 @@ class TaskExtensionController extends Controller
         $companyId = Auth::user()->company_id;
         $userRole = Auth::user()->userRole->name ?? '';
 
-        $query = TaskExtensionRequest::forCompany($companyId)->pending();
+        if (!in_array($userRole, ['Supervisor', 'Technical Officer', 'Engineer'])) {
+            return response()->json(['pending_count' => 0]);
+        }
 
-        // Filter by role
+        $query = TaskExtensionRequest::pending()->forCompany($companyId);
+
+        // Additional filtering for supervisors
         if ($userRole === 'Supervisor') {
             $query->forSupervisor(Auth::id());
         }
@@ -349,7 +401,7 @@ class TaskExtensionController extends Controller
      */
     private function calculateDuration($startDate, $endDate)
     {
-        if (!$startDate || !$endDate) {
+        if (!$startDate || $endDate) {
             return null;
         }
 

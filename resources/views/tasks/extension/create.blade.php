@@ -163,6 +163,14 @@ $(document).ready(function() {
     const currentEndDate = new Date('{{ $jobEmployee->end_date ? $jobEmployee->end_date->format("Y-m-d") : "" }}');
     let daysDifference = 0;
 
+    // Set SweetAlert2 to match Bootstrap font size
+    const swalCustomClasses = {
+        popup: 'swal2-bootstrap-font',
+        title: 'swal2-bootstrap-title',
+        confirmButton: 'swal2-bootstrap-btn',
+        cancelButton: 'swal2-bootstrap-btn'
+    };
+
     $('#requested_end_date').change(function() {
         const requestedDate = new Date($(this).val());
         const extensionInfo = $('#extension-info');
@@ -178,28 +186,6 @@ $(document).ready(function() {
         }
     });
 
-    function showCustomAlert(type, message) {
-        // Remove any previous alert
-        $('.custom-alert').remove();
-        // Bootstrap alert classes
-        let alertClass = 'alert-info';
-        if (type === 'error') alertClass = 'alert-danger';
-        if (type === 'warning') alertClass = 'alert-warning';
-        if (type === 'success') alertClass = 'alert-success';
-
-        const alertHtml = `
-            <div class="alert ${alertClass} custom-alert d-flex align-items-center mt-3" role="alert" style="z-index:9999;">
-                <i class="fas fa-info-circle me-2"></i>
-                <div>${message}</div>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-        // Insert alert at the top of the form
-        $('#extension-request-form').prepend(alertHtml);
-        // Auto-dismiss after 4 seconds
-        setTimeout(() => { $('.custom-alert').fadeOut(400, function() { $(this).remove(); }); }, 4000);
-    }
-
     $('#extension-request-form').submit(function(e) {
         e.preventDefault();
 
@@ -208,58 +194,75 @@ $(document).ready(function() {
         const reason = $('#reason').val().trim();
 
         if (!requestedDateVal) {
-            showCustomAlert('warning', 'Please select a new end date.');
+            Swal.fire({
+                title: 'Missing Date',
+                text: 'Please select a new end date.',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK',
+                customClass: swalCustomClasses
+            });
             return false;
         }
 
         if (requestedDate <= currentEndDate) {
-            showCustomAlert('error', 'New end date must be after the current end date.');
+            Swal.fire({
+                title: 'Invalid Date',
+                text: 'New end date must be after the current end date.',
+                icon: 'error',
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Got it',
+                customClass: swalCustomClasses
+            });
             return false;
         }
 
         if (reason.length < 10) {
-            showCustomAlert('warning', 'Please provide a more detailed reason (at least 10 characters).');
+            Swal.fire({
+                title: 'Validation Error',
+                text: 'Please provide a more detailed reason (at least 10 characters).',
+                icon: 'warning',
+                customClass: swalCustomClasses
+            });
             return false;
         }
 
-        // Confirmation using Bootstrap modal style
-        if ($('#customConfirmModal').length) $('#customConfirmModal').remove();
-        const confirmModal = `
-            <div class="modal fade" id="customConfirmModal" tabindex="-1" aria-labelledby="customConfirmModalLabel" aria-hidden="true">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="customConfirmModalLabel"><i class="fas fa-question-circle"></i> Confirm Extension</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    Are you sure you want to request a <strong>${daysDifference} day</strong> extension? This will require approval from your supervisor.
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmExtensionBtn">Yes, submit</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-        `;
-        $('body').append(confirmModal);
-        const modal = new bootstrap.Modal(document.getElementById('customConfirmModal'));
-        modal.show();
-
-        $('#confirmExtensionBtn').off('click').on('click', function() {
-            modal.hide();
-            $('#extension-request-form')[0].submit();
+        Swal.fire({
+            title: 'Confirm Extension',
+            text: `Are you sure you want to request a ${daysDifference} day extension? This will require approval from your supervisor.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, submit',
+            cancelButtonText: 'Cancel',
+            customClass: swalCustomClasses
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $('#extension-request-form')[0].submit();
+            }
         });
-
-        return false;
     });
 });
 </script>
 
 <style>
-.btn-lg {
-    padding: 0.75rem 1.5rem;
+/* Match Bootstrap font and button sizes for SweetAlert2 popups */
+.swal2-bootstrap-font {
+    font-size: 1rem !important;
+    font-family: inherit !important;
+    padding: 1.1rem 1.1rem !important;
+}
+.swal2-bootstrap-title {
+    font-size: 1.25rem !important;
+    font-weight: 500 !important;
+}
+.swal2-bootstrap-btn {
+    font-size: 1rem !important;
+    padding: 0.5rem 1.25rem !important;
+    border-radius: 0.25rem !important;
+}
+
+.btn-lg, .swal2-bootstrap-btn.swal2-confirm, .swal2-bootstrap-btn.swal2-cancel {
+    padding: 0.65rem 1.2rem;
     font-size: 1.1rem;
 }
 
@@ -276,14 +279,6 @@ $(document).ready(function() {
 
 .form-text {
     font-size: 0.875rem;
-}
-
-/* Custom alert styling */
-.custom-alert {
-    position: relative;
-    border-radius: 0.4rem;
-    font-size: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 </style>
 @endsection

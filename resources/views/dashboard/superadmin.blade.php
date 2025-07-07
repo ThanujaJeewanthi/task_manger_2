@@ -197,7 +197,7 @@
                 <div class="alert alert-{{ $alert['type'] }} dashboard-alert mb-0">
                     <i class="{{ $alert['icon'] }}"></i>
                     <strong>{{ $alert['count'] }}</strong> - {{ $alert['message'] }}
-                    <small class="d-block mt-1">{{ $alert['action'] }}</small>
+                    {{-- <small class="d-block mt-1">{{ $alert['action'] }}</small> --}}
                 </div>
             </div>
             @endforeach

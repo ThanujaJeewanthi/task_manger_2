@@ -363,12 +363,10 @@
                                         {{-- <a href="{{ route('jobs.approval.show', $job) }}" class="btn btn-sm btn-primary">
                                             <i class="fas fa-eye"></i> Review
                                         </a> --}}
-                                        <button class="btn btn-sm btn-success" onclick="quickApprove({{ $job->id }})">
-                                            <i class="fas fa-check"></i> Approve
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" onclick="quickReject({{ $job->id }})">
-                                            <i class="fas fa-times"></i> Reject
-                                        </button>
+                                      {{--how to Redirect to the correct row in the   extension requests table in order to approve or reject the extension request--}}
+            <a href="{{ route('jobs.items.show-approval', ['job' => $job->id]) }}" class="btn btn-sm btn-primary">
+                <i class="fas fa-eye"></i> Approve/Reject
+            </a>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -457,6 +455,10 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-component-title">
                                     <span>Recent Jobs</span>
+                                </div>
+
+                                <div class="ms-auto">
+                                    <a href="{{ route('tasks.extension.index') }}" class="btn btn-sm btn-outline-primary">Extension Requests</a>
                                 </div>
                                 <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
                             </div>
@@ -767,17 +769,6 @@ setInterval(updateNotificationCounts, 30000);
 // Update on page load
 document.addEventListener('DOMContentLoaded', updateNotificationCounts);
 
-function quickApprove(jobId) {
-    document.getElementById('approvalJobId').value = jobId;
-    document.getElementById('approvalAction').value = 'approve';
-    new bootstrap.Modal(document.getElementById('quickApprovalModal')).show();
-}
-
-function quickReject(jobId) {
-    document.getElementById('approvalJobId').value = jobId;
-    document.getElementById('approvalAction').value = 'reject';
-    new bootstrap.Modal(document.getElementById('quickApprovalModal')).show();
-}
 
 // Modern Approval Management using new modal system
 function approveJob(jobId) {
