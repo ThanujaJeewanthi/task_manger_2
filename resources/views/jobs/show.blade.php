@@ -507,48 +507,66 @@
                                     @elseif($task->status === 'in_progress')
                                         <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
                                             @csrf
-                                            <button type="button" class="btn btn-success btn-sm" onclick="showCompleteTaskSwal(this)">
-                                                <i class="fas fa-check"></i> Complete
-                                            </button>
-                                            <script>
-                                            function showCompleteTaskSwal(btn) {
-                                                const swalDefaults = {
-                                                    customClass: {
-                                                        popup: 'swal2-consistent-ui',
-                                                        confirmButton: 'btn btn-success btn-action-xs',
-                                                        cancelButton: 'btn btn-secondary btn-action-xs',
-                                                        denyButton: 'btn btn-danger btn-action-xs',
-                                                        input: 'form-control',
-                                                        title: '',
-                                                        htmlContainer: '',
-                                                    },
-                                                    buttonsStyling: false,
-                                                    background: '#fff',
-                                                    width: 420,
-                                                    showClass: { popup: 'swal2-show' },
-                                                    hideClass: { popup: 'swal2-hide' },
-                                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                                                };
-                                                Swal.fire({
-                                                    ...swalDefaults,
-                                                    icon: 'question',
-                                                    title: '<span style="font-size:1.05rem;font-weight:600;">Complete this task?</span>',
-                                                    html: `<div style="font-size:0.92rem;">Are you sure you want to complete this task?</div>`,
-                                                    showCancelButton: true,
-                                                    confirmButtonText: 'Complete',
-                                                    cancelButtonText: 'Cancel',
-                                                    focusConfirm: false,
-                                                }).then((result) => {
-                                                    if (result.isConfirmed) {
-                                                        let form = btn.closest('form');
-                                                        if(form) {
-                                                            btn.disabled = true;
-                                                            form.submit();
-                                                        }
-                                                    }
-                                                });
-                                            }
-                                            </script>
+                                            <button type="button" class="btn btn-success btn-sm"
+                                onclick="handleCompleteTaskSwal(event, this.form)">
+                                <i class="fas fa-check"></i> Complete
+                            </button>
+                            <script>
+                            if (typeof swalDefaults === 'undefined') {
+                                window.swalDefaults = {
+                                    customClass: {
+                                        popup: 'swal2-consistent-ui',
+                                        confirmButton: 'btn btn-success btn-action-xs',
+                                        cancelButton: 'btn btn-secondary btn-action-xs',
+                                        denyButton: 'btn btn-danger btn-action-xs',
+                                        input: 'form-control',
+                                        title: '',
+                                        htmlContainer: '',
+                                    },
+                                    buttonsStyling: false,
+                                    background: '#fff',
+                                    width: 420,
+                                    showClass: { popup: 'swal2-show' },
+                                    hideClass: { popup: 'swal2-hide' },
+                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                                };
+                            }
+                            function handleCompleteTaskSwal(event, form) {
+                                event.preventDefault();
+                                Swal.fire({
+                                    ...swalDefaults,
+                                    icon: 'question',
+                                    title: '<span style="font-size:1.05rem;font-weight:600;">Are you sure you want to complete this task?</span>',
+                                    html: `<div style="font-size:0.92rem;">
+                                        This action will mark the task as completed.<br><br>
+                                        <label for="swal-complete-notes" style="font-size:0.85rem;font-weight:500;">Completion Notes (optional):</label>
+                                        <textarea id="swal-complete-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
+                                    </div>`,
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Complete',
+                                    cancelButtonText: 'Cancel',
+                                    focusConfirm: false,
+                                    preConfirm: () => {
+                                        // Optionally, you can return notes here if you want to submit them
+                                        return document.getElementById('swal-complete-notes').value;
+                                    }
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        // If you want to send notes, add a hidden input to the form
+                                        let notesInput = form.querySelector('input[name="completion_notes"]');
+                                        if (!notesInput) {
+                                            notesInput = document.createElement('input');
+                                            notesInput.type = 'hidden';
+                                            notesInput.name = 'completion_notes';
+                                            form.appendChild(notesInput);
+                                        }
+                                        notesInput.value = result.value || '';
+                                        form.submit();
+                                    }
+                                });
+                                return false;
+                            }
+                            </script> 
                                         </form>
                                         <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
                                             <i class="fas fa-clock"></i>
