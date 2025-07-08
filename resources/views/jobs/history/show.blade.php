@@ -11,7 +11,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-light rounded p-3">
                     <li class="breadcrumb-item">
-                        <a href="{{ route('jobs.index') }}"> Jobs</a>
+                        <a href="{{ route('jobs.index') }}">Jobs</a>
                     </li>
                     <li class="breadcrumb-item">
                         <a href="{{ route('jobs.show', $job) }}">Job #{{ $job->id }}</a>
@@ -35,7 +35,6 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <h4 class="mb-0">
-
                                 Activity Details
                                 @if($activity->is_major_activity)
                                     <span class="badge badge-warning ms-2">
@@ -43,60 +42,24 @@
                                     </span>
                                 @endif
                             </h4>
-                            <small class="opacity-75">
-                                {{ ucfirst(str_replace('_', ' ', $activity->activity_type)) }} -
-                                {{ $activity->created_at->format('M d, Y H:i:s') }}
-                            </small>
+                            <small>{{ $activity->created_at->format('M d, Y g:i A') }} ({{ $activity->created_at->diffForHumans() }})</small>
                         </div>
                         <div class="btn-group">
-                            <a href="{{ route('jobs.history.index', $job) }}" class="btn btn-light">
-                                <i class="fas fa-arrow-left"></i> Back to History
-                            </a>
-                            <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-light">
-                                <i class="fas fa-eye"></i> View Job
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body p-2">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <!-- Previous/Next Navigation -->
-                        <div class="navigation-controls">
                             @if($previousActivity)
                                 <a href="{{ route('jobs.history.show', [$job, $previousActivity]) }}"
-                                   class="btn btn-outline-secondary btn-sm" title="Previous Activity">
-                                    <i class="fas fa-chevron-left"></i> Previous
+                                   class="btn btn-outline-light btn-sm" title="Previous Activity">
+                                    <i class="fas fa-chevron-left"></i>
                                 </a>
-                            @else
-                                <button class="btn btn-outline-secondary btn-sm" disabled>
-                                    <i class="fas fa-chevron-left"></i> Previous
-                                </button>
                             @endif
-
+                            <a href="{{ route('jobs.history.index', $job) }}" class="btn btn-outline-light btn-sm">
+                                <i class="fas fa-list"></i> All Activities
+                            </a>
                             @if($nextActivity)
                                 <a href="{{ route('jobs.history.show', [$job, $nextActivity]) }}"
-                                   class="btn btn-outline-secondary btn-sm ms-2" title="Next Activity">
-                                    Next <i class="fas fa-chevron-right"></i>
+                                   class="btn btn-outline-light btn-sm" title="Next Activity">
+                                    <i class="fas fa-chevron-right"></i>
                                 </a>
-                            @else
-                                <button class="btn btn-outline-secondary btn-sm ms-2" disabled>
-                                    Next <i class="fas fa-chevron-right"></i>
-                                </button>
                             @endif
-                        </div>
-
-                        <!-- Activity Position Info -->
-                        <div class="activity-position text-muted small">
-                            <i class="fas fa-list-ol"></i>
-                            Activity {{ $activity->id }} of Job #{{ $job->id }}
-                        </div>
-
-                        <!-- Quick Actions -->
-                        <div class="quick-actions">
-                            <a href="{{ route('jobs.history.export.pdf', $job) }}?activity_id={{ $activity->id }}"
-                               class="btn btn-success btn-sm">
-                                <i class="fas fa-file-pdf"></i> Export
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -107,16 +70,14 @@
     <div class="row">
         <!-- Main Activity Details -->
         <div class="col-lg-8">
-            <!-- Activity Overview Card -->
-            <div class="card mb-4 {{ $activity->is_major_activity ? 'border-warning' : '' }}">
+            <div class="card {{ $activity->is_major_activity ? 'border-warning' : '' }}">
                 <div class="card-header {{ $activity->is_major_activity ? 'bg-warning bg-opacity-10' : 'bg-light' }}">
                     <h5 class="mb-0">
-
                         {{ ucfirst(str_replace('_', ' ', $activity->activity_type)) }}
                         @if($activity->is_major_activity)
                             <i class="fas fa-star text-warning ms-2" title="Major Activity"></i>
                         @endif
-                        <span class="badge {{ $activity->priority_badge ?? 'badge-secondary' }} ms-2">
+                        <span class="badge {{ $activity->priority_level === 'high' ? 'badge-danger' : ($activity->priority_level === 'medium' ? 'badge-warning' : 'badge-secondary') }} ms-2">
                             {{ ucfirst($activity->priority_level ?? 'Normal') }}
                         </span>
                     </h5>
@@ -135,12 +96,12 @@
                         <div class="col-md-6">
                             <div class="info-card">
                                 <h6 class="text-muted mb-2">
-                                    <i class="fas fa-tag text-info"></i> Timing Information
+                                    <i class="fas fa-clock text-info"></i> Timing Information
                                 </h6>
                                 <div class="info-list">
                                     <div class="info-item">
                                         <span class="info-label">Date & Time:</span>
-                                        <span class="info-value">{{ $activity->created_at->format('M d, Y H:i:s') }}</span>
+                                        <span class="info-value">{{ $activity->created_at->format('M d, Y g:i A') }}</span>
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Relative Time:</span>
@@ -171,7 +132,7 @@
                                     </div>
                                     <div class="info-item">
                                         <span class="info-label">Priority:</span>
-                                        <span class="badge {{ $activity->priority_badge ?? 'badge-secondary' }}">
+                                        <span class="badge badge-{{ $activity->priority_level === 'high' ? 'danger' : ($activity->priority_level === 'medium' ? 'warning' : 'secondary') }}">
                                             {{ ucfirst($activity->priority_level ?? 'Normal') }}
                                         </span>
                                     </div>
@@ -180,81 +141,203 @@
                         </div>
                     </div>
 
-                    <!-- Value Changes Section -->
+                    <!-- User Information -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-user text-info"></i> Performed By
+                                </h6>
+                                <div class="info-list">
+                                    <div class="info-item">
+                                        <span class="info-label">User:</span>
+                                        <span class="info-value">{{ $activity->user ? $activity->user->name : 'System' }}</span>
+                                    </div>
+                                    @if($activity->user_role)
+                                        <div class="info-item">
+                                            <span class="info-label">Role:</span>
+                                            <span class="info-value">{{ $activity->user_role }}</span>
+                                        </div>
+                                    @endif
+                                    @if($activity->ip_address)
+                                        <div class="info-item">
+                                            <span class="info-label">IP Address:</span>
+                                            <span class="info-value">{{ $activity->ip_address }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        @if($activity->affectedUser)
+                            <div class="col-md-6">
+                                <div class="info-card">
+                                    <h6 class="text-muted mb-2">
+                                        <i class="fas fa-user-tag text-info"></i> Affected User
+                                    </h6>
+                                    <div class="info-list">
+                                        <div class="info-item">
+                                            <span class="info-label">User:</span>
+                                            <span class="info-value">{{ $activity->affectedUser->name }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    <!-- Changes Section -->
                     @if($activity->old_values || $activity->new_values)
                         <div class="changes-section">
                             <h6 class="text-muted mb-3">
-                                <i class="fas fa-exchange-alt text-warning"></i> Changes Made
+                                <i class="fas fa-exchange-alt text-info"></i> Changes Made
                             </h6>
 
-                            <div class="row">
-                                @if($activity->old_values)
+                            @if($activity->old_values && $activity->new_values)
+                                <!-- Side by side comparison for updates -->
+                                <div class="row">
                                     <div class="col-md-6">
-                                        <div class="changes-card old-values">
-                                            <h6 class="changes-title">
-                                                <i class="fas fa-arrow-left text-danger"></i> Previous Values
-                                            </h6>
-                                            <div class="values-display">
-                                                @foreach(json_decode($activity->old_values, true) ?? [] as $key => $value)
-                                                    <div class="value-item">
-                                                        <span class="value-key">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
-                                                        <span class="badge badge-outline-danger">{{ $value }}</span>
-                                                    </div>
+                                        <div class="changes-card">
+                                            <h6 class="text-danger mb-2">Previous Values</h6>
+                                            <div class="changes-content">
+                                                @foreach($activity->old_values as $key => $value)
+                                                    @if(!in_array($key, ['updated_by', 'created_by', 'updated_at', 'created_at']))
+                                                        <div class="change-row">
+                                                            <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
+                                                            <span class="old-value">
+                                                                {{ is_array($value) ? json_encode($value) : $value }}
+                                                            </span>
+                                                        </div>
+                                                    @endif
                                                 @endforeach
                                             </div>
                                         </div>
                                     </div>
-                                @endif
+                                    <div class="col-md-6">
+                                        <div class="changes-card">
+                                            <h6 class="text-success mb-2">New Values</h6>
+                                            <div class="changes-content">
+                                                @foreach($activity->new_values as $key => $value)
+                                                    @if(!in_array($key, ['updated_by', 'created_by', 'updated_at', 'created_at']))
+                                                        <div class="change-row">
+                                                            <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
+                                                            <span class="new-value">
+                                                                @if($key === 'items' && is_array($value))
+                                                                    {{ implode(', ', $value) }}
+                                                                @elseif(is_array($value))
+                                                                    {{ json_encode($value) }}
+                                                                @else
+                                                                    {{ $value }}
+                                                                @endif
+                                                            </span>
+                                                        </div>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                @if($activity->new_values)
-                                    <div class="col-md-6">
-                                        <div class="changes-card new-values">
-                                            <h6 class="changes-title">
-                                                <i class="fas fa-arrow-right text-success"></i> New Values
-                                            </h6>
-                                            <div class="values-display">
+                                <!-- Change Summary -->
+                                <div class="mt-3">
+                                    <h6 class="text-muted mb-2">Summary of Changes</h6>
+                                    <div class="change-summary-card">
+                                        @foreach($activity->old_values as $key => $oldValue)
+                                            @if(isset($activity->new_values[$key]) && !in_array($key, ['updated_by', 'created_by', 'updated_at', 'created_at']))
                                                 @php
-                                                    $newValues = is_string($activity->new_values)
-                                                        ? json_decode($activity->new_values, true)
-                                                        : ($activity->new_values ?? []);
+                                                    $newValue = $activity->new_values[$key];
+                                                    $fieldName = ucfirst(str_replace('_', ' ', $key));
                                                 @endphp
-                                                @foreach($newValues as $key => $value)
-                                                    <div class="value-item">
-                                                        <span class="value-key">{{ ucfirst(str_replace('_', ' ', $key)) }}:</span>
-                                                        <span class="badge badge-outline-success">{{ $value }}</span>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
+                                                <div class="change-comparison">
+                                                    <strong>{{ $fieldName }}:</strong>
+                                                    <span class="comparison-flow">
+                                                        <span class="old-value">{{ is_array($oldValue) ? json_encode($oldValue) : $oldValue }}</span>
+                                                        <i class="fas fa-arrow-right mx-2"></i>
+                                                        <span class="new-value">{{ is_array($newValue) ? json_encode($newValue) : $newValue }}</span>
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
                                     </div>
-                                @endif
+                                </div>
+                            @elseif($activity->new_values)
+                                <!-- Only new values (for creations) -->
+                                <div class="changes-card">
+                                    <h6 class="text-success mb-2">Added Values</h6>
+                                    <div class="changes-content">
+                                        @foreach($activity->new_values as $key => $value)
+                                            @if(!in_array($key, ['updated_by', 'created_by', 'updated_at', 'created_at']))
+                                                <div class="change-row">
+                                                    <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
+                                                    <span class="new-value">
+                                                        @if($key === 'items' && is_array($value))
+                                                            {{ implode(', ', $value) }}
+                                                        @elseif(is_array($value))
+                                                            {{ json_encode($value) }}
+                                                        @else
+                                                            {{ $value }}
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @elseif($activity->old_values)
+                                <!-- Only old values (for deletions) -->
+                                <div class="changes-card">
+                                    <h6 class="text-danger mb-2">Removed Values</h6>
+                                    <div class="changes-content">
+                                        @foreach($activity->old_values as $key => $value)
+                                            @if(!in_array($key, ['updated_by', 'created_by', 'updated_at', 'created_at']))
+                                                <div class="change-row">
+                                                    <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
+                                                    <span class="old-value">
+                                                        {{ is_array($value) ? json_encode($value) : $value }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+
+                    <!-- Metadata Section -->
+                    @if($activity->metadata)
+                        <div class="metadata-section mt-4">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-info-circle text-info"></i> Additional Information
+                            </h6>
+                            <div class="metadata-card">
+                                @foreach($activity->metadata as $key => $value)
+                                    <div class="metadata-item">
+                                        <strong>{{ ucfirst(str_replace('_', ' ', $key)) }}:</strong>
+                                        <span>{{ is_array($value) ? json_encode($value) : $value }}</span>
+                                    </div>
+                                @endforeach
                             </div>
                         </div>
                     @endif
 
                     <!-- Related Entity Information -->
-                    @if($activity->related_entity_name || $activity->related_model_type)
+                    @if($activity->related_model_type)
                         <div class="related-entity-section mt-4">
-                            <h6 class="text-muted mb-3">
-                                <i class="fas fa-link text-info"></i> Related Information
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-link text-info"></i> Related Entity
                             </h6>
                             <div class="related-entity-card">
-                                @if($activity->related_model_type)
-                                    <div class="info-item">
-                                        <span class="info-label">Related Type:</span>
-                                        <span class="badge badge-info">{{ $activity->related_model_type }}</span>
-                                    </div>
-                                @endif
+                                <div class="related-item">
+                                    <strong>Type:</strong> {{ $activity->related_model_type }}
+                                </div>
                                 @if($activity->related_entity_name)
-                                    <div class="info-item">
-                                        <span class="info-label">Related Entity:</span>
-                                        <span class="info-value">{{ $activity->related_entity_name }}</span>
+                                    <div class="related-item">
+                                        <strong>Name:</strong> {{ $activity->related_entity_name }}
                                     </div>
                                 @endif
                                 @if($activity->related_model_id)
-                                    <div class="info-item">
-                                        <span class="info-label">Entity ID:</span>
-                                        <span class="info-value">#{{ $activity->related_model_id }}</span>
+                                    <div class="related-item">
+                                        <strong>ID:</strong> {{ $activity->related_model_id }}
                                     </div>
                                 @endif
                             </div>
@@ -262,141 +345,39 @@
                     @endif
                 </div>
             </div>
-
-            <!-- User Information Card -->
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0">
-                        User Information
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <!-- Performed By -->
-                        <div class="col-md-6">
-                            <div class="user-info-card">
-                                <h6 class="user-info-title">
-                                    <i class="fas fa-user text-primary"></i> Performed By
-                                </h6>
-                                <div class="user-details">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <div class="avatar-lg me-3">
-                                            {{ substr($activity->user->name ?? 'S', 0, 2) }}
-                                        </div>
-                                        <div>
-                                            <div class="user-name">{{ $activity->user->name ?? 'System' }}</div>
-                                            @if($activity->user_role)
-                                                <div class="user-role">{{ $activity->user_role }}</div>
-                                            @endif
-                                            @if($activity->user)
-                                                <div class="user-email text-muted small">{{ $activity->user->email ?? '' }}</div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Affected User (if any) -->
-                        @if($activity->affected_user_id && $activity->affectedUser)
-                            <div class="col-md-6">
-                                <div class="user-info-card">
-                                    <h6 class="user-info-title">
-                                        <i class="fas fa-user-tag text-warning"></i> Affected User
-                                    </h6>
-                                    <div class="user-details">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <div class="avatar-lg me-3 bg-warning">
-                                                {{ substr($activity->affectedUser->name, 0, 2) }}
-                                            </div>
-                                            <div>
-                                                <div class="user-name">{{ $activity->affectedUser->name }}</div>
-                                                <div class="user-email text-muted small">{{ $activity->affectedUser->email ?? '' }}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <!-- Sidebar with Context and Navigation -->
+        <!-- Sidebar -->
         <div class="col-lg-4">
-            <!-- Job Context Card -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                      Job Context
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="job-details">
-                        <div class="job-info-item">
-                            <span class="info-label">Job ID:</span>
-                            <span class="info-value">#{{ $job->id }}</span>
-                        </div>
-                        <div class="job-info-item">
-                            <span class="info-label">Description:</span>
-                            <span class="info-value">{{ Str::limit($job->description, 50) }}</span>
-                        </div>
-                        <div class="job-info-item">
-                            <span class="info-label">Status:</span>
-                            <span class=" badge-{{ $job->status === 'completed' ? 'success' : ($job->status === 'cancelled' ? 'danger' : 'warning') }}">
-                                {{ ucfirst($job->status) }}
-                            </span>
-                        </div>
-                        <div class="job-info-item">
-                            <span class="info-label">Priority:</span>
-                            <span class=" badge-{{ $job->priority == 1 ? 'danger' : ($job->priority == 2 ? 'warning' : 'info') }}">
-                                Priority {{ $job->priority }}
-                            </span>
-                        </div>
-                        @if($job->jobType)
-                            <div class="job-info-item">
-                                <span class="info-label">Type:</span>
-                                <span class="info-value">{{ $job->jobType->name }}</span>
-                            </div>
-                        @endif
-                        @if($job->client)
-                            <div class="job-info-item">
-                                <span class="info-label">Client:</span>
-                                <span class="info-value">{{ $job->client->name }}</span>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
             <!-- Related Activities -->
-            @if($relatedActivities && $relatedActivities->count() > 0)
+            @if($relatedActivities->count() > 0)
                 <div class="card mb-4">
                     <div class="card-header bg-info text-white">
                         <h5 class="mb-0">
-                           Related Activities
+                            <i class="fas fa-history"></i> Related Activities
                         </h5>
                     </div>
                     <div class="card-body p-0">
                         <div class="related-activities-list">
                             @foreach($relatedActivities as $relatedActivity)
-                                <div class="related-activity-item {{ $relatedActivity->is_major_activity ? 'major' : '' }}">
-                                    <div class="d-flex align-items-center">
-                                        <div class="activity-icon me-3">
-                                            <i class="{{ $relatedActivity->activity_icon ?? 'fas fa-circle' }}"></i>
-                                        </div>
+                                <div class="related-activity-item {{ $relatedActivity->is_major_activity ? 'major-related' : '' }}">
+                                    <div class="d-flex justify-content-between align-items-start">
                                         <div class="flex-grow-1">
-                                            <div class="activity-title">
+                                            <h6 class="mb-1">
                                                 {{ ucfirst(str_replace('_', ' ', $relatedActivity->activity_type)) }}
                                                 @if($relatedActivity->is_major_activity)
-                                                    <i class="fas fa-star text-warning small"></i>
+                                                    <i class="fas fa-star text-warning ms-1"></i>
                                                 @endif
-                                            </div>
+                                            </h6>
+                                            <p class="text-muted small mb-1">{{ $relatedActivity->description }}</p>
                                             <div class="activity-meta">
                                                 <small class="text-muted">
-                                                    {{ $relatedActivity->created_at->format('M d, H:i') }} by
-                                                    {{ $relatedActivity->user->name ?? 'System' }}
+                                                    <i class="fas fa-clock"></i>
+                                                    {{ $relatedActivity->created_at->format('M d, Y g:i A') }}
+                                                </small>
+                                                <small class="text-muted ms-2">
+                                                    <i class="fas fa-user"></i>
+                                                    {{ $relatedActivity->user ? $relatedActivity->user->name : 'System' }}
                                                 </small>
                                             </div>
                                         </div>
@@ -418,7 +399,7 @@
             <div class="card mb-4">
                 <div class="card-header bg-secondary text-white">
                     <h5 class="mb-0">
-                        Quick Navigation
+                        <i class="fas fa-compass"></i> Quick Navigation
                     </h5>
                 </div>
                 <div class="card-body">
@@ -437,282 +418,161 @@
                                 <i class="fas fa-user"></i> Same User
                             </a>
                         @endif
-                        <a href="{{ route('jobs.history.index', $job) }}?type={{ $activity->activity_type }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-tag"></i> Same Type
+                        <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-briefcase"></i> Back to Job
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Activity Statistics -->
-            {{-- <div class="card">
+            <!-- Technical Details -->
+            <div class="card">
                 <div class="card-header bg-light">
                     <h5 class="mb-0">
-                        <i class="fas fa-chart-bar text-primary"></i> Activity Statistics
+                        <i class="fas fa-cogs"></i> Technical Details
                     </h5>
                 </div>
                 <div class="card-body">
-                    <div class="stats-grid">
-                        <div class="stat-item text-center">
-                            <div class="stat-number text-primary">{{ $activity->id }}</div>
-                            <div class="stat-label">Activity ID</div>
+                    <div class="technical-details">
+                        <div class="detail-item">
+                            <strong>Activity ID:</strong> {{ $activity->id }}
                         </div>
-                        <div class="stat-item text-center">
-                            <div class="stat-number text-info">
-                                @if($activity->created_at->isToday())
-                                    Today
-                                @elseif($activity->created_at->isYesterday())
-                                    Yesterday
-                                @else
-                                    {{ $activity->created_at->diffForHumans() }}
-                                @endif
+                        <div class="detail-item">
+                            <strong>Job ID:</strong> {{ $activity->job_id }}
+                        </div>
+                        @if($activity->browser_info)
+                            @php
+                                $browserInfo = json_decode($activity->browser_info, true);
+                            @endphp
+                            <div class="detail-item">
+                                <strong>Browser:</strong>
+                                {{ $browserInfo['browser'] ?? 'Unknown' }}
+                                {{ isset($browserInfo['version']) ? 'v' . $browserInfo['version'] : '' }}
                             </div>
-                            <div class="stat-label">When</div>
+                            @if(isset($browserInfo['os']))
+                                <div class="detail-item">
+                                    <strong>OS:</strong> {{ $browserInfo['os'] }}
+                                </div>
+                            @endif
+                        @endif
+                        <div class="detail-item">
+                            <strong>Created:</strong> {{ $activity->created_at->format('Y-m-d H:i:s') }}
                         </div>
+                        @if($activity->updated_at !== $activity->created_at)
+                            <div class="detail-item">
+                                <strong>Updated:</strong> {{ $activity->updated_at->format('Y-m-d H:i:s') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
-            </div> --}}
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-/* Enhanced card styles */
-.card {
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-}
-
-.card:hover {
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-}
-
-/* Activity description styling */
-.activity-description .bg-light {
-    border-left: 4px solid #007bff;
-    font-size: 1.1rem;
-    line-height: 1.6;
-}
-
-/* Info cards */
-.info-card {
+.info-card, .changes-card, .metadata-card, .related-entity-card {
     background: #f8f9fa;
+    border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 1rem;
-    height: 100%;
 }
 
-.info-list {
-    margin: 0;
-}
-
-.info-item {
+.info-list .info-item, .changes-content .change-row, .metadata-card .metadata-item, .related-entity-card .related-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0;
-    border-bottom: 1px solid #e9ecef;
+    border-bottom: 1px solid #f1f3f4;
 }
 
-.info-item:last-child {
+.info-list .info-item:last-child, .changes-content .change-row:last-child, .metadata-card .metadata-item:last-child, .related-entity-card .related-item:last-child {
     border-bottom: none;
 }
 
 .info-label {
-    font-weight: 600;
-    color: #495057;
-    flex-shrink: 0;
-    margin-right: 1rem;
+    font-weight: 500;
+    color: #6c757d;
+    min-width: 120px;
 }
 
 .info-value {
-    text-align: right;
-    color: #6c757d;
+    color: #495057;
+    font-weight: 500;
 }
 
-/* Changes section */
-.changes-section {
+.old-value {
+    color: #dc3545;
+    background: #f8d7da;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    /* text-decoration: line-through; */
+}
+
+.new-value {
+    color: #155724;
+    background: #d4edda;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.change-summary-card {
     background: #f8f9fa;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-top: 1.5rem;
-}
-
-.changes-card {
-    background: white;
+    border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 1rem;
-    margin-bottom: 1rem;
 }
 
-.changes-card:last-child {
+.change-comparison {
+    margin-bottom: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.change-comparison:last-child {
+    border-bottom: none;
     margin-bottom: 0;
 }
 
-.changes-card.old-values {
-    border-left: 4px solid #dc3545;
-}
-
-.changes-card.new-values {
-    border-left: 4px solid #28a745;
-}
-
-.changes-title {
-    margin-bottom: 1rem;
-    font-weight: 600;
-}
-
-.values-display .value-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.value-key {
-    font-weight: 500;
-    color: #495057;
-}
-
-/* Related entity section */
-.related-entity-section {
-    background: #e3f2fd;
-    border-radius: 12px;
-    padding: 1.5rem;
-}
-
-.related-entity-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-}
-
-/* User information cards */
-.user-info-card {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 1rem;
-    height: 100%;
-}
-
-.user-info-title {
-    margin-bottom: 1rem;
-    font-weight: 600;
-    color: #495057;
-}
-
-.avatar-lg {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: #007bff;
-    color: white;
+.comparison-flow {
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 1rem;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
 }
 
-.user-name {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 0.25rem;
-}
-
-.user-role {
+.comparison-flow .fas.fa-arrow-right {
     color: #6c757d;
     font-size: 0.875rem;
-    margin-bottom: 0.25rem;
-}
-
-.user-email {
-    font-size: 0.8rem;
-}
-
-/* Job details in sidebar */
-.job-details .job-info-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #e9ecef;
-}
-
-.job-details .job-info-item:last-child {
-    border-bottom: none;
-}
-
-/* Related activities */
-.related-activities-list {
-    max-height: 300px;
-    overflow-y: auto;
 }
 
 .related-activity-item {
     padding: 1rem;
-    border-bottom: 1px solid #e9ecef;
-    transition: background-color 0.2s ease;
-}
-
-.related-activity-item:hover {
-    background-color: #f8f9fa;
+    border-bottom: 1px solid #f1f3f4;
 }
 
 .related-activity-item:last-child {
     border-bottom: none;
 }
 
-.related-activity-item.major {
-    background: linear-gradient(90deg, #fff3cd 0%, #ffffff 100%);
-    border-left: 3px solid #ffc107;
+.related-activity-item.major-related {
+    background: linear-gradient(135deg, #fff, #fffaf0);
+    border-left: 4px solid #ffc107;
 }
 
-.activity-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: #e9ecef;
+.technical-details .detail-item {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    color: #6c757d;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #f1f3f4;
 }
 
-.activity-title {
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 0.25rem;
+.technical-details .detail-item:last-child {
+    border-bottom: none;
 }
 
-.activity-meta {
-    font-size: 0.875rem;
-}
-
-/* Statistics */
-.stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.stat-item {
-    text-align: center;
-}
-
-.stat-number {
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-}
-
-.stat-label {
-    font-size: 0.875rem;
-    color: #6c757d;
-}
-
-/* Badge styles */
 .badge-outline-primary {
     color: #007bff;
     border: 1px solid #007bff;
@@ -731,184 +591,27 @@
     background: transparent;
 }
 
-.badge-outline-warning {
-    color: #ffc107;
-    border: 1px solid #ffc107;
-    background: transparent;
-}
-
-.badge-outline-danger {
-    color: #dc3545;
-    border: 1px solid #dc3545;
-    background: transparent;
-}
-
-.badge-outline-secondary {
-    color: #6c757d;
-    border: 1px solid #6c757d;
-    background: transparent;
-}
-
-/* Navigation controls */
-.navigation-controls .btn {
-    margin-right: 0.5rem;
-}
-
-.activity-position {
-    font-style: italic;
-}
-
-/* Mobile responsiveness */
 @media (max-width: 768px) {
-    .d-flex.justify-content-between {
+    .comparison-flow {
         flex-direction: column;
-        gap: 1rem;
+        align-items: flex-start;
+        gap: 0.25rem;
     }
 
-    .navigation-controls {
-        display: flex;
-        justify-content: center;
+    .comparison-flow .fas.fa-arrow-right {
+        transform: rotate(90deg);
+        align-self: center;
     }
 
-    .activity-position {
-        text-align: center;
+    .info-list .info-item, .changes-content .change-row, .metadata-card .metadata-item, .related-entity-card .related-item {
+        flex-direction: column;
+        align-items: flex-start;
     }
 
-    .quick-actions {
-        display: flex;
-        justify-content: center;
+    .info-label {
+        min-width: auto;
+        margin-bottom: 0.25rem;
     }
-
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .changes-card {
-        margin-bottom: 1rem;
-    }
-}
-
-/* Print styles */
-@media print {
-    .btn, .card-header, .navigation-controls, .quick-actions {
-        display: none !important;
-    }
-
-    .card {
-        border: 1px solid #000 !important;
-        box-shadow: none !important;
-        break-inside: avoid;
-    }
-
-    .col-lg-4 {
-        display: none !important;
-    }
-
-    .col-lg-8 {
-        width: 100% !important;
-        max-width: 100% !important;
-    }
-}
-
-/* Animation effects */
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(0);
-    }
-}
-
-.card {
-    animation: slideInRight 0.5s ease-out;
-}
-
-.card:nth-child(2) {
-    animation-delay: 0.1s;
-}
-
-.card:nth-child(3) {
-    animation-delay: 0.2s;
 }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Add smooth transitions for badge hovers
-    document.querySelectorAll('.badge').forEach(badge => {
-        badge.addEventListener('mouseenter', function() {
-            this.style.transform = 'scale(1.05)';
-        });
-
-        badge.addEventListener('mouseleave', function() {
-            this.style.transform = 'scale(1)';
-        });
-    });
-
-    // Enhanced navigation with keyboard support
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey || e.metaKey) {
-            switch(e.key) {
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    const prevBtn = document.querySelector('a[title="Previous Activity"]');
-                    if (prevBtn && !prevBtn.disabled) {
-                        prevBtn.click();
-                    }
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    const nextBtn = document.querySelector('a[title="Next Activity"]');
-                    if (nextBtn && !nextBtn.disabled) {
-                        nextBtn.click();
-                    }
-                    break;
-                case 'h':
-                    e.preventDefault();
-                    window.location.href = document.querySelector('a[href*="history"]').href;
-                    break;
-            }
-        }
-    });
-
-    // Add tooltips to navigation buttons
-    const tooltips = document.querySelectorAll('[title]');
-    tooltips.forEach(element => {
-        element.addEventListener('mouseenter', function() {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'custom-tooltip';
-            tooltip.textContent = this.getAttribute('title');
-            document.body.appendChild(tooltip);
-
-            const rect = this.getBoundingClientRect();
-            tooltip.style.left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2 + 'px';
-            tooltip.style.top = rect.bottom + 5 + 'px';
-        });
-
-        element.addEventListener('mouseleave', function() {
-            const tooltip = document.querySelector('.custom-tooltip');
-            if (tooltip) {
-                tooltip.remove();
-            }
-        });
-    });
-
-    // Smooth scroll for related activities
-    document.querySelectorAll('.related-activity-item a').forEach(link => {
-        link.addEventListener('click', function(e) {
-            // Add loading state
-            const icon = this.querySelector('i');
-            const originalClass = icon.className;
-            icon.className = 'fas fa-spinner fa-spin';
-
-            setTimeout(() => {
-                icon.className = originalClass;
-            }, 1000);
-        });
-    });
-});
-</script>
 @endsection
