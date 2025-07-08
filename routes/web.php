@@ -473,32 +473,27 @@ Route::middleware(['auth'])->group(function () {
     // Job History Timeline
     Route::get('/jobs/{job}/history', [JobHistoryController::class, 'index'])
         ->name('jobs.history.index')
-        ->middleware('role.permission:11.23'); // Add this permission to your seeds
+        ->middleware('role.permission:11.23');
 
     // View specific activity details
     Route::get('/jobs/{job}/history/{activity}', [JobHistoryController::class, 'show'])
         ->name('jobs.history.show')
-        ->middleware('role.permission:11.24'); // Add this permission to your seeds
-
-        Route::get('/jobs/{job}/history/export', [JobHistoryController::class, 'export'])
-        ->name('jobs.history.export')
         ->middleware('role.permission:11.24');
 
-    // Export job history as PDF
+    // Export job history
+    // Route::get('/jobs/{job}/history/export', [JobHistoryController::class, 'export'])
+    //     ->name('jobs.history.export')
+    //     ->middleware('role.permission:11.24');
+
+    // Export job history as PDF (only PDF export, Word removed)
     Route::get('/jobs/{job}/history/export/pdf', [JobHistoryController::class, 'exportPdf'])
         ->name('jobs.history.export.pdf')
-        ->middleware('role.permission:11.24'); // Add this permission to your seeds
-
-    // Export job history as Word document
-    Route::get('/jobs/{job}/history/export/word', [JobHistoryController::class, 'exportWord'])
-        ->name('jobs.history.export.word')
-        ->middleware('role.permission:11.24'); // Same permission as PDF export
+        ->middleware('role.permission:11.24');
 
     // AJAX endpoint for timeline data (for visual timeline components)
     Route::get('/jobs/{job}/history/timeline-data', [JobHistoryController::class, 'getTimelineData'])
         ->name('jobs.history.timeline-data')
-        ->middleware('role.permission:11.24'); // Same as view permission
-
+        ->middleware('role.permission:11.24');
 });
 
 
