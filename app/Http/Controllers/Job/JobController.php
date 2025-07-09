@@ -1135,9 +1135,9 @@ public function updateJobStatusBasedOnTasks(Job $job)
         return;
     }
 
+    $totalTasks = $tasks->count();
     $completedTasks = $tasks->where('status', 'completed')->count();
     $inProgressTasks = $tasks->where('status', 'in_progress')->count();
-    $totalTasks = $tasks->count();
 
     $currentStatus = $job->status;
     $newStatus = $currentStatus;
@@ -1148,21 +1148,35 @@ public function updateJobStatusBasedOnTasks(Job $job)
         $job->update([
             'status' => $newStatus,
             'completed_date' => now(),
-            'updated_by' => Auth::id(),
+            'updated_by' => \Illuminate\Support\Facades\Auth::id(),
         ]);
+
+        // Log job completion
+        \App\Services\JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'All tasks completed');
+        \App\Services\JobActivityLogger::logJobCompleted($job, 'All tasks have been completed successfully');
     }
-    // If at least one task is in progress, mark job as in_progress
+    // If at least one task is in progress and job is approved, mark job as in_progress
     elseif ($inProgressTasks > 0 && $currentStatus === 'approved') {
         $newStatus = 'in_progress';
         $job->update([
             'status' => $newStatus,
-             'updated_by' => Auth::id(),
+            'updated_by' => \Illuminate\Support\Facades\Auth::id(),
         ]);
+
+        // Log status change
+        \App\Services\JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'Tasks started');
     }
+    // If job has completed tasks but not all, and current status is in_progress, keep it in_progress
+    elseif ($completedTasks > 0 && $completedTasks < $totalTasks && $currentStatus !== 'in_progress' && $currentStatus === 'approved') {
+        $newStatus = 'in_progress';
+        $job->update([
+            'status' => $newStatus,
+            'updated_by' => \Illuminate\Support\Facades\Auth::id(),
+        ]);
 
-    // log the things performed here to the jobactivity log through JobActivityLogger
-    JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus);
-
+        // Log status change
+        \App\Services\JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'Partial task completion');
+    }
 }
 
 /**
@@ -1336,64 +1350,95 @@ private function getTimelineData(Job $job)
         return $timelineData;
     }
 
-    private function calculateTaskProgress(Task $task, $taskEmployees)
-    {
-        if ($task->status === 'completed') return 100;
-        if ($task->status === 'cancelled') return 0;
-        if ($task->status === 'pending') return 0;
+   private function calculateTaskProgress(Task $task, $taskEmployees)
+{
+    if ($task->status === 'completed') return 100;
+    if ($task->status === 'cancelled') return 0;
+    if ($task->status === 'pending') return 0;
 
-        // For in-progress tasks, calculate based on time elapsed
+    // For in-progress tasks, calculate based on employee completion percentage
+    $totalEmployees = $taskEmployees->count();
+
+    if ($totalEmployees === 0) return 0;
+
+    $completedEmployees = $taskEmployees->where('status', 'completed')->count();
+    $inProgressEmployees = $taskEmployees->where('status', 'in_progress')->count();
+
+    // Calculate completion percentage
+    $completionPercentage = ($completedEmployees / $totalEmployees) * 100;
+
+    // If some employees are in progress but none completed, show partial progress
+    if ($completionPercentage === 0 && $inProgressEmployees > 0) {
+        // Calculate time-based progress for in-progress employees
         $startDate = $taskEmployees->min('start_date');
         $endDate = $taskEmployees->max('end_date');
 
-        if (!$startDate || !$endDate) return 0;
+        if ($startDate && $endDate) {
+            $start = \Carbon\Carbon::parse($startDate);
+            $end = \Carbon\Carbon::parse($endDate);
+            $now = \Carbon\Carbon::now();
 
-        $start = Carbon::parse($startDate);
-        $end = Carbon::parse($endDate);
-        $now = Carbon::now();
+            if ($now <= $start) return 5; // Just started
+            if ($now >= $end) return 85; // Overdue but not completed
 
-        if ($now <= $start) return 0;
-        if ($now >= $end) return 90; // Almost complete but not marked as done
+            $totalDays = $start->diffInDays($end);
+            if ($totalDays === 0) return 50; // Same day task
 
-        $totalDays = $start->diffInDays($end);
-        if ($totalDays === 0) return 50; // Same day task
+            $elapsedDays = $start->diffInDays($now);
+            $timeProgress = min(80, ($elapsedDays / $totalDays) * 80); // Max 80% for time-based
 
-        $elapsedDays = $start->diffInDays($now);
-
-        return min(90, round(($elapsedDays / $totalDays) * 100));
-    }
-
-    private function getJobStats(Job $job)
-    {
-        $tasks = $job->tasks()->where('active', true)->get();
-        $totalTasks = $tasks->count();
-
-        if ($totalTasks === 0) {
-            return [
-                'total_tasks' => 0,
-                'completed_tasks' => 0,
-                'in_progress_tasks' => 0,
-                'pending_tasks' => 0,
-                'overall_progress' => 0
-            ];
+            return round($timeProgress);
         }
 
-        $completedTasks = $tasks->where('status', 'completed')->count();
-        $inProgressTasks = $tasks->where('status', 'in_progress')->count();
-        $pendingTasks = $tasks->where('status', 'pending')->count();
+        return 25; // Default for in-progress with no dates
+    }
 
-        // Calculate overall progress
-        $overallProgress = round(($completedTasks / $totalTasks) * 100);
+    return round($completionPercentage);
+}
 
+   private function getJobStats(Job $job)
+{
+    $tasks = $job->tasks()->where('active', true)->get();
+    $totalTasks = $tasks->count();
+
+    if ($totalTasks === 0) {
         return [
-            'total_tasks' => $totalTasks,
-            'completed_tasks' => $completedTasks,
-            'in_progress_tasks' => $inProgressTasks,
-            'pending_tasks' => $pendingTasks,
-            'overall_progress' => $overallProgress
+            'total_tasks' => 0,
+            'completed_tasks' => 0,
+            'in_progress_tasks' => 0,
+            'pending_tasks' => 0,
+            'cancelled_tasks' => 0,
+            'overall_progress' => 0,
+            'employee_assignments' => 0,
+            'completed_assignments' => 0
         ];
     }
 
+    $completedTasks = $tasks->where('status', 'completed')->count();
+    $inProgressTasks = $tasks->where('status', 'in_progress')->count();
+    $pendingTasks = $tasks->where('status', 'pending')->count();
+    $cancelledTasks = $tasks->where('status', 'cancelled')->count();
+
+    // Calculate overall progress based on completed tasks vs total tasks
+    $overallProgress = round(($completedTasks / $totalTasks) * 100);
+
+    // Get employee assignment statistics
+    $totalAssignments = \App\Models\JobEmployee::whereIn('task_id', $tasks->pluck('id'))->count();
+    $completedAssignments = \App\Models\JobEmployee::whereIn('task_id', $tasks->pluck('id'))
+        ->where('status', 'completed')->count();
+
+    return [
+        'total_tasks' => $totalTasks,
+        'completed_tasks' => $completedTasks,
+        'in_progress_tasks' => $inProgressTasks,
+        'pending_tasks' => $pendingTasks,
+        'cancelled_tasks' => $cancelledTasks,
+        'overall_progress' => $overallProgress,
+        'employee_assignments' => $totalAssignments,
+        'completed_assignments' => $completedAssignments,
+        'assignment_completion_rate' => $totalAssignments > 0 ? round(($completedAssignments / $totalAssignments) * 100) : 0
+    ];
+}
     private function getInitials($name)
     {
         $words = explode(' ', $name);

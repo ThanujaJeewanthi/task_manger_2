@@ -1,26 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
-             {{-- error or success message --}}
-                @if(session('success'))
-                    <div class="alert alert-success">
-                        {{ session('success') }}
-                    </div>
-                @elseif(session('error'))
-                    <div class="alert alert-danger">
-                        {{ session('error') }}
-                    </div>
-                @endif
             <!-- Header Section -->
             <div class="card mb-3">
                 <div class="card-header">
                     <div class="d-component-title">
-                        <span>Employee Dashboard - {{ $employee->name }}</span>
+                        <span>Employee Dashboard</span>
                     </div>
                 </div>
                 <div class="card-body">
@@ -57,7 +45,7 @@
                             <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_completed_tasks'] }}</h5>
-                                    <small>Completed</small>
+                                    <small>Completed Tasks</small>
                                 </div>
                             </div>
                         </div>
@@ -66,7 +54,7 @@
                             <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_overdue_tasks'] }}</h5>
-                                    <small>Overdue</small>
+                                    <small>Overdue Tasks</small>
                                 </div>
                             </div>
                         </div>
@@ -75,7 +63,7 @@
                             <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['my_completed_jobs'] }}</h5>
-                                    <small>Jobs Done</small>
+                                    <small>Completed Jobs</small>
                                 </div>
                             </div>
                         </div>
@@ -83,44 +71,18 @@
                 </div>
             </div>
 
-            <!-- Alerts Section -->
-             @if(count($alerts) > 0)
-<div class="card mb-3">
-    <div class="card-header">
-        <div class="d-component-title">
-            <span>Alerts & Notifications</span>
-
-        </div>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            @foreach($alerts as $alert)
-            <div class="col-md-6 mb-2">
-
-                <div class="alert alert-{{ $alert['type'] }} dashboard-alert mb-0">
-                    <i class="{{ $alert['icon'] }}"></i>
-                    <strong>{{ $alert['count'] }}</strong> - {{ $alert['message'] }}
-                    <small class="d-block mt-1">{{ $alert['action'] }}</small>
-                </div>
-            </div>
-            @endforeach
-        </div>
-    </div>
-</div>
-@endif
-
+            <!-- Performance Section -->
             <div class="row">
-                <!-- Performance Overview -->
-              <div class="col-md-8 d-flex flex-column">
-        <div class="card mb-3 h-100 d-flex flex-column">
-
+                <div class="col-md-12">
+                    <div class="card mb-3">
                         <div class="card-header">
                             <div class="d-component-title">
-                                <span>Your Performance Overview</span>
+                                <span>Performance Overview</span>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="row mb-3">
+                            <!-- Performance Cards Row -->
+                            <div class="row">
                                 <div class="col-md-3">
                                     <div class="card bg-card text-white mb-3">
                                         <div class="card-body text-center">
@@ -182,94 +144,11 @@
                                 <div class="row mt-2">
                                     @foreach($tasksByStatus as $status => $count)
                                     <div class="col-md-3">
-                                        <small><span class="badge bg-{{ $statusColors[$status] ?? 'secondary' }}">{{ ucfirst(str_replace('_', ' ', $status)) }}: {{ $count }}</span></small>
+                                        <small><span class="badge bg-{{ $statusColors[$status] ?? 'secondary' }}">{{ ucfirst(str_replace('_', ' ', $status)) }}</span> {{ $count }}</small>
                                     </div>
                                     @endforeach
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions & Upcoming Deadlines -->
-               <div class="col-md-4 d-flex flex-column">
-                    {{-- <div class="card mb-3">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Quick Actions</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <button type="button" class="btn btn-primary" onclick="quickStatusUpdate()">
-                                    <i class="fas fa-check"></i> Quick Status Update
-                                </button>
-                                <button type="button" class="btn btn-success" onclick="markTaskComplete()">
-                                    <i class="fas fa-check-circle"></i> Complete Task
-                                </button>
-                                <button type="button" class="btn btn-info" onclick="viewMyJobs()">
-                                    <i class="fas fa-briefcase"></i> View My Jobs
-                                </button>
-                                <button type="button" class="btn btn-warning" onclick="requestHelp()">
-                                    <i class="fas fa-question-circle"></i> Request Help
-                                </button>
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-cogs"></i> More Actions
-                                    </button>
-                                    <ul class="dropdown-menu w-100">
-                                        <li><a class="dropdown-item" href="{{ route('profile') }}">
-                                            <i class="fas fa-user"></i> View Profile
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                            <i class="fas fa-edit"></i> Edit Profile
-                                        </a></li>
-                                        <li><hr class="dropdown-divider"></li>
-                                        <li><button class="dropdown-item" onclick="showTimeTracker()">
-                                            <i class="fas fa-clock"></i> Time Tracker
-                                        </button></li>
-                                        <li><button class="dropdown-item" onclick="downloadWorkReport()">
-                                            <i class="fas fa-download"></i> Download Work Report
-                                        </button></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-
-                    <!-- Upcoming Deadlines -->
-                    <div class="card mb-3 h-100 d-flex flex-column">
-
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Upcoming Deadlines</span>
-                            </div>
-                        </div>
-                   <div class="card-body flex-grow-1">
-                            @forelse($upcomingDeadlines as $task)
-                            <div class="mb-2 p-2 border rounded">
-                                <strong>{{ Str::limit($task->task, 25) }}</strong>
-                                <div class="small text-muted">
-                                    Job: {{ $task->job->id ?? 'No Job' }}
-                                    @foreach($task->jobEmployees as $assignment)
-                                        @if($assignment->employee_id == $employee->id)
-                                            <br>Due: {{ $assignment->end_date ? \Carbon\Carbon::parse($assignment->end_date)->format('M d, Y') : 'No due date' }}
-                                            @if($assignment->end_date)
-                                                @php
-                                                    $daysLeft = \Carbon\Carbon::now()->diffInDays(\Carbon\Carbon::parse($assignment->end_date), false);
-                                                    $textClass = $daysLeft < 0 ? 'text-danger' : ($daysLeft <= 2 ? 'text-warning' : 'text-success');
-                                                @endphp
-                                                <span class="{{ $textClass }}">
-                                                    ({{ $daysLeft < 0 ? abs($daysLeft) . ' days overdue' : $daysLeft . ' days left' }})
-                                                </span>
-                                            @endif
-                                        @endif
-                                    @endforeach
-                                </div>
-                            </div>
-                            @empty
-                            <p class="text-muted">No upcoming deadlines</p>
-                            @endforelse
                         </div>
                     </div>
                 </div>
@@ -291,6 +170,7 @@
                                     <th>Type</th>
                                     <th>Client</th>
                                     <th>Priority</th>
+                                    <th>My Tasks</th>
                                     <th>Progress</th>
                                     <th>Due Date</th>
                                     <th>Status</th>
@@ -300,7 +180,7 @@
                             <tbody>
                                 @forelse($myActiveJobs as $job)
                                 <tr>
-                                    <td>{{ $job->id }}</td>
+                                    <td><strong>{{ $job->id }}</strong></td>
                                     <td>
                                         <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
                                             {{ $job->jobType->name }}
@@ -308,45 +188,35 @@
                                     </td>
                                     <td>{{ $job->client->name ?? 'N/A' }}</td>
                                     <td>
-                                        @php
-                                            $priorityColors = ['1' => 'danger', '2' => 'warning', '3' => 'info', '4' => 'secondary'];
-                                            $priorityLabels = ['1' => 'High', '2' => 'Medium', '3' => 'Low', '4' => 'Very Low'];
-                                        @endphp
-                                        <span class="badge bg-{{ $priorityColors[$job->priority] }}">
-                                            {{ $priorityLabels[$job->priority] }}
+                                        <span class="badge bg-{{ $job->priority === 'high' ? 'danger' : ($job->priority === 'medium' ? 'warning' : 'info') }}">
+                                            {{ ucfirst($job->priority) }}
                                         </span>
                                     </td>
+                                    <td>{{ $job->my_completed_tasks }}/{{ $job->my_tasks_count }}</td>
                                     <td>
-                                        <div class="progress" style="height: 20px; width: 80px;">
-                                            <div class="progress-bar bg-success" style="width: {{ $job->progress }}%">
-                                                {{ $job->progress }}%
-                                            </div>
+                                        <div class="progress" style="height: 15px; width: 60px;">
+                                            <div class="progress-bar bg-success" style="width: {{ $job->progress }}%"></div>
                                         </div>
-                                        <small>{{ $job->my_completed_tasks }}/{{ $job->my_tasks_count }} tasks</small>
+                                        <small>{{ $job->progress }}%</small>
                                     </td>
                                     <td>
                                         @if($job->due_date)
                                             @php
-                                                $daysUntilDue = \Carbon\Carbon::now()->diffInDays($job->due_date, false);
-                                                $textClass = $daysUntilDue < 0 ? 'text-danger' : ($daysUntilDue <= 3 ? 'text-warning' : 'text-primary');
+                                                $dueDate = \Carbon\Carbon::parse($job->due_date);
+                                                $isOverdue = $dueDate->isPast();
                                             @endphp
-                                            <span class="{{ $textClass }}">{{ $job->due_date->format('M d') }}</span>
+                                            <span class="{{ $isOverdue ? 'text-danger' : '' }}">
+                                                {{ $dueDate->format('M d, Y') }}
+                                            </span>
+                                            @if($isOverdue)
+                                                <i class="fas fa-exclamation-triangle text-danger" title="Overdue"></i>
+                                            @endif
                                         @else
                                             N/A
                                         @endif
                                     </td>
                                     <td>
-                                        @php
-                                            $statusColors = [
-
-                                                'pending' => 'warning',
-                                                'in_progress' => 'primary',
-                                                'on_hold' => 'info',
-                                                'completed' => 'success',
-                                                'cancelled' => 'danger'
-                                            ];
-                                        @endphp
-                                        <span class="badge bg-{{ $statusColors[$job->status] ?? 'secondary' }}">
+                                        <span class="badge bg-{{ $job->status === 'completed' ? 'success' : ($job->status === 'in_progress' ? 'primary' : ($job->status === 'pending' ? 'warning' : 'secondary')) }}">
                                             {{ ucfirst(str_replace('_', ' ', $job->status)) }}
                                         </span>
                                     </td>
@@ -354,12 +224,11 @@
                                         <button class="btn btn-sm btn-primary" onclick="viewJobDetails({{ $job->id }})">
                                             <i class="fas fa-eye"></i>
                                         </button>
-
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">No active jobs assigned to you</td>
+                                    <td colspan="9" class="text-center">No active jobs assigned to you</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -370,8 +239,6 @@
 
             <!-- My Active Tasks -->
             <div class="row align-items-stretch">
-
-
                 <div class="col-md-8 d-flex flex-column">
                     <div class="card mb-3 flex-fill h-100">
                         <div class="card-header">
@@ -389,12 +256,14 @@
                                             <th>Start Date</th>
                                             <th>End Date</th>
                                             <th>Status</th>
-                                            {{-- <th>Progress</th> --}}
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse($myActiveTasks as $task)
+                                        @php
+                                            $jobEmployee = $task->jobEmployees->where('employee_id', $employee->id)->first();
+                                        @endphp
                                         <tr id="task-row-{{ $task->id }}">
                                             <td>
                                                 <strong>{{ Str::limit($task->task, 30) }}</strong>
@@ -403,206 +272,100 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                {{ $task->job->id ?? 'No Job' }}
-                                                <br><small class="text-muted">{{ $task->job->client->name ?? 'No Client' }}</small>
+                                                {{ $task->job->id ?? 'N/A' }}
+                                                @if($task->job)
+                                                <br><small class="text-muted">{{ $task->job->jobType->name ?? '' }}</small>
+                                                @endif
                                             </td>
                                             <td>
-                                                @foreach($task->jobEmployees as $assignment)
-                                                    @if($assignment->employee_id == $employee->id)
-                                                        {{ $assignment->start_date ? \Carbon\Carbon::parse($assignment->start_date)->format('M d') : 'N/A' }}
+                                                @if($jobEmployee && $jobEmployee->start_date)
+                                                    {{ \Carbon\Carbon::parse($jobEmployee->start_date)->format('M d, Y') }}
+                                                @else
+                                                    <span class="text-muted">Not started</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($jobEmployee && $jobEmployee->end_date)
+                                                    @php
+                                                        $endDate = \Carbon\Carbon::parse($jobEmployee->end_date);
+                                                        $isOverdue = $endDate->isPast() && $jobEmployee->status !== 'completed';
+                                                    @endphp
+                                                    <span class="{{ $isOverdue ? 'text-danger' : '' }}">
+                                                        {{ $endDate->format('M d, Y') }}
+                                                    </span>
+                                                    @if($isOverdue)
+                                                        <i class="fas fa-exclamation-triangle text-danger" title="Overdue"></i>
                                                     @endif
-                                                @endforeach
+                                                @else
+                                                    N/A
+                                                @endif
                                             </td>
                                             <td>
-                                                @foreach($task->jobEmployees as $assignment)
-                                                    @if($assignment->employee_id == $employee->id)
-                                                        @if($assignment->end_date)
-                                                            @php
-                                                                $endDate = \Carbon\Carbon::parse($assignment->end_date);
-                                                                $isOverdue = $endDate->isPast() && $task->status != 'completed';
-                                                                $textClass = $isOverdue ? 'text-danger' : 'text-primary';
-                                                            @endphp
-                                                            <span class="{{ $textClass }}">{{ $endDate->format('M d') }}</span>
-                                                            @if($isOverdue)
-                                                                <br><small class="text-danger">Overdue</small>
-                                                            @endif
-                                                        @else
-                                                            N/A
-                                                        @endif
-                                                    @endif
-                                                @endforeach
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}" id="task-status-{{ $task->id }}">
-                                                    {{ ucfirst(str_replace('_', ' ', $task->status)) }}
-                                                </span>
-                                            </td>
-                                            {{-- <td>
-                                                @foreach($task->jobEmployees as $assignment)
-                                                    @if($assignment->employee_id == $employee->id && $assignment->start_date && $assignment->end_date)
-                                                        @php
-                                                            $startDate = \Carbon\Carbon::parse($assignment->start_date);
-                                                            $endDate = \Carbon\Carbon::parse($assignment->end_date);
-                                                            $today = \Carbon\Carbon::now();
+                                                @php
+                                                    $employeeStatus = $jobEmployee ? $jobEmployee->status : 'not_assigned';
 
-                                                            if ($task->status == 'completed') {
-                                                                $progress = 100;
-                                                            } elseif ($today <= $startDate) {
-                                                                $progress = 0;
-                                                            } elseif ($today >= $endDate) {
-                                                                $progress = 100;
-                                                            } else {
-                                                                $totalDays = $startDate->diffInDays($endDate);
-                                                                $elapsedDays = $startDate->diffInDays($today);
-                                                                $progress = $totalDays > 0 ? round(($elapsedDays / $totalDays) * 100, 1) : 0;
-                                                            }
-                                                        @endphp
-                                                        <div class="progress" style="height: 15px; width: 60px;">
-                                                            <div class="progress-bar bg-{{ $task->status == 'completed' ? 'success' : 'primary' }}"
-                                                                 style="width: {{ $progress }}%">
-                                                            </div>
+                                                    // Determine badge color based on employee status
+                                                    $badgeClass = match($employeeStatus) {
+                                                        'pending' => 'bg-warning',
+                                                        'in_progress' => 'bg-primary',
+                                                        'completed' => 'bg-success',
+                                                        'cancelled' => 'bg-danger',
+                                                        default => 'bg-secondary'
+                                                    };
+
+                                                    // Status text for employee
+                                                    $statusText = match($employeeStatus) {
+                                                        'pending' => 'Pending',
+                                                        'in_progress' => 'In Progress',
+                                                        'completed' => 'Completed',
+                                                        'cancelled' => 'Cancelled',
+                                                        default => 'Not Assigned'
+                                                    };
+                                                @endphp
+
+                                                {{-- Employee Status Badge --}}
+                                                <span class="badge {{ $badgeClass }}" id="task-status-{{ $task->id }}">
+                                                    {{ $statusText }}
+                                                </span>
+
+                                                {{-- Show overall task status if different from employee status --}}
+                                                @if($jobEmployee && $task->status !== $employeeStatus)
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Overall:
+                                                        <span class="badge bg-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'warning') }} badge-sm">
+                                                            {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                                        </span>
+                                                    </small>
+                                                @endif
+
+                                                {{-- Progress indicator for tasks with multiple employees --}}
+                                                @if($task->jobEmployees->count() > 1)
+                                                    @php
+                                                        $totalEmployees = $task->jobEmployees->count();
+                                                        $completedEmployees = $task->jobEmployees->where('status', 'completed')->count();
+                                                        $progressPercentage = $totalEmployees > 0 ? round(($completedEmployees / $totalEmployees) * 100) : 0;
+                                                    @endphp
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        Progress: {{ $completedEmployees }}/{{ $totalEmployees }} employees
+                                                        <div class="progress mt-1" style="height: 4px;">
+                                                            <div class="progress-bar bg-success" style="width: {{ $progressPercentage }}%"></div>
                                                         </div>
-                                                        <small>{{ $progress }}%</small>
-                                                    @else
-                                                        <small class="text-muted">No dates set</small>
-                                                    @endif
-                                                @endforeach
-                                            </td> --}}
+                                                    </small>
+                                                @endif
+                                            </td>
                                             <td>
-            @foreach($task->jobEmployees as $assignment)
-                @if($assignment->employee_id == $employee->id)
-                    <!-- Task Action Buttons for Employees -->
-                    @if($task->status === 'pending')
-                        <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
-                            @csrf
-                            <button type="button" class="btn btn-primary btn-sm"
-                                onclick="handleStartTaskSwal(event, this.form)">
-                                <i class="fas fa-play"></i> Start
-                            </button>
-                            <script>
-                            if (typeof swalDefaults === 'undefined') {
-                                window.swalDefaults = {
-                                    customClass: {
-                                        popup: 'swal2-consistent-ui',
-                                        confirmButton: 'btn btn-success btn-action-xs',
-                                        cancelButton: 'btn btn-secondary btn-action-xs',
-                                        denyButton: 'btn btn-danger btn-action-xs',
-                                        input: 'form-control',
-                                        title: '',
-                                        htmlContainer: '',
-                                    },
-                                    buttonsStyling: false,
-                                    background: '#fff',
-                                    width: 420,
-                                    showClass: { popup: 'swal2-show' },
-                                    hideClass: { popup: 'swal2-hide' },
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                                };
-                            }
-                            function handleStartTaskSwal(event, form) {
-                                event.preventDefault();
-                                Swal.fire({
-                                    ...swalDefaults,
-                                    icon: 'question',
-                                    title: '<span style="font-size:1.05rem;font-weight:600;">Are you sure you want to start this task?</span>',
-                                    html: `<div style="font-size:0.92rem;">
-                                        This action will mark the task as started and set it to "In Progress".
-                                    </div>`,
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Start',
-                                    cancelButtonText: 'Cancel',
-                                    focusConfirm: false,
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        form.submit();
-                                    }
-                                });
-                                return false;
-                            }
-                            </script>
-                        </form>
-                    @elseif($task->status === 'in_progress')
-                       <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
-                            @csrf
-                            <button type="button" class="btn btn-success btn-sm"
-                                onclick="handleCompleteTaskSwal(event, this.form)">
-                                <i class="fas fa-check"></i> Complete
-                            </button>
-                            <script>
-                            if (typeof swalDefaults === 'undefined') {
-                                window.swalDefaults = {
-                                    customClass: {
-                                        popup: 'swal2-consistent-ui',
-                                        confirmButton: 'btn btn-success btn-action-xs',
-                                        cancelButton: 'btn btn-secondary btn-action-xs',
-                                        denyButton: 'btn btn-danger btn-action-xs',
-                                        input: 'form-control',
-                                        title: '',
-                                        htmlContainer: '',
-                                    },
-                                    buttonsStyling: false,
-                                    background: '#fff',
-                                    width: 420,
-                                    showClass: { popup: 'swal2-show' },
-                                    hideClass: { popup: 'swal2-hide' },
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                                };
-                            }
-                            function handleCompleteTaskSwal(event, form) {
-                                event.preventDefault();
-                                Swal.fire({
-                                    ...swalDefaults,
-                                    icon: 'question',
-                                    title: '<span style="font-size:1.05rem;font-weight:600;">Are you sure you want to complete this task?</span>',
-                                    html: `<div style="font-size:0.92rem;">
-                                        This action will mark the task as completed.<br><br>
-                                        <label for="swal-complete-notes" style="font-size:0.85rem;font-weight:500;">Completion Notes (optional):</label>
-                                        <textarea id="swal-complete-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
-                                    </div>`,
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Complete',
-                                    cancelButtonText: 'Cancel',
-                                    focusConfirm: false,
-                                    preConfirm: () => {
-                                        // Optionally, you can return notes here if you want to submit them
-                                        return document.getElementById('swal-complete-notes').value;
-                                    }
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        // If you want to send notes, add a hidden input to the form
-                                        let notesInput = form.querySelector('input[name="completion_notes"]');
-                                        if (!notesInput) {
-                                            notesInput = document.createElement('input');
-                                            notesInput.type = 'hidden';
-                                            notesInput.name = 'completion_notes';
-                                            form.appendChild(notesInput);
-                                        }
-                                        notesInput.value = result.value || '';
-                                        form.submit();
-                                    }
-                                });
-                                return false;
-                            }
-                            </script>
-                        </form>
-                        <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
-                            <i class="fas fa-clock"></i>
-                        </a>
-                    @elseif($task->status === 'completed')
-                        <span class="badge bg-success">
-                            <i class="fas fa-check-circle"></i> Done
-                        </span>
-                    @else
-                        <span class="badge bg-secondary">{{ ucfirst($task->status) }}</span>
-                    @endif
-                    @break
-                @endif
-            @endforeach
-            </td>
+                                                @if($jobEmployee)
+                                                    @include('components.dashboard.employee-task-buttons', ['task' => $task, 'jobEmployee' => $jobEmployee])
+                                                @else
+                                                    <span class="text-muted">Not assigned</span>
+                                                @endif
+                                            </td>
                                         </tr>
                                         @empty
                                         <tr>
-                                            <td colspan="7" class="text-center">No active tasks assigned to you</td>
+                                            <td colspan="6" class="text-center">No active tasks assigned to you</td>
                                         </tr>
                                         @endforelse
                                     </tbody>
@@ -612,81 +375,35 @@
                     </div>
                 </div>
 
-                <!-- Recent Completed Tasks -->
+                <!-- Quick Actions Panel -->
                 <div class="col-md-4 d-flex flex-column">
                     <div class="card mb-3 flex-fill h-100">
                         <div class="card-header">
                             <div class="d-component-title">
-                                <span>Recently Completed</span>
+                                <span>Quick Actions</span>
                             </div>
                         </div>
                         <div class="card-body">
-                            @forelse($myRecentCompletedTasks as $task)
-                            <div class="mb-2 p-2 border rounded bg-light">
-                                <strong>{{ Str::limit($task->task, 25) }}</strong>
-                                <div class="small text-muted">
-                                    Job: {{ $task->job->id ?? 'No Job' }}
-                                    <br>Completed: {{ $task->updated_at->format('M d, H:i') }}
-                                    <br>Client: {{ $task->job->client->name ?? 'No Client' }}
-                                </div>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="viewMyJobs()">
+                                    <i class="fas fa-briefcase"></i> View All My Jobs
+                                </button>
+                                <button class="btn btn-success" onclick="quickStatusUpdate()">
+                                    <i class="fas fa-tasks"></i> Quick Task Update
+                                </button>
+                                <button class="btn btn-info" onclick="showPendingTasks()">
+                                    <i class="fas fa-clock"></i> Show Pending Tasks
+                                </button>
+                                <button class="btn btn-warning" onclick="showOverdueTasks()">
+                                    <i class="fas fa-exclamation-triangle"></i> Show Overdue Tasks
+                                </button>
+                                <button class="btn btn-secondary" onclick="viewMyProfile()">
+                                    <i class="fas fa-user"></i> My Profile
+                                </button>
+                                <button class="btn btn-outline-primary" onclick="downloadWorkReport()">
+                                    <i class="fas fa-download"></i> Download Report
+                                </button>
                             </div>
-                            @empty
-                            <p class="text-muted">No completed tasks yet</p>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Work Trends -->
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card mb-3">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Your Work Trends (Last 6 Months)</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            @if($workloadTrends->count() > 0)
-                            <div class="table-responsive">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Month</th>
-                                            <th>Tasks Assigned</th>
-                                            <th>Tasks Completed</th>
-                                            <th>Completion Rate</th>
-                                            <th>Performance</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($workloadTrends as $trend)
-                                        <tr>
-                                            <td>{{ \Carbon\Carbon::createFromFormat('Y-m', $trend->month)->format('M Y') }}</td>
-                                            <td>{{ $trend->assigned_tasks }}</td>
-                                            <td>{{ $trend->completed_tasks }}</td>
-                                            <td>
-                                                @php
-                                                    $rate = $trend->assigned_tasks > 0 ? round(($trend->completed_tasks / $trend->assigned_tasks) * 100, 1) : 0;
-                                                @endphp
-                                                {{ $rate }}%
-                                            </td>
-                                            <td>
-                                                <div class="progress" style="height: 20px; width: 100px;">
-                                                    <div class="progress-bar bg-{{ $rate >= 80 ? 'success' : ($rate >= 60 ? 'warning' : 'danger') }}"
-                                                         style="width: {{ $rate }}%">
-                                                    </div>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                            @else
-                            <p class="text-muted">No work trend data available yet</p>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -695,7 +412,7 @@
     </div>
 </div>
 
-<!-- Task Status Update Modal -->
+{{-- Task Status Update Modal --}}
 <div class="modal fade" id="taskStatusModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -708,7 +425,7 @@
                     <input type="hidden" id="taskId" name="task_id">
                     <div class="mb-3">
                         <label for="taskStatus" class="form-label">Status</label>
-                        <select class="form-control" id="taskStatus" name="status" required>
+                        <select class="form-select" id="taskStatus" name="status" required>
                             <option value="pending">Pending</option>
                             <option value="in_progress">In Progress</option>
                             <option value="completed">Completed</option>
@@ -732,6 +449,276 @@
         </div>
     </div>
 </div>
+
+{{-- Complete Task Modal --}}
+<div class="modal fade" id="completeTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Complete Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    You are about to mark "<span id="modalTaskName"></span>" as completed.
+                </div>
+                <form id="completeTaskForm">
+                    <div class="mb-3">
+                        <label for="completion_notes" class="form-label">Completion Notes (Optional)</label>
+                        <textarea class="form-control" id="completion_notes" name="completion_notes" rows="3"
+                                  placeholder="Describe what was completed..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitCompleteTask()">
+                    <i class="fas fa-check"></i> Complete Task
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Start Task Modal --}}
+<div class="modal fade" id="startTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Start Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-play-circle"></i>
+                    You are about to start "<span id="modalStartTaskName"></span>".
+                </div>
+                <p>Are you sure you want to start this task?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmStartTask">
+                    <i class="fas fa-play"></i> Start Task
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTaskId = null;
+let currentTaskName = '';
+
+// Start Task Function
+function startTask(taskId, taskName) {
+    currentTaskId = taskId;
+    currentTaskName = taskName;
+    document.getElementById('modalStartTaskName').textContent = taskName;
+    new bootstrap.Modal(document.getElementById('startTaskModal')).show();
+}
+
+// Complete Task Function
+function completeTask(taskId, taskName) {
+    currentTaskId = taskId;
+    currentTaskName = taskName;
+    document.getElementById('modalTaskName').textContent = taskName;
+    document.getElementById('completion_notes').value = ''; // Clear previous notes
+    new bootstrap.Modal(document.getElementById('completeTaskModal')).show();
+}
+
+// Task Status Update Function
+function updateTaskStatus(taskId, status = null) {
+    document.getElementById('taskId').value = taskId;
+    if (status) {
+        document.getElementById('taskStatus').value = status;
+        toggleCompletionNotes();
+    }
+    new bootstrap.Modal(document.getElementById('taskStatusModal')).show();
+}
+
+function toggleCompletionNotes() {
+    const status = document.getElementById('taskStatus').value;
+    const completionDiv = document.getElementById('completionNotesDiv');
+    if (status === 'completed') {
+        completionDiv.style.display = 'block';
+    } else {
+        completionDiv.style.display = 'none';
+    }
+}
+
+document.getElementById('taskStatus').addEventListener('change', toggleCompletionNotes);
+
+// Start Task Confirmation
+document.getElementById('confirmStartTask').addEventListener('click', function() {
+    if (!currentTaskId) return;
+
+    // Show loading state
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+    this.disabled = true;
+
+    fetch(`/tasks/${currentTaskId}/start`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('startTaskModal')).hide();
+
+            // Show success message using SweetAlert
+            Swal.fire({
+                title: 'Success!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            showAlert('error', data.message || 'Failed to start task');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', 'Failed to start task');
+    })
+    .finally(() => {
+        // Reset button state
+        this.innerHTML = '<i class="fas fa-play"></i> Start Task';
+        this.disabled = false;
+    });
+});
+
+// Submit Complete Task
+function submitCompleteTask() {
+    if (!currentTaskId) return;
+
+    const completionNotes = document.getElementById('completion_notes').value;
+    const submitBtn = document.querySelector('#completeTaskModal .btn-success');
+
+    // Show loading state
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+    submitBtn.disabled = true;
+
+    fetch(`/tasks/${currentTaskId}/complete`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            completion_notes: completionNotes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('completeTaskModal')).hide();
+
+            // Show success message using SweetAlert
+            Swal.fire({
+                title: 'Success!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                location.reload();
+            });
+        } else {
+            showAlert('error', data.message || 'Failed to complete task');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showAlert('error', 'Failed to complete task');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Complete Task';
+        submitBtn.disabled = false;
+    });
+}
+
+// Submit Task Status Update
+function submitTaskStatus() {
+    const form = document.getElementById('taskStatusForm');
+    const formData = new FormData(form);
+    const taskId = formData.get('task_id');
+
+    fetch(`/employee/tasks/${taskId}/status`, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            status: formData.get('status'),
+            notes: formData.get('notes'),
+            completion_notes: formData.get('completion_notes')
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update the status badge
+            updateTaskStatusBadge(taskId, data.new_status);
+
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('taskStatusModal')).hide();
+
+            // Show success message
+            Swal.fire({
+                title: 'Success!',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                // Refresh page to show updated buttons and overall status
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                text: data.message || 'Failed to update task status',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error!',
+            text: 'Failed to update task status',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    });
+}
+
+function updateTaskStatusBadge(taskId, newStatus) {
+    const statusBadge = document.getElementById(`task-status-${taskId}`);
+    if (!statusBadge) return;
+
+    // Update badge class and text
+    const statusConfig = {
+        'pending': { class: 'bg-warning', text: 'Pending' },
+        'in_progress': { class: 'bg-primary', text: 'In Progress' },
+        'completed': { class: 'bg-success', text: 'Completed' },
+        'cancelled': { class: 'bg-danger', text: 'Cancelled' }
+    };
+
+    const { class: badgeClass, text: badgeText } = statusConfig[newStatus] || {};
+    statusBadge.className = `badge ${badgeClass}`;
+    statusBadge.textContent = badgeText;
+}
+
 
 <script>
 function updateTaskStatus(taskId, status = null) {

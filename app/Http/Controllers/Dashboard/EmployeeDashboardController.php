@@ -192,82 +192,98 @@ class EmployeeDashboardController extends Controller
     }
 
     public function updateTaskStatus(Request $request, Task $task)
-    {
-        $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
+{
+    $user = Auth::user();
+    $employee = Employee::where('user_id', $user->id)->first();
 
-        // Check if this employee is assigned to this task
-        $jobEmployee = JobEmployee::where('employee_id', $employee->id)
-            ->where('task_id', $task->id)
-            ->first();
-
-        if (!$jobEmployee) {
-            return response()->json(['error' => 'You are not assigned to this task'], 403);
-        }
-
-        $request->validate([
-            'status' => 'required|in:pending,in_progress,completed',
-            'notes' => 'nullable|string|max:1000',
-            'completion_notes' => 'nullable|string|max:1000'
-        ]);
-
-        DB::beginTransaction();
-        try {
-            // Update task status
-            $updateData = [
-                'status' => $request->status,
-                'updated_by' => $user->id
-            ];
-
-            // If task is completed, update completion timestamp
-            if ($request->status === 'completed') {
-                $updateData['completed_at'] = Carbon::now();
-            }
-
-            $task->update($updateData);
-
-            // Update job employee status and notes
-            $jobEmployeeUpdateData = [
-                'status' => $request->status,
-                'updated_by' => $user->id
-            ];
-
-            if ($request->notes) {
-                $jobEmployeeUpdateData['notes'] = $request->notes;
-            }
-
-            $jobEmployee->update($jobEmployeeUpdateData);
-
-            // If all tasks for this job are completed, update job status
-            $job = $task->job;
-            if ($job) {
-                $allTasksCompleted = $job->tasks()->where('active', true)->count() ===
-                                    $job->tasks()->where('status', 'completed')->where('active', true)->count();
-
-                if ($allTasksCompleted && $job->status !== 'completed') {
-                    $job->update([
-                        'status' => 'completed',
-                        'completed_date' => Carbon::now(),
-                        'updated_by' => $user->id
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Task status updated successfully',
-                'new_status' => $request->status,
-                'job_status' => $job ? $job->fresh()->status : null
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['error' => 'Failed to update task status'], 500);
-        }
+    if (!$employee) {
+        return response()->json(['success' => false, 'message' => 'Employee record not found'], 403);
     }
 
+    $jobEmployee = JobEmployee::where('employee_id', $employee->id)
+        ->where('task_id', $task->id)
+        ->first();
+
+    if (!$jobEmployee) {
+        return response()->json(['success' => false, 'message' => 'Task assignment not found'], 404);
+    }
+
+    $request->validate([
+        'status' => 'required|in:pending,in_progress,completed',
+        'notes' => 'nullable|string|max:1000',
+        'completion_notes' => 'nullable|string|max:1000'
+    ]);
+
+    DB::beginTransaction();
+    try {
+        // Update job employee status and notes for this specific employee
+        $jobEmployeeUpdateData = [
+            'status' => $request->status,
+            'updated_by' => $user->id
+        ];
+
+        if ($request->notes) {
+            $jobEmployeeUpdateData['notes'] = $request->notes;
+        }
+
+        if ($request->status === 'completed' && $request->completion_notes) {
+            $jobEmployeeUpdateData['notes'] = $request->completion_notes;
+        }
+
+        if ($request->status === 'in_progress' && !$jobEmployee->start_date) {
+            $jobEmployeeUpdateData['start_date'] = now()->toDateString();
+        }
+
+        $jobEmployee->update($jobEmployeeUpdateData);
+
+        // Handle task status updates based on ALL employee completions
+        if ($request->status === 'completed') {
+            // Check if ALL employees assigned to this task have completed it
+            $totalEmployeesForTask = JobEmployee::where('task_id', $task->id)->count();
+            $completedEmployeesForTask = JobEmployee::where('task_id', $task->id)
+                ->where('status', 'completed')
+                ->count();
+
+            // Update task status only if ALL employees completed it
+            if ($completedEmployeesForTask === $totalEmployeesForTask) {
+                $task->update([
+                    'status' => 'completed',
+                    'completed_at' => Carbon::now(),
+                    'updated_by' => $user->id
+                ]);
+            }
+        } elseif ($request->status === 'in_progress' && $task->status === 'pending') {
+            // Update task to in_progress if any employee starts it
+            $task->update([
+                'status' => 'in_progress',
+                'updated_by' => $user->id
+            ]);
+        }
+
+        // Update job status based on task completions
+        $job = $task->job;
+        if ($job) {
+            $this->updateJobStatusBasedOnTasks($job);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Task status updated successfully',
+            'new_status' => $request->status,
+            'job_status' => $job ? $job->fresh()->status : null,
+            'task_status' => $task->fresh()->status
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update task status'
+        ], 500);
+    }
+}
     public function updateJobStatus(Request $request, Job $job)
     {
         $user = Auth::user();
@@ -308,6 +324,46 @@ class EmployeeDashboardController extends Controller
             'new_status' => $request->status
         ]);
     }
+    private function updateJobStatusBasedOnTasks(Job $job)
+{
+    $tasks = $job->tasks()->where('active', true)->get();
+
+    if ($tasks->isEmpty()) {
+        return;
+    }
+
+    $totalTasks = $tasks->count();
+    $completedTasks = $tasks->where('status', 'completed')->count();
+    $inProgressTasks = $tasks->where('status', 'in_progress')->count();
+
+    $currentStatus = $job->status;
+    $newStatus = $currentStatus;
+
+    // If all tasks are completed, mark job as completed
+    if ($completedTasks === $totalTasks && $currentStatus !== 'completed') {
+        $newStatus = 'completed';
+        $job->update([
+            'status' => $newStatus,
+            'completed_date' => Carbon::now(),
+            'updated_by' => Auth::id(),
+        ]);
+
+        // Log job completion
+        \App\Services\JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'All tasks completed');
+        \App\Services\JobActivityLogger::logJobCompleted($job, 'All tasks have been completed successfully');
+    }
+    // If at least one task is in progress and job is approved, mark job as in_progress
+    elseif ($inProgressTasks > 0 && $currentStatus === 'approved') {
+        $newStatus = 'in_progress';
+        $job->update([
+            'status' => $newStatus,
+            'updated_by' => Auth::id(),
+        ]);
+
+        // Log status change
+        \App\Services\JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'Tasks started');
+    }
+}
 
     // Helper methods
     private function getMyActiveJobs($employeeId)
@@ -404,25 +460,24 @@ class EmployeeDashboardController extends Controller
         return round($totalDays / $completedTasks->count(), 1);
     }
 
-    private function getOnTimeCompletionRate($employeeId)
-    {
-        $completedTasks = JobEmployee::where('employee_id', $employeeId)
-            ->whereHas('task', function ($query) {
-                $query->where('status', 'completed');
-            })
-            ->whereNotNull('end_date')
-            ->get();
+   private function getOnTimeCompletionRate($employeeId)
+{
+    $completedTasks = \App\Models\JobEmployee::where('employee_id', $employeeId)
+        ->where('status', 'completed')
+        ->whereNotNull('end_date')
+        ->get();
 
-        if ($completedTasks->isEmpty()) {
-            return 0;
-        }
-
-        $onTimeTasks = $completedTasks->filter(function ($jobEmployee) {
-            return $jobEmployee->task->updated_at <= $jobEmployee->end_date;
-        })->count();
-
-        return round(($onTimeTasks / $completedTasks->count()) * 100, 1);
+    if ($completedTasks->isEmpty()) {
+        return 0;
     }
+
+    $onTimeTasks = $completedTasks->filter(function ($jobEmployee) {
+        // Check if the task was completed before or on the end date
+        return $jobEmployee->updated_at <= \Carbon\Carbon::parse($jobEmployee->end_date)->endOfDay();
+    })->count();
+
+    return round(($onTimeTasks / $completedTasks->count()) * 100, 1);
+}
 
     public function getTaskDetails(Request $request, Task $task)
     {
@@ -446,31 +501,47 @@ class EmployeeDashboardController extends Controller
         ]);
     }
 
-    private function calculateTaskProgress($task, $employeeId)
-    {
-        $jobEmployee = JobEmployee::where('employee_id', $employeeId)
-            ->where('task_id', $task->id)
-            ->first();
+ private function calculateTaskProgress($task, $employeeId)
+{
+    $jobEmployee = \App\Models\JobEmployee::where('employee_id', $employeeId)
+        ->where('task_id', $task->id)
+        ->first();
 
-        if (!$jobEmployee || !$jobEmployee->start_date || !$jobEmployee->end_date) {
-            return 0;
-        }
+    if (!$jobEmployee) {
+        return 0;
+    }
 
-        $startDate = Carbon::parse($jobEmployee->start_date);
-        $endDate = Carbon::parse($jobEmployee->end_date);
-        $today = Carbon::now();
+    // If this employee completed the task, return 100
+    if ($jobEmployee->status === 'completed') {
+        return 100;
+    }
+
+    // If task is pending for this employee, return 0
+    if ($jobEmployee->status === 'pending') {
+        return 0;
+    }
+
+    // If in progress, calculate time-based progress
+    if ($jobEmployee->status === 'in_progress' && $jobEmployee->start_date && $jobEmployee->end_date) {
+        $startDate = \Carbon\Carbon::parse($jobEmployee->start_date);
+        $endDate = \Carbon\Carbon::parse($jobEmployee->end_date);
+        $today = \Carbon\Carbon::now();
 
         if ($today >= $endDate) {
-            return 100;
+            return 90; // Overdue but not completed
         }
 
         if ($today <= $startDate) {
-            return 0;
+            return 10; // Just started
         }
 
         $totalDays = $startDate->diffInDays($endDate);
-        $elapsedDays = $startDate->diffInDays($today);
+        if ($totalDays === 0) return 50; // Same day task
 
-        return round(($elapsedDays / $totalDays) * 100, 1);
+        $elapsedDays = $startDate->diffInDays($today);
+        return round(($elapsedDays / $totalDays) * 90); // Max 90% for time-based progress
     }
+
+    return 25; // Default for in-progress without dates
+}
 }
