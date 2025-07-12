@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\DB;
 use App\Services\JobActivityLogger;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Job\JobController;
 
 class EmployeeTaskController extends Controller
 {
@@ -24,7 +23,7 @@ class EmployeeTaskController extends Controller
         $employee = Employee::where('user_id', $user->id)->first();
 
         if (!$employee) {
-            return response()->json(['error' => 'Employee record not found'], 403);
+            return response()->json(['success' => false, 'message' => 'Employee record not found'], 403);
         }
 
         // Check if employee is assigned to this task
@@ -33,48 +32,58 @@ class EmployeeTaskController extends Controller
             ->first();
 
         if (!$jobEmployee) {
-            return response()->json(['error' => 'You are not assigned to this task'], 403);
+            return response()->json(['success' => false, 'message' => 'You are not assigned to this task'], 403);
         }
 
-        if ($task->status !== 'pending') {
-            return response()->json(['error' => 'Task cannot be started'], 400);
+        if ($jobEmployee->status !== 'pending') {
+            return response()->json(['success' => false, 'message' => 'Task cannot be started'], 400);
         }
 
         try {
             DB::beginTransaction();
 
-            // Update task status
-            $task->update([
+            // Update job employee status for this specific employee
+            $jobEmployee->update([
                 'status' => 'in_progress',
-                'updated_by' => Auth::id(),
+                'start_date' => now()->toDateString(),
             ]);
 
-// Update job employee status
-$jobEmployee->update([
-    'status' => 'in_progress',
-    'start_date' => now()->toDateString(),
-]);
+            // Update task status to in_progress if any employee started it
+            if ($task->status === 'pending') {
+                $task->update([
+                    'status' => 'in_progress',
+                    'updated_by' => Auth::id(),
+                ]);
+            }
 
-// Get the job instance
-$job = $task->job;
+            // Get the job instance
+            $job = $task->job;
 
-// Auto-update job status
-$jobController = new JobController();
-$jobController->updateJobStatusBasedOnTasks($job);
+            // Auto-update job status based on tasks
+            $this->updateJobStatusBasedOnTasks($job);
 
-DB::commit();
-// After task status update, add:
-JobActivityLogger::logTaskStarted($job, $task, $employee);
-return redirect()->back()
-    ->with('success', 'Task started successfully');
+            DB::commit();
+
+            // Log task started
+            JobActivityLogger::logTaskStarted($job, $task, $employee);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Task started successfully!'
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()
-            ->with('error', 'Failed to start task');
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to start task. Please try again.'
+            ], 500);
         }
     }
 
+    /**
+     * Complete a task for the current employee
+     */
     public function completeTask(Request $request, Task $task)
     {
         $request->validate([
@@ -88,52 +97,118 @@ return redirect()->back()
             $employee = Employee::where('user_id', Auth::id())->first();
 
             if (!$employee) {
-                throw new \Exception('Employee record not found.');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Employee record not found.'
+                ], 403);
             }
 
-            // Update task status in job_employees
-            JobEmployee::where('task_id', $task->id)
+            // Get the job employee record for this specific employee and task
+            $jobEmployee = JobEmployee::where('task_id', $task->id)
                 ->where('employee_id', $employee->id)
-                ->update([
+                ->first();
+
+            if (!$jobEmployee) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You are not assigned to this task.'
+                ], 403);
+            }
+
+            if ($jobEmployee->status === 'completed') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Task is already completed by you.'
+                ], 400);
+            }
+
+            // Update task status in job_employees for this specific employee
+            $jobEmployee->update([
+                'status' => 'completed',
+                'notes' => $request->completion_notes,
+                'updated_at' => now(),
+            ]);
+
+            // Check if ALL employees assigned to this task have completed it
+            $totalEmployeesForTask = JobEmployee::where('task_id', $task->id)->count();
+            $completedEmployeesForTask = JobEmployee::where('task_id', $task->id)
+                ->where('status', 'completed')
+                ->count();
+
+            // Update task status only if ALL employees completed it
+            if ($completedEmployeesForTask === $totalEmployeesForTask) {
+                $task->update([
                     'status' => 'completed',
-                    'notes' => $request->completion_notes,
+                    'completed_at' => now(),
+                    'updated_by' => Auth::id(),
                 ]);
 
-            // Update task status if all employees completed
-            $pendingCount = JobEmployee::where('task_id', $task->id)
-                ->where('status', '!=', 'completed')
-                ->count();
-
-            if ($pendingCount === 0) {
-                $task->update(['status' => 'completed']);
+                // Log task completion
+                JobActivityLogger::logTaskCompleted($job, $task, $employee, $request->completion_notes);
             }
-
-            // Log task completion
-            JobActivityLogger::logTaskCompleted($job, $task, $employee, $request->completion_notes);
 
             // Check if all tasks are completed to update job status
-            $pendingTasks = Task::where('job_id', $job->id)
-                ->where('status', '!=', 'completed')
-                ->count();
-
-            if ($pendingTasks === 0) {
-                $oldStatus = $job->status;
-                $job->update(['status' => 'completed', 'completed_date' => now()]);
-
-                // Log job completion
-                JobActivityLogger::logJobStatusChanged($job, $oldStatus, 'completed', 'All tasks completed');
-                JobActivityLogger::logJobCompleted($job, 'All tasks have been completed successfully');
-            }
+            $this->updateJobStatusBasedOnTasks($job);
 
             DB::commit();
 
-            return redirect()->back()
-                ->with('success', 'Task completed successfully!');
+            return response()->json([
+                'success' => true,
+                'message' => 'Task completed successfully!',
+                'task_fully_completed' => ($completedEmployeesForTask === $totalEmployeesForTask),
+                'job_status' => $job->fresh()->status
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Failed to complete task. Please try again.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to complete task. Please try again.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Update job status based on task completion
+     */
+    private function updateJobStatusBasedOnTasks(Job $job)
+    {
+        $tasks = $job->tasks()->where('active', true)->get();
+
+        if ($tasks->isEmpty()) {
+            return;
+        }
+
+        $totalTasks = $tasks->count();
+        $completedTasks = $tasks->where('status', 'completed')->count();
+        $inProgressTasks = $tasks->where('status', 'in_progress')->count();
+
+        $currentStatus = $job->status;
+        $newStatus = $currentStatus;
+
+        // If all tasks are completed, mark job as completed
+        if ($completedTasks === $totalTasks && $currentStatus !== 'completed') {
+            $newStatus = 'completed';
+            $job->update([
+                'status' => $newStatus,
+                'completed_date' => now(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Log job completion
+            JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'All tasks completed');
+            JobActivityLogger::logJobCompleted($job, 'All tasks have been completed successfully');
+        }
+        // If at least one task is in progress and job is approved, mark job as in_progress
+        elseif ($inProgressTasks > 0 && $currentStatus === 'approved') {
+            $newStatus = 'in_progress';
+            $job->update([
+                'status' => $newStatus,
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Log status change
+            JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'Tasks started');
         }
     }
 }
