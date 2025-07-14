@@ -166,7 +166,7 @@ class JobHistoryController extends Controller
             $activities = $query->get();
 
             // Generate PDF
-            $pdf = Pdf::loadView('jobs.history.export_pdf', [
+            $pdf = Pdf::loadView('jobs.history.pdf', [
                 'job' => $job,
                 'activities' => $activities,
                 'filters' => $filters,

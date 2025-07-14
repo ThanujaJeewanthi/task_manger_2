@@ -109,11 +109,11 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row g-3">
+                   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-9">
                         <!-- Job Approval -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="card h-100">
-                                <div class="card-header bg-card text-white">
+                       {{-- <div class="col d-flex">
+                            <div class="card flex-fill h-100 ">
+                                <div class="card-header bg-card text-white mb-3">
                                     <h6 class="mb-0"><i class="fas fa-clipboard-check"></i> Job Approvals</h6>
                                 </div>
                                 <div class="card-body">
@@ -127,12 +127,12 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <!-- Task Management -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="card h-100">
-                                <div class="card-header bg-card text-white">
+                          <div class="col d-flex">
+                           <div class="card  flex-fill h-100 mb-3">
+                                <div class="card-header bg-card text-white  mb-3">
                                     <h6 class="mb-0"><i class="fas fa-tasks"></i> Task Management</h6>
                                 </div>
                                 <div class="card-body">
@@ -149,9 +149,9 @@
                         </div>
 
                         <!-- Employee Management -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="card h-100">
-                                <div class="card-header bg-card text-white">
+                       <div class="col d-flex">
+                           <div class="card  flex-fill h-100 mb-3">
+                                <div class="card-header bg-card text-white  mb-3">
                                     <h6 class="mb-0"><i class="fas fa-users"></i> Employee Management</h6>
                                 </div>
                                 <div class="card-body">
@@ -165,8 +165,8 @@
                         </div>
 
                         <!-- Equipment Management -->
-                        <div class="col-12 col-sm-6 col-lg-3">
-                            <div class="card h-100">
+                         <div class="col d-flex">
+                           <div class="card  flex-fill h-100">
                                 <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-tools"></i> Equipment Management</h6>
                                 </div>

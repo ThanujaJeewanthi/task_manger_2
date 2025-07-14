@@ -221,9 +221,9 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <button class="btn btn-sm btn-primary" onclick="viewJobDetails({{ $job->id }})">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                       <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary" title="View Job">
+                                <i class="fas fa-eye"></i>
+                            </a>
                                     </td>
                                 </tr>
                                 @empty
@@ -239,7 +239,7 @@
 
             <!-- My Active Tasks -->
             <div class="row align-items-stretch">
-                <div class="col-md-8 d-flex flex-column">
+                <div class="col d-flex flex-column">
                     <div class="card mb-3 flex-fill h-100">
                         <div class="card-header">
                             <div class="d-component-title">
@@ -329,7 +329,7 @@
                                                 </span>
 
                                                 {{-- Show overall task status if different from employee status --}}
-                                                @if($jobEmployee && $task->status !== $employeeStatus)
+                                                {{-- @if($jobEmployee && $task->status !== $employeeStatus)
                                                     <br>
                                                     <small class="text-muted">
                                                         Overall:
@@ -337,7 +337,7 @@
                                                             {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                                                         </span>
                                                     </small>
-                                                @endif
+                                                @endif --}}
 
                                                 {{-- Progress indicator for tasks with multiple employees --}}
                                                 @if($task->jobEmployees->count() > 1)
@@ -355,13 +355,161 @@
                                                     </small>
                                                 @endif
                                             </td>
-                                            <td>
-                                                @if($jobEmployee)
-                                                    @include('components.dashboard.employee-task-buttons', ['task' => $task, 'jobEmployee' => $jobEmployee])
-                                                @else
-                                                    <span class="text-muted">Not assigned</span>
-                                                @endif
-                                            </td>
+                                           <td>
+    @if($jobEmployee)
+        @php
+            $currentUserEmployee = Auth::user()->employee ?? null;
+            $isAssignedToTask = false;
+            $userJobEmployee = null;
+
+            if ($currentUserEmployee) {
+                $userJobEmployee = $jobEmployee;
+                $isAssignedToTask = $userJobEmployee !== null;
+            }
+        @endphp
+
+        @if(Auth::user()->userRole->name === 'Employee' && $isAssignedToTask)
+            <!-- Employee Task Actions -->
+            <div class="btn-group" role="group">
+                @if($task->status === 'pending')
+                    <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
+                        @csrf
+                        <button type="button" class="btn btn-primary btn-sm"
+                            onclick="showStartTaskSwal(this)">
+                           Start
+                        </button>
+                        <script>
+                        function showStartTaskSwal(btn) {
+                            const swalDefaults = {
+                                customClass: {
+                                    popup: 'swal2-consistent-ui',
+                                    confirmButton: 'btn btn-success btn-action-xs',
+                                    cancelButton: 'btn btn-secondary btn-action-xs',
+                                    denyButton: 'btn btn-danger btn-action-xs',
+                                    input: 'form-control',
+                                    title: '',
+                                    htmlContainer: '',
+                                },
+                                buttonsStyling: false,
+                                background: '#fff',
+                                width: 420,
+                                showClass: { popup: 'swal2-show' },
+                                hideClass: { popup: 'swal2-hide' },
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                            };
+                            Swal.fire({
+                                ...swalDefaults,
+                                icon: 'question',
+                                title: '<span style="font-size:1.05rem;font-weight:600;">Start this task?</span>',
+                                html: `<div style="font-size:0.92rem;">Are you sure you want to start this task?</div>`,
+                                showCancelButton: true,
+                                confirmButtonText: 'Start',
+                                cancelButtonText: 'Cancel',
+                                focusConfirm: false,
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Find the parent form and submit
+                                    let form = btn.closest('form');
+                                    if(form) {
+                                        btn.disabled = true;
+                                        form.submit();
+                                    }
+                                }
+                            });
+                        }
+                        </script>
+                    </form>
+                @elseif($task->status === 'in_progress' && $userJobEmployee->status!='completed' && $task->status!='completed')
+                    <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                        @csrf
+                        <button type="button" class="btn btn-success btn-sm"
+            onclick="handleCompleteTaskSwal(event, this.form)">
+           Complete
+        </button>
+        <script>
+        if (typeof swalDefaults === 'undefined') {
+            window.swalDefaults = {
+                customClass: {
+                    popup: 'swal2-consistent-ui',
+                    confirmButton: 'btn btn-success btn-action-xs',
+                    cancelButton: 'btn btn-secondary btn-action-xs',
+                    denyButton: 'btn btn-danger btn-action-xs',
+                    input: 'form-control',
+                    title: '',
+                    htmlContainer: '',
+                },
+                buttonsStyling: false,
+                background: '#fff',
+                width: 420,
+                showClass: { popup: 'swal2-show' },
+                hideClass: { popup: 'swal2-hide' },
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            };
+        }
+        function handleCompleteTaskSwal(event, form) {
+            event.preventDefault();
+            Swal.fire({
+                ...swalDefaults,
+                icon: 'question',
+                title: '<span style="font-size:1.05rem;font-weight:600;">Are you sure you want to complete this task?</span>',
+                html: `<div style="font-size:0.92rem;">
+                    This action will mark the task as completed.<br><br>
+                    <label for="swal-complete-notes" style="font-size:0.85rem;font-weight:500;">Completion Notes (optional):</label>
+                    <textarea id="swal-complete-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Complete',
+                cancelButtonText: 'Cancel',
+                focusConfirm: false,
+                preConfirm: () => {
+                    // Optionally, you can return notes here if you want to submit them
+                    return document.getElementById('swal-complete-notes').value;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If you want to send notes, add a hidden input to the form
+                    let notesInput = form.querySelector('input[name="completion_notes"]');
+                    if (!notesInput) {
+                        notesInput = document.createElement('input');
+                        notesInput.type = 'hidden';
+                        notesInput.name = 'completion_notes';
+                        form.appendChild(notesInput);
+                    }
+                    notesInput.value = result.value || '';
+                    form.submit();
+                }
+            });
+            return false;
+        }
+        </script>
+                    </form>
+                    <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
+                        <i class="fas fa-clock"></i>
+                    </a>
+                @elseif($task->status === 'completed' || $userJobEmployee->status==='completed')
+                    <span class="badge bg-success">
+                         Completed
+                    </span>
+                @endif
+            </div>
+        @else
+            <!-- Non-employee or unassigned users see view/edit options -->
+            @if(in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor', 'Technical Officer', 'admin']))
+                <div class="btn-group" role="group">
+                    @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
+                        <a href="{{ route('jobs.tasks.edit', ['job' => $task->job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    @endif
+                </div>
+            @else
+                <span class="text-muted">-</span>
+            @endif
+        @endif
+    @else
+        <span class="text-muted">Not assigned</span>
+    @endif
+</td>
                                         </tr>
                                         @empty
                                         <tr>
@@ -375,38 +523,7 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions Panel -->
-                <div class="col-md-4 d-flex flex-column">
-                    <div class="card mb-3 flex-fill h-100">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>Quick Actions</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-primary" onclick="viewMyJobs()">
-                                    <i class="fas fa-briefcase"></i> View All My Jobs
-                                </button>
-                                <button class="btn btn-success" onclick="quickStatusUpdate()">
-                                    <i class="fas fa-tasks"></i> Quick Task Update
-                                </button>
-                                <button class="btn btn-info" onclick="showPendingTasks()">
-                                    <i class="fas fa-clock"></i> Show Pending Tasks
-                                </button>
-                                <button class="btn btn-warning" onclick="showOverdueTasks()">
-                                    <i class="fas fa-exclamation-triangle"></i> Show Overdue Tasks
-                                </button>
-                                <button class="btn btn-secondary" onclick="viewMyProfile()">
-                                    <i class="fas fa-user"></i> My Profile
-                                </button>
-                                <button class="btn btn-outline-primary" onclick="downloadWorkReport()">
-                                    <i class="fas fa-download"></i> Download Report
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
             </div>
         </div>
     </div>

@@ -55,7 +55,7 @@
                         </div>
                         <div class="col-md-3">
                             <strong>Status:</strong>
-                            <span class="badge badge-{{ $job->status === 'completed' ? 'success' : ($job->status === 'in_progress' ? 'warning' : 'secondary') }}">
+                            <span class="text-dark ">
                                 {{ ucfirst(str_replace('_', ' ', $job->status)) }}
                             </span>
                         </div>
