@@ -1353,10 +1353,7 @@ public function showReview(Job $job)
         abort(403, 'You do not have permission to review jobs.');
     }
 
-    if ($job->status !== 'completed') {
-        return redirect()->route('jobs.show', $job)
-            ->with('error', 'Only completed jobs can be reviewed.');
-    }
+
 
     $job->load(['tasks', 'jobEmployees.employee', 'jobEmployees.task']);
 
@@ -1377,10 +1374,7 @@ public function processReview(Request $request, Job $job)
         abort(403, 'You do not have permission to review jobs.');
     }
 
-    if ($job->status !== 'completed') {
-        return redirect()->route('jobs.show', $job)
-            ->with('error', 'Only completed jobs can be reviewed.');
-    }
+
 
     $request->validate([
         'action' => 'required|in:close',
@@ -1399,11 +1393,12 @@ public function processReview(Request $request, Job $job)
             'closed_at' => now(),
             'updated_by' => Auth::id(),
         ]);
+        JobActivityLogger::logJobReviewed($job, $request->review_notes, Auth::id());
+
+
 
         DB::commit();
          // log job review
-     JobActivityLogger::logJobReviewed($job, $request->review_notes, Auth::id());
-
 
         return redirect()->route('jobs.show', $job)
             ->with('success', 'Job has been reviewed and closed successfully.');

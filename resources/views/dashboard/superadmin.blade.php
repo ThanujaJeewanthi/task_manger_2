@@ -526,31 +526,17 @@
                     <div class="row">
                         <div class="col-md-12">
                             <div class="btn-toolbar" role="toolbar">
-                                <div class="btn-group me-2" role="group">
-                                    <button type="button" class="btn btn-primary" onclick="generateSystemReport()">
-                                        <i class="fas fa-chart-line"></i> System Report
-                                    </button>
-                                    <button type="button" class="btn btn-info" onclick="exportSystemData()">
-                                        <i class="fas fa-download"></i> Export Data
-                                    </button>
-                                    <button type="button" class="btn btn-warning" onclick="systemMaintenance()">
-                                        <i class="fas fa-tools"></i> Maintenance Mode
-                                    </button>
-                                </div>
+                                
 
                                 <div class="btn-group me-2" role="group">
                                     <a href="{{ route('logs.index') }}" class="btn btn-secondary">
                                         <i class="fas fa-history"></i> View All Logs
                                     </a>
-                                    <button type="button" class="btn btn-danger" onclick="clearOldLogs()">
-                                        <i class="fas fa-trash"></i> Clear Old Logs
-                                    </button>
+
                                 </div>
 
                                 <div class="btn-group" role="group">
-                                    <button type="button" class="btn btn-success" onclick="sendSystemNotification()">
-                                        <i class="fas fa-bell"></i> Send Notification
-                                    </button>
+
                                     <a href="{{ route('admin.permissions.manage', ['roleId' => 1]) }}" class="btn btn-outline-primary">
                                         <i class="fas fa-shield-alt"></i> Manage Permissions
                                     </a>

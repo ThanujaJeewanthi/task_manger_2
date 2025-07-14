@@ -647,7 +647,7 @@
     </div>
 
     <!-- Activity Statistics -->
-    <div class="statistics-section">
+    {{-- <div class="statistics-section">
         <div class="stats-header">
             Activity Summary & Statistics
         </div>
@@ -679,7 +679,7 @@
             </div>
             @endif
         </div>
-    </div>
+    </div> --}}
 
     <!-- Applied Filters Section -->
     @if(!empty(array_filter($filters)))

@@ -33,9 +33,7 @@ body.modal-open {
                             <a href="{{ route('jobs.create') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> Create Job
                             </a>
-                            {{-- <button class="btn btn-success btn-sm" onclick="showBulkAssignModal()">
-                                <i class="fas fa-users"></i> Bulk Assign
-                            </button> --}}
+
                         </div>
                     </div>
                 </div>
@@ -43,7 +41,7 @@ body.modal-open {
                     <div class="row g-3">
                          <!-- Overview Cards -->
                         <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-                            <div class="card bg-card text-white mb-3">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_jobs'] }}</h5>
                                     <small>Total Jobs</small>
@@ -52,7 +50,7 @@ body.modal-open {
                         </div>
 
                         <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-                            <div class="card bg-success text-white mb-3">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['jobs_created_by_me'] }}</h5>
                                     <small>Created by Me</small>
@@ -60,8 +58,8 @@ body.modal-open {
                             </div>
                         </div>
 
-                        <div class="col-md-2">
-                            <div class="card bg-warning text-white mb-3">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $jobStats['unassigned_jobs'] }}</h5>
                                     <small>Unassigned</small>
@@ -69,8 +67,8 @@ body.modal-open {
                             </div>
                         </div>
 
-                        <div class="col-md-2">
-                            <div class="card bg-info text-white mb-3">
+                        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_clients'] }}</h5>
                                     <small>Clients</small>
@@ -78,8 +76,8 @@ body.modal-open {
                             </div>
                         </div>
 
-                        <div class="col-md-2">
-                            <div class="card bg-secondary text-white mb-3">
+                       <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_employees'] }}</h5>
                                     <small>Employees</small>
@@ -87,8 +85,8 @@ body.modal-open {
                             </div>
                         </div>
 
-                        <div class="col-md-2">
-                            <div class="card bg-dark text-white mb-3">
+                       <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+                            <div class="card bg-card text-white h-100">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_equipment'] }}</h5>
                                     <small>Equipment</small>
@@ -133,22 +131,22 @@ body.modal-open {
                     </div>
                 </div>
                 <div class="card-body">
-                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-7">
                         <!-- Job Creation & Assignment -->
                         <div class="col d-flex">
-                            <div class="card border-primary flex-fill h-100">
-                                <div class="card-header bg-primary text-white">
+                            <div class="card flex-fill h-100">
+                                <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-briefcase"></i> Job Management</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('jobs.create') }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('jobs.create') }}" class="btn btn-sm bg-card text-light">
                                             <i class="fas fa-plus"></i> Create New Job
                                         </a>
-                                        <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ route('jobs.index') }}" class="btn btn-sm bg-card text-light">
                                             <i class="fas fa-list"></i> View All Jobs
                                         </a>
-                                        <button class="btn btn-sm btn-outline-primary" onclick="showQuickJobModal()">
+                                        <button class="btn btn-sm bg-card text-light" onclick="showQuickJobModal()">
                                             <i class="fas fa-bolt"></i> Quick Job
                                         </button>
                                     </div>
@@ -158,63 +156,61 @@ body.modal-open {
 
                         <!-- Assignment Management -->
                         <div class="col d-flex">
-                            <div class="card border-warning flex-fill h-100">
-                                <div class="card-header bg-warning text-white">
+                            <div class="card  flex-fill h-100">
+                                <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-user-tag"></i> Job Assignment</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <button class="btn btn-sm btn-warning" onclick="showAssignmentQueue()">
+                                        <button class="btn btn-sm bg-card text-light" onclick="showAssignmentQueue()">
                                             <i class="fas fa-clipboard-list"></i> Assignment Queue ({{ $jobStats['unassigned_jobs'] }})
                                         </button>
-                                        <button class="btn btn-sm btn-outline-warning" onclick="showBulkAssignModal()">
-                                            <i class="fas fa-users"></i> Bulk Assign
-                                        </button>
+
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Team Management -->
-                        <div class="col d-flex">
-                            <div class="card border-success flex-fill h-100">
-                                <div class="card-header bg-success text-white">
+                        {{-- <div class="col d-flex">
+                            <div class="card  flex-fill h-100">
+                                <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-users"></i> Team Management</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-success">
+                                        <a href="{{ route('employees.index') }}" class="btn btn-sm bg-card text-light">
                                             <i class="fas fa-list"></i> View Team
                                         </a>
-                                        <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-success">
+                                        <a href="{{ route('clients.index') }}" class="btn btn-sm bg-card text-light">
                                             <i class="fas fa-handshake"></i> Manage Clients
                                         </a>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <!-- Reports & Analytics -->
-                        <div class="col d-flex">
-                            <div class="card border-info flex-fill h-100">
-                                <div class="card-header bg-info text-white">
+                        {{-- <div class="col d-flex">
+                            <div class="card  flex-fill h-100">
+                                <div class="card-header bg-card text-white">
                                     <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Reports & Analytics</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <button class="btn btn-sm btn-info" onclick="generateJobReport()">
+                                        <button class="btn btn-sm bg-card text-light" onclick="generateJobReport()">
                                             <i class="fas fa-file-alt"></i> Job Report
                                         </button>
-                                        <button class="btn btn-sm btn-outline-info" onclick="generateTeamReport()">
+                                        <button class="btn btn-sm bg-card text-light" onclick="generateTeamReport()">
                                             <i class="fas fa-users"></i> Team Report
                                         </button>
-                                        <button class="btn btn-sm btn-outline-info" onclick="generateClientReport()">
+                                        <button class="btn btn-sm bg-card text-light" onclick="generateClientReport()">
                                             <i class="fas fa-handshake"></i> Client Report
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </div>
@@ -316,7 +312,7 @@ body.modal-open {
                                         <tr>
                                             <th>Officer</th>
                                             <th>Active Jobs</th>
-                                            <th>Actions</th>
+
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -329,12 +325,7 @@ body.modal-open {
                                                 @endphp
                                                 <span class="badge bg-{{ $workloadColor }}">{{ $officer->active_jobs_count }}</span>
                                             </td>
-                                            <td>
 
-                                                <button class="btn btn-sm btn-info" onclick="viewOfficerJobs({{ $officer->id }})">
-                                                    <i class="fas fa-eye"></i>
-                                                </button>
-                                            </td>
                                         </tr>
                                         @empty
                                         <tr>
@@ -357,9 +348,7 @@ body.modal-open {
                         <div class="d-component-title">
                             <span>Unassigned Jobs Requiring Attention</span>
                         </div>
-                        <button class="btn btn-sm btn-warning" onclick="showBulkAssignModal()">
-                            <i class="fas fa-users"></i> Bulk Assign Selected
-                        </button>
+
                     </div>
                 </div>
                 <div class="card-body">
@@ -367,9 +356,7 @@ body.modal-open {
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>
-                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                                    </th>
+
                                     <th>Job #</th>
                                     <th>Type</th>
                                     <th>Client</th>
@@ -381,9 +368,7 @@ body.modal-open {
                             <tbody>
                                 @foreach($unassignedJobs as $job)
                                 <tr>
-                                    <td>
-                                        <input type="checkbox" class="job-checkbox" value="{{ $job->id }}">
-                                    </td>
+
                                     <td>{{ $job->id }}</td>
                                     <td>
                                         <span class="badge" style="background-color: {{ $job->jobType->color ?? '#6c757d' }};">
@@ -405,9 +390,7 @@ body.modal-open {
                                         <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <button class="btn btn-sm btn-success" onclick="showAssignModal({{ $job->id }})">
-                                            <i class="fas fa-user-tag"></i> Assign
-                                        </button>
+
                                         <a href="{{ route('jobs.edit', $job) }}" class="btn btn-sm btn-info">
                                             <i class="fas fa-edit"></i>
                                         </a>
@@ -506,7 +489,7 @@ body.modal-open {
                     </div>
                 </div>
 
-                <!-- Upcoming Deadlines -->
+                <!-- Upcoming Deadlines-->
                 <div class="col-md-4">
                     <div class="card mb-3">
                         <div class="card-header">
@@ -663,57 +646,9 @@ async function assignJob(jobId) {
     }
 }
 
-function bulkAssignJobs() {
-    const selectedJobs = getSelectedJobs();
-    if (selectedJobs.length === 0) {
-        TaskManager.showError('Please select at least one job for bulk assignment.');
-        return;
-    }
 
-    ModernModal.confirm({
-        title: 'Bulk Job Assignment',
-        message: `Assign ${selectedJobs.length} selected jobs?`,
-        type: 'form',
-        confirmText: 'Assign All',
-        formFields: [
-            {
-                type: 'select',
-                name: 'assigned_user_id',
-                label: 'Assign To',
-                required: true,
-                options: [] // Will be populated dynamically
-            },
-            {
-                type: 'select',
-                name: 'priority',
-                label: 'Priority for All Jobs',
-                required: true,
-                value: '2',
-                options: [
-                    { value: '1', text: 'High' },
-                    { value: '2', text: 'Medium' },
-                    { value: '3', text: 'Low' },
-                    { value: '4', text: 'Very Low' }
-                ]
-            }
-        ],
-        onConfirm: async (formData) => {
-            const response = await apiClient.post('/supervisor/jobs/bulk-assign', {
-                ...formData.data,
-                job_ids: selectedJobs
-            });
 
-            if (response.success) {
-                await ModernModal.success(response.message);
-                TaskManager.refreshPage();
-            } else {
-                throw new Error(response.message || 'Failed to assign jobs');
-            }
 
-            return response;
-        }
-    });
-}
 
 function getSelectedJobs() {
     const checkboxes = document.querySelectorAll('input[name="selected_jobs[]"]:checked');
@@ -721,42 +656,7 @@ function getSelectedJobs() {
 }
 
 
-function submitBulkAssignment() {
-    const selectedJobs = getSelectedJobs();
-    if (selectedJobs.length === 0) {
-        alert('No jobs selected');
-        return;
-    }
 
-    const form = document.getElementById('bulkAssignForm');
-    const formData = new FormData(form);
-
-    fetch('/supervisor/jobs/bulk-assign', {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            job_ids: selectedJobs,
-            assigned_user_id: formData.get('assigned_user_id'),
-            priority: formData.get('priority')
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('bulkAssignModal')).hide();
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            alert('Error bulk assigning jobs: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error bulk assigning jobs');
-    });
-}
 
 function getSelectedJobs() {
     const checkboxes = document.querySelectorAll('.job-checkbox:checked');
