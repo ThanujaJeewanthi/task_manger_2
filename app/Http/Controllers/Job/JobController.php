@@ -1306,7 +1306,7 @@ public function updateJobStatusBasedOnTasks(Job $job)
         $newStatus = 'completed';
         $job->update([
             'status' => $newStatus,
-            'completed_date' => now(),
+            'completed_date' => now()->format('Y-m-d H:i:s'),
             'updated_by' => \Illuminate\Support\Facades\Auth::id(),
         ]);
 

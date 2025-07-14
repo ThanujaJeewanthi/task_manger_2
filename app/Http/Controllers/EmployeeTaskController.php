@@ -183,7 +183,7 @@ class EmployeeTaskController extends Controller
             $newStatus = 'completed';
             $job->update([
                 'status' => $newStatus,
-                'completed_date' => now(),
+                'completed_date' => now()->toDateString(),
                 'updated_by' => Auth::id(),
             ]);
 

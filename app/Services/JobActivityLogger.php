@@ -117,11 +117,11 @@ public static function logTaskStarted(Job $job, $task, $employee)
         'activity_category' => 'task',
         'priority_level' => 'medium',
         'is_major_activity' => false,
-        'description' => "Task '{$task->task}' started by {$employee->user->name}",
+        'description' => "Task '{$task->task}' started by {$employee->username}",
         'affected_user_id' => $employee->user_id,
         'new_values' => [
-            'started_by' => $employee->user->name,
-            'started_at' => now(),
+            'started_by' => $employee->username,
+            'started_at' => now()->format('Y-m-d H:i:s'),
         ],
         'related_model_type' => 'Task',
         'related_model_id' => $task->id,
@@ -144,7 +144,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
             'new_values' => [
                 'assigned_to' => $assignedUser->name,
                 'assignment_type' => $assignmentType,
-                'assigned_at' => now(),
+                'assigned_at' => now()->format('Y-m-d H:i:s'),
             ],
             'metadata' => [
                 'assignment_type' => $assignmentType,
@@ -195,7 +195,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
                 'approval_status' => $action,
                 'approver' => $approver->name,
                 'approval_notes' => $notes,
-                'approved_at' => now(),
+                'approved_at' => now()->format('Y-m-d H:i:s'),
             ],
             'metadata' => [
                 'approver_role' => $approver->userRole?->name,
@@ -267,7 +267,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
             'new_values' => [
                 'reviewed_by' => $reviewer->name,
                 'review_notes' => $notes,
-                'reviewed_at' => now(),
+                'reviewed_at' => now()->format('Y-m-d H:i:s'),
             ],
             'metadata' => [
                 'review_notes' => $notes,
@@ -435,12 +435,12 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => false,
-            'description' => "Assigned task '{$task->task}' to {$employee->user->name}" .
+            'description' => "Assigned task '{$task->task}' to {$employee->username}" .
                 ($startDate && $endDate ? " ({$startDate} to {$endDate})" : ''),
             'affected_user_id' => $employee->user_id,
             'new_values' => [
                 'task_name' => $task->task,
-                'assigned_to' => $employee->user->name,
+                'assigned_to' => $employee->username,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
             ],
@@ -461,7 +461,7 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => false,
-            'description' => "Extension requested for task '{$task->task}' by {$employee->user->name} from {$currentEndDate} to {$requestedEndDate}",
+            'description' => "Extension requested for task '{$task->task}' by {$employee->username} from {$currentEndDate} to {$requestedEndDate}",
             'affected_user_id' => $employee->user_id,
             'old_values' => ['end_date' => $currentEndDate],
             'new_values' => ['requested_end_date' => $requestedEndDate],
@@ -486,7 +486,7 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => true,
-            'description' => "Task extension {$action} for '{$task->task}' assigned to {$employee->user->name}" .
+            'description' => "Task extension {$action} for '{$task->task}' assigned to {$employee->username}" .
                 ($notes ? " - {$notes}" : ''),
             'affected_user_id' => $employee->user_id,
             'new_values' => [
@@ -513,12 +513,13 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'high',
             'is_major_activity' => true,
-            'description' => "Task '{$task->task}' completed by {$employee->user->name}" .
+            'description' => "Task '{$task->task}' completed by {$employee->username}" .
                 ($completionNotes ? " - {$completionNotes}" : ''),
             'affected_user_id' => $employee->user_id,
             'new_values' => [
-                'completed_by' => $employee->user->name,
-                'completed_at' => now(),
+                'completed_by' => $employee->username,
+                //  store  current date and time in a better format and save
+                'completed_at'=> now()->format('Y-m-d H:i:s'),
                 'completion_notes' => $completionNotes,
             ],
             'related_model_type' => 'Task',
@@ -540,7 +541,7 @@ if (is_array($notes)) {
             'is_major_activity' => true,
             'description' => "Job completed" . ($completionNotes ? " - {$completionNotes}" : ''),
             'new_values' => [
-                'completed_at' => now(),
+                'completed_at' => now()->format('Y-m-d H:i:s'),
                 'completion_notes' => $completionNotes,
                 'final_status' => 'completed',
             ],
@@ -627,7 +628,7 @@ if (is_array($notes)) {
             'new_values' => [
                 'copied_from_job_id' => $originalJob->id,
                 'copied_by' => $copier->name,
-                'copied_at' => now(),
+                'copied_at' => now()->format('Y-m-d H:i:s'),
                 'new_job_id' => $newJob->id,
                 'job_type' => $newJob->jobType?->name,
                 'priority' => $newJob->priority,
@@ -647,7 +648,7 @@ if (is_array($notes)) {
                 'copied_tasks_count' => $originalJob->tasks()->where('active', true)->count(),
                 'copied_items_count' => \App\Models\JobItems::where('job_id', $originalJob->id)->where('active', true)->count(),
                 'copier_role' => $copier->userRole?->name,
-                'copy_timestamp' => now()->toISOString(),
+                'copy_timestamp' => now()->format('Y-m-d H:i:s'),
             ],
         ]);
     }
