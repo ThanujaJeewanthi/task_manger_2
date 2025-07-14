@@ -374,6 +374,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
     { if ($job->company_id !== Auth::user()->company_id) {
             abort(403);
         }
+        $oldValues = $job->getOriginal();
 
         $request->validate([
 
@@ -413,14 +414,14 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
         }
 
         $job->update($data);
-        // Log job update
-        // Capture old values before update for logging
-        $oldValues = $job->getOriginal();
+
+
+
 
         // Log job update with old and new values
         JobActivityLogger::logJobUpdated($job, $oldValues, $data);
 
-        return redirect()->route('jobs.index')->with('success', 'Job updated successfully.');        return redirect()->route('jobs.index')->with('success', 'Job updated successfully.');
+        return redirect()->route('jobs.index')->with('success', 'Job updated successfully.');
     }
     public function destroy(Job $job)
     {
@@ -446,7 +447,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
 
  public function storeTask(Request $request, Job $job)
     {
-        if ($job->company_id !== Auth::user()->company_id) {
+        if ($job->company_id !== Auth::user()->company_id) { 
             abort(403);
         }
 
@@ -1343,19 +1344,40 @@ public function updateJobStatusBasedOnTasks(Job $job)
  */
 public function showReview(Job $job)
 {
+    // Check company access
     if ($job->company_id !== Auth::user()->company_id) {
         abort(403);
     }
 
-    // Check if user has review rights
+    // Check user role permissions
     $userRole = Auth::user()->userRole->name ?? '';
     if (!in_array($userRole, ['Engineer', 'admin'])) {
         abort(403, 'You do not have permission to review jobs.');
     }
 
+    // CRITICAL: Validate job status - only completed jobs can be reviewed
+    if ($job->status !== 'completed') {
+        return redirect()->route('jobs.show', $job)
+            ->with('error', 'Only completed jobs can be reviewed. Current status: ' . ucfirst($job->status));
+    }
 
+    // Check if job is already closed/reviewed
+    if ($job->status === 'closed') {
+        return redirect()->route('jobs.show', $job)
+            ->with('info', 'This job has already been reviewed and closed.');
+    }
 
-    $job->load(['tasks', 'jobEmployees.employee', 'jobEmployees.task']);
+    // Validate that all tasks are actually completed
+    $incompleteTasks = $job->tasks()->where('active', true)
+        ->where('status', '!=', 'completed')
+        ->count();
+
+    if ($incompleteTasks > 0) {
+        return redirect()->route('jobs.show', $job)
+            ->with('error', "Cannot review job: {$incompleteTasks} task(s) are not completed yet.");
+    }
+
+    $job->load(['tasks.jobEmployees.employee', 'jobType', 'client', 'creator']);
 
     return view('jobs.review', compact('job'));
 }
@@ -1365,16 +1387,28 @@ public function showReview(Job $job)
  */
 public function processReview(Request $request, Job $job)
 {
+    // Check company access
     if ($job->company_id !== Auth::user()->company_id) {
         abort(403);
     }
 
+    // Check user role permissions
     $userRole = Auth::user()->userRole->name ?? '';
     if (!in_array($userRole, ['Engineer', 'admin'])) {
         abort(403, 'You do not have permission to review jobs.');
     }
 
+    // Validate job status
+    if ($job->status !== 'completed') {
+        return redirect()->back()
+            ->with('error', 'Only completed jobs can be reviewed and closed.');
+    }
 
+    // Check if already closed
+    if ($job->status === 'closed') {
+        return redirect()->route('jobs.show', $job)
+            ->with('error', 'This job has already been closed.');
+    }
 
     $request->validate([
         'action' => 'required|in:close',
@@ -1384,7 +1418,18 @@ public function processReview(Request $request, Job $job)
     try {
         DB::beginTransaction();
 
-        // Always close the job (streamlined - no task adding)
+        // Double-check all tasks are completed before closing
+        $incompleteTasks = $job->tasks()->where('active', true)
+            ->where('status', '!=', 'completed')
+            ->exists();
+
+        if ($incompleteTasks) {
+            DB::rollBack();
+            return redirect()->back()
+                ->with('error', 'Cannot close job: Some tasks are not completed yet.');
+        }
+
+        // Close the job
         $job->update([
             'status' => 'closed',
             'reviewed_by' => Auth::id(),
@@ -1393,22 +1438,37 @@ public function processReview(Request $request, Job $job)
             'closed_at' => now(),
             'updated_by' => Auth::id(),
         ]);
-        JobActivityLogger::logJobReviewed($job, $request->review_notes, Auth::id());
 
-
+        // Log the review - wrap in try-catch to prevent transaction failure
+        try {
+            if (class_exists('App\Services\JobActivityLogger')) {
+                JobActivityLogger::logJobReviewed($job, $request->review_notes, Auth::id());
+            }
+        } catch (\Exception $logError) {
+            // Log the error but don't fail the transaction
+            \Log::warning('Failed to log job review activity', [
+                'job_id' => $job->id,
+                'error' => $logError->getMessage()
+            ]);
+        }
 
         DB::commit();
-         // log job review
 
         return redirect()->route('jobs.show', $job)
             ->with('success', 'Job has been reviewed and closed successfully.');
 
     } catch (\Exception $e) {
         DB::rollBack();
-        return redirect()->back()
-            ->with('error', 'Failed to process review. Please try again.');
-    }
 
+        \Log::error('Failed to process job review', [
+            'job_id' => $job->id,
+            'user_id' => Auth::id(),
+            'error' => $e->getMessage()
+        ]);
+
+        return redirect()->back()
+            ->with('error', 'Failed to process review. Please try again. Error: ' . $e->getMessage());
+    }
 }
 
 // Add method to get status color for consistent display

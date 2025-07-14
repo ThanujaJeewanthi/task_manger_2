@@ -444,10 +444,10 @@ Route::middleware(['auth'])->group(function () {
 // Engineer Job Review Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/jobs/{job}/review', [JobController::class, 'showReview'])
-        ->name('jobs.review');
+        ->name('jobs.review')->middleware('role.permission:11.25');;
 
     Route::post('/jobs/{job}/review', [JobController::class, 'processReview'])
-        ->name('jobs.review.process');
+        ->name('jobs.review.process')->middleware('role.permission:11.25');;
 });
 
 Route::middleware(['auth'])->group(function () {
