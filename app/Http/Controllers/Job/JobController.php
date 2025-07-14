@@ -11,6 +11,8 @@ use App\Models\Client;
 use App\Models\JobType;
 use App\Models\Employee;
 
+
+
 use App\Models\Equipment;
 use App\Models\JobOption;
 use App\Models\JobEmployee;
@@ -299,15 +301,6 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
 
     return redirect()->route('jobs.index')->with('success', 'Job created successfully.');
 }
-
-
-
-
-
-
-
-
-
 
 
          public function show(Job $job)
@@ -938,8 +931,9 @@ public function processApproval(Request $request, Job $job)
         }
 
         DB::commit();
-
-        return redirect()->route('jobs.index')->with('success', $message);
+// redirect to the task creation page for this job
+        return redirect()->route('jobs.tasks.create' , ['job' => $job->id])
+            ->with('success', $message);
 
     } catch (\Exception $e) {
         DB::rollBack();
@@ -982,63 +976,228 @@ public function processApproval(Request $request, Job $job)
 
     public function storeCopy(Request $request, Job $job)
     {
-
-
         // Get job type and its options for validation
         $jobType = null;
         if ($request->has('job_type_id') && $request->job_type_id) {
             $jobType = JobType::with('jobOptions')->find($request->job_type_id);
         }
 
-        // Build validation rules
-        $rules = $this->getValidationRules($jobType);
-        $request->validate($rules);
+        // Build validation rules dynamically
+        $rules = [
+            'job_type_id' => 'required|exists:job_types,id',
+            'client_id' => 'nullable|exists:clients,id',
+            'equipment_id' => 'nullable|exists:equipments,id',
+            'description' => 'nullable|string',
+            'references' => 'nullable|string',
+            'priority' => 'required|in:1,2,3,4',
+            'assigned_user_id' => 'nullable|exists:users,id',
+            'start_date' => 'nullable|date',
+            'due_date' => 'nullable|date|after_or_equal:start_date',
+            'photos' => 'nullable|array',
+            'photos.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
+        ];
 
-        // Prepare job data
-        $jobData = $this->prepareJobData($request);
+        // Add validation for job options if job_type_id is present
+        if ($jobType) {
+            foreach ($jobType->jobOptions as $option) {
+                $fieldName = 'job_option_' . $option->id;
 
-        // Handle job option values
-        $jobOptionValues = $this->processJobOptionValues($request, $jobType);
-        if (!empty($jobOptionValues)) {
-            $jobData['job_option_values'] = $jobOptionValues;
-        }
+                if ($option->required) {
+                    $rules[$fieldName] = 'required';
+                // Copy job option values from original job (if no new values provided)
+            if (empty($jobOptionValues)) {
+                $originalJobOptionValues = \App\Models\JobOptionValue::where('job_id', $job->id)->get();
+                foreach ($originalJobOptionValues as $originalValue) {
+                    \App\Models\JobOptionValue::create([
+                        'job_id' => $newJob->id,
+                        'job_option_id' => $originalValue->job_option_id,
+                        'value' => $originalValue->value,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            }
 
-        // Copy photos from original job
-        if ($job->photos) {
-            $jobData['photos'] = $job->photos; // Copy JSON-encoded photos
-        }
-
-        // Create the new job
-        $newJob = Job::create($jobData);
-
-        // Copy tasks from original job
-        $tasks = Task::where('job_id', $job->id)->where('active', true)->get();
-        foreach ($tasks as $task) {
-            $newTask = $task->replicate();
-            $newTask->job_id = $newJob->id;
-            $newTask->created_by = Auth::id();
-            $newTask->save();
-
-            // Copy job employees for the task
-            $jobEmployees = $job->jobEmployees()->where('task_id', $task->id)->get();
-            foreach ($jobEmployees as $jobEmployee) {
-                $newJob->jobEmployees()->create([
-                    'employee_id' => $jobEmployee->employee_id,
-                    'task_id' => $newTask->id,
-                    'start_date' => $jobEmployee->start_date,
-                    'end_date' => $jobEmployee->end_date,
-                    'duration_in_days' => $jobEmployee->duration_in_days,
-                    'status' => $jobEmployee->status,
-                    'notes' => $jobEmployee->notes,
-                    'created_by' => Auth::id(),
-                    'updated_by' => Auth::id(),
-                ]);
+                // Add specific validation based on option type
+                switch ($option->option_type) {
+                    case 'number':
+                        $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'numeric';
+                        break;
+                    case 'date':
+                        $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'date';
+                        break;
+                    case 'file':
+                        $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'file|max:2048';
+                        break;
+                    case 'checkbox':
+                        $rules[$fieldName] = 'nullable|boolean';
+                        break;
+                    case 'select':
+                        // For equipment and client dropdowns
+                        if ($option->id == 1) { // Equipment option
+                            $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'exists:equipments,id';
+                        } elseif ($option->id == 2) { // Client option
+                            $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'exists:clients,id';
+                        } else {
+                            $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'string|max:255';
+                        }
+                        break;
+                    default:
+                        $rules[$fieldName] = ($option->required ? 'required|' : 'nullable|') . 'string|max:255';
+                        break;
+                }
             }
         }
 
-        return redirect()->route('jobs.index')->with('success', 'Job copied successfully as a new job.');
-    }
+        // Validate the request
+        $request->validate($rules);
 
+        // Prepare job data (without custom id - use auto-increment)
+        $jobData = [
+            'job_type_id' => $request->job_type_id,
+            'client_id' => $request->client_id,
+            'equipment_id' => $request->equipment_id,
+            'description' => $request->description,
+            'references' => $request->references,
+            'priority' => $request->priority,
+            'assigned_user_id' => $request->assigned_user_id,
+            'start_date' => $request->start_date,
+            'due_date' => $request->due_date,
+            'status' => 'pending',
+            'active' => true,
+            'company_id' => Auth::user()->company_id,
+            'created_by' => Auth::id(),
+        ];
+
+        // Handle job option values in separate table (skip special options that map to main fields)
+        if ($jobType) {
+            foreach ($jobType->jobOptions as $option) {
+                $fieldName = 'job_option_' . $option->id;
+
+                // Skip special options that map to main database fields
+                if ($option->id == 1) { // Equipment option
+                    if ($request->has($fieldName)) {
+                        $jobData['equipment_id'] = $request->input($fieldName);
+                    }
+                    continue;
+                } elseif ($option->id == 2) { // Client option
+                    if ($request->has($fieldName)) {
+                        $jobData['client_id'] = $request->input($fieldName);
+                    }
+                    continue;
+                }
+
+                if ($request->has($fieldName)) {
+                    $value = $request->input($fieldName);
+
+                    // Handle file uploads for job options
+                    if ($option->option_type === 'file' && $request->hasFile($fieldName)) {
+                        $file = $request->file($fieldName);
+                        $fileName = time() . '_' . $file->getClientOriginalName();
+                        $filePath = $file->storeAs('job_option_files', $fileName, 'public');
+                        $value = $filePath;
+                    }
+
+                    $jobOptionValues[$option->id] = $value;
+                }
+            }
+        }
+
+        if (!empty($jobOptionValues)) {
+            $jobData['job_option_values'] = json_encode($jobOptionValues);
+        }
+
+        // Handle photo uploads for the new job (if any new photos are uploaded)
+        if ($request->hasFile('photos')) {
+            $photos = [];
+            foreach ($request->file('photos') as $photo) {
+                $fileName = time() . '_' . $photo->getClientOriginalName();
+                $filePath = $photo->storeAs('job_photos', $fileName, 'public');
+                $photos[] = $filePath;
+            }
+            $jobData['photos'] = json_encode($photos);
+        } else {
+            // Copy photos from original job if no new photos uploaded
+            if ($job->photos) {
+                $jobData['photos'] = $job->photos; // Copy JSON-encoded photos
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Create the new job
+            $newJob = Job::create($jobData);
+
+            // Save job option values to separate table
+            if (!empty($jobOptionValues)) {
+                foreach ($jobOptionValues as $optionId => $value) {
+                    if ($value !== null && $value !== '') {
+                        \App\Models\JobOptionValue::create([
+                            'job_id' => $newJob->id,
+                            'job_option_id' => $optionId,
+                            'value' => $value, // Store file path in value column
+                            'created_by' => Auth::id(),
+                            'updated_by' => Auth::id(),
+                        ]);
+                    }
+                }
+            }
+
+            // Copy tasks from original job
+            $tasks = Task::where('job_id', $job->id)->where('active', true)->get();
+            foreach ($tasks as $task) {
+                $newTask = $task->replicate();
+                $newTask->job_id = $newJob->id;
+                $newTask->created_by = Auth::id();
+                $newTask->save();
+
+                // Copy job employees for the task
+                $jobEmployees = $job->jobEmployees()->where('task_id', $task->id)->get();
+                foreach ($jobEmployees as $jobEmployee) {
+                    $newJob->jobEmployees()->create([
+                        'employee_id' => $jobEmployee->employee_id,
+                        'task_id' => $newTask->id,
+                        'start_date' => $jobEmployee->start_date,
+                        'end_date' => $jobEmployee->end_date,
+                        'duration_in_days' => $jobEmployee->duration_in_days,
+                        'status' => 'pending', // Reset status for copied job
+                        'notes' => $jobEmployee->notes,
+                        'created_by' => Auth::id(),
+                        'updated_by' => Auth::id(),
+                    ]);
+                }
+            }
+
+            // Copy job items from original job (if any)
+            $jobItems = JobItems::where('job_id', $job->id)->where('active', true)->get();
+            foreach ($jobItems as $jobItem) {
+                $newJobItem = $jobItem->replicate();
+                $newJobItem->job_id = $newJob->id;
+                $newJobItem->created_by = Auth::id();
+                $newJobItem->updated_by = Auth::id();
+                $newJobItem->added_by = Auth::id();
+                $newJobItem->added_at = now();
+                $newJobItem->save();
+            }
+
+            DB::commit();
+
+            // Log job copy activity
+            if (class_exists('App\Services\JobActivityLogger')) {
+                \App\Services\JobActivityLogger::logJobCopied($newJob, $job, Auth::id());
+            }
+
+            return redirect()->route('jobs.index')->with('success', 'Job copied successfully as a new job.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to copy job. Please try again. Error: ' . $e->getMessage());
+        }
+    }
+}
     public function extendTask(Job $job)
     {
       $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();

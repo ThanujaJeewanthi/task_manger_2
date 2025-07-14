@@ -160,6 +160,11 @@ class Job extends Model
         return $this->hasMany(JobAssignment::class);
     }
 
+    public function optionValues()
+{
+    return $this->hasMany(JobOptionValue::class);
+}
+
     public function activeAssignments()
     {
         return $this->hasMany(JobAssignment::class)->where('active', true);

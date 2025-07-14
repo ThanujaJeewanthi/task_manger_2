@@ -67,11 +67,7 @@ class EmployeeTaskController extends Controller
             // Log task started
             JobActivityLogger::logTaskStarted($job, $task, $employee);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Task started successfully!'
-            ]);
-
+            return back()->with('success', 'Task started successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -152,12 +148,8 @@ class EmployeeTaskController extends Controller
 
             DB::commit();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Task completed successfully!',
-                'task_fully_completed' => ($completedEmployeesForTask === $totalEmployeesForTask),
-                'job_status' => $job->fresh()->status
-            ]);
+            // return back with error or sucess message
+            return back()->with('success', 'Task completed successfully!');
 
         } catch (\Exception $e) {
             DB::rollBack();

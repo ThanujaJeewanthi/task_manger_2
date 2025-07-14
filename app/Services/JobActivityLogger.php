@@ -610,5 +610,45 @@ if (is_array($notes)) {
         ];
     }
 
+/**
+     * Log job copy.
+     */
+    public static function logJobCopied(Job $newJob, Job $originalJob, $copiedBy = null)
+    {
+        $copier = $copiedBy ? \App\Models\User::find($copiedBy) : Auth::user();
 
+        return self::log([
+            'job_id' => $newJob->id,
+            'activity_type' => 'copied',
+            'activity_category' => 'job',
+            'priority_level' => 'medium',
+            'is_major_activity' => true,
+            'description' => "Job created as a copy of Job #{$originalJob->id} by {$copier->name}",
+            'new_values' => [
+                'copied_from_job_id' => $originalJob->id,
+                'copied_by' => $copier->name,
+                'copied_at' => now(),
+                'new_job_id' => $newJob->id,
+                'job_type' => $newJob->jobType?->name,
+                'priority' => $newJob->priority,
+                'status' => $newJob->status,
+            ],
+            'old_values' => [
+                'original_job_id' => $originalJob->id,
+                'original_status' => $originalJob->status,
+                'original_priority' => $originalJob->priority,
+            ],
+            'related_model_type' => 'Job',
+            'related_model_id' => $originalJob->id,
+            'related_entity_name' => "Original Job #{$originalJob->id}",
+            'metadata' => [
+                'original_job_id' => $originalJob->id,
+                'original_job_description' => $originalJob->description,
+                'copied_tasks_count' => $originalJob->tasks()->where('active', true)->count(),
+                'copied_items_count' => \App\Models\JobItems::where('job_id', $originalJob->id)->where('active', true)->count(),
+                'copier_role' => $copier->userRole?->name,
+                'copy_timestamp' => now()->toISOString(),
+            ],
+        ]);
+    }
 }

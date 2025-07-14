@@ -28,17 +28,6 @@
 
                         <div class="d-component-container">
                             <div class="row">
-                                <!-- Job Id Field -->
-                                <div class="col-md-6">
-                                    <div class="form-group mb-4">
-                                        <label for="id">Job Id</label>
-                                        <input type="text" class="form-control @error('id') is-invalid @enderror" id="id" name="id" value="{{ old('id', $job->id . '-COPY-' . time()) }}" required>
-                                        @error('id')
-                                            <span class="invalid-feedback">{{ $message }}</span>
-                                        @enderror
-                                    </div>
-                                </div>
-
                                 <!-- Job Type Field -->
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
@@ -56,42 +45,17 @@
                                         @enderror
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Job Options Container -->
-                            <div id="job-options-container" class="form-group mb-4" style="display: none;">
-                                <label>Job Options</label>
-                                <div id="job-options-fields"></div>
-                            </div>
-
-                            <!-- Description Field -->
-                            <div class="form-group mb-4">
-                                <label for="description">Description</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="4">{{ old('description', $job->description) }}</textarea>
-                                @error('description')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <!-- References Field -->
-                            <div class="form-group mb-4">
-                                <label for="references">References</label>
-                                <textarea class="form-control @error('references') is-invalid @enderror" id="references" name="references" rows="3">{{ old('references', $job->references) }}</textarea>
-                                @error('references')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="row">
                                 <!-- Priority Field -->
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="priority">Priority</label>
                                         <select class="form-control @error('priority') is-invalid @enderror" id="priority" name="priority" required>
-                                            <option value="1" {{ old('priority', $job->priority) == '1' ? 'selected' : '' }}>High</option>
-                                            <option value="2" {{ old('priority', $job->priority) == '2' ? 'selected' : '' }}>Medium</option>
-                                            <option value="3" {{ old('priority', $job->priority) == '3' ? 'selected' : '' }}>Low</option>
-                                            <option value="4" {{ old('priority', $job->priority) == '4' ? 'selected' : '' }}>Very Low</option>
+                                            <option value="">Select Priority</option>
+                                            <option value="1" {{ old('priority', $job->priority) == '1' ? 'selected' : '' }}>Critical</option>
+                                            <option value="2" {{ old('priority', $job->priority) == '2' ? 'selected' : '' }}>High</option>
+                                            <option value="3" {{ old('priority', $job->priority) == '3' ? 'selected' : '' }}>Medium</option>
+                                            <option value="4" {{ old('priority', $job->priority) == '4' ? 'selected' : '' }}>Low</option>
                                         </select>
                                         @error('priority')
                                             <span class="invalid-feedback">{{ $message }}</span>
@@ -100,45 +64,77 @@
                                 </div>
                             </div>
 
-                            <!-- Current Photos Display -->
-                            @if($job->photos)
-                                <div class="form-group mb-4">
-                                    <label>Current Photos</label>
-                                    <div class="row">
-                                        @foreach(json_decode($job->photos, true) as $photo)
-                                            <div class="col-md-3 mb-2">
-                                                <img src="{{ Storage::url($photo) }}" alt="Job Photo" class="img-thumbnail" style="max-height: 150px;">
-                                            </div>
-                                        @endforeach
+                            <div class="row">
+                                <!-- Description Field -->
+                                <div class="col-md-12">
+                                    <div class="form-group mb-4">
+                                        <label for="description">Description</label>
+                                        <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" placeholder="Enter job description">{{ old('description', $job->description) }}</textarea>
+                                        @error('description')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
                                     </div>
                                 </div>
-                            @endif
+                            </div>
+
+                            <div class="row">
+                                <!-- References Field -->
+                                <div class="col-md-12">
+                                    <div class="form-group mb-4">
+                                        <label for="references">References</label>
+                                        <textarea class="form-control @error('references') is-invalid @enderror" id="references" name="references" rows="2" placeholder="Enter any references">{{ old('references', $job->references) }}</textarea>
+                                        @error('references')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Start Date Field -->
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label for="start_date">Start Date</label>
+                                        <input type="date" class="form-control @error('start_date') is-invalid @enderror" id="start_date" name="start_date" value="{{ old('start_date', $job->start_date) }}">
+                                        @error('start_date')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Due Date Field -->
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label for="due_date">Due Date</label>
+                                        <input type="date" class="form-control @error('due_date') is-invalid @enderror" id="due_date" name="due_date" value="{{ old('due_date', $job->due_date) }}">
+                                        @error('due_date')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Job Options Container -->
+                            <div id="job-options-container" style="display: none;">
+                                <div class="form-group mb-4">
+                                    <h6>Job Type Specific Options</h6>
+                                    <div id="job-options-fields"></div>
+                                </div>
+                            </div>
 
                             <!-- Photos Field -->
                             <div class="form-group mb-4">
-                                <label for="photos">Update Job Photos</label>
-                                <input type="file" class="form-control @error('photos') is-invalid @enderror" id="photos" name="photos[]" multiple accept="image/*">
-                                <small class="form-text text-muted">Select new images to replace existing photos. Leave empty to keep current photos.</small>
-                                @error('photos')
+                                <label for="photos">Photos</label>
+                                <input type="file" class="form-control @error('photos.*') is-invalid @enderror" id="photos" name="photos[]" multiple accept="image/*">
+                                <small class="form-text text-muted">Upload new photos (optional). Original job photos will be copied if no new photos are uploaded.</small>
+                                @error('photos.*')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
 
-                            <!-- Active Status Toggle -->
-                            <div class="d-com-flex justify-content-start mb-4">
-                                <label class="d-label-text me-2">Active</label>
-                                <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                    <input type="checkbox" class="form-check-input d-section-toggle" name="is_active" {{ old('is_active', $job->active) ? 'checked' : '' }} />
-                                    <span class="d-slider">
-                                        <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
-                                        <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
-                                    </span>
-                                </label>
-                            </div>
-
                             <!-- Submit Button -->
                             <div class="form-group mt-4">
-                                <button type="submit" class="btn btn-primary">Create New Job</button>
+                                <button type="submit" class="btn btn-primary">Create Copy of Job</button>
                                 <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary ms-2">Cancel</a>
                             </div>
                         </div>
@@ -154,7 +150,7 @@
 $(document).ready(function() {
     const clients = @json($clients);
     const equipments = @json($equipments);
-    const existingJobOptionValues = @json($job->job_option_values ? json_decode($job->job_option_values, true) : []);
+    const existingJobOptionValues = @json($jobOptionValues); // This now comes from separate table
     const existingEquipmentId = @json($job->equipment_id);
     const existingClientId = @json($job->client_id);
 
@@ -178,6 +174,7 @@ $(document).ready(function() {
                             let fieldHtml = '';
                             let selectedValue = '';
 
+                            // Get the existing value for this option
                             if (option.id == 1) {
                                 selectedValue = existingEquipmentId;
                             } else if (option.id == 2) {
@@ -187,64 +184,63 @@ $(document).ready(function() {
                             }
 
                             if (option.option_type === 'select') {
-                                if (option.id == 1) {
+                                if (option.id == 1) { // Equipment
                                     fieldHtml = `
                                         <div class="form-group mb-3">
                                             <label for="${fieldName}">Equipment${isRequired ? ' <span class="text-danger">*</span>' : ''}</label>
                                             <select class="form-control" id="${fieldName}" name="${fieldName}" ${isRequired}>
-                                                <option value="">Select Equipment</option>
-                                                ${equipments.map(e => `<option value="${e.id}" ${e.id == selectedValue ? 'selected' : ''}>${e.name}</option>`).join('')}
-                                            </select>
-                                        </div>`;
-                                } else if (option.id == 2) {
+                                                <option value="">Select Equipment</option>`;
+                                    equipments.forEach(function(equipment) {
+                                        const selected = equipment.id == selectedValue ? 'selected' : '';
+                                        fieldHtml += `<option value="${equipment.id}" ${selected}>${equipment.name}</option>`;
+                                    });
+                                    fieldHtml += `</select></div>`;
+                                } else if (option.id == 2) { // Client
+                                    fieldHtml = `
+                                        <div class="form-group mb-3">
+                                            <label for="${fieldName}">Client${isRequired ? ' <span class="text-danger">*</span>' : ''}</label>
+                                            <select class="form-control" id="${fieldName}" name="${fieldName}" ${isRequired}>
+                                                <option value="">Select Client</option>`;
+                                    clients.forEach(function(client) {
+                                        const selected = client.id == selectedValue ? 'selected' : '';
+                                        fieldHtml += `<option value="${client.id}" ${selected}>${client.name}</option>`;
+                                    });
+                                    fieldHtml += `</select></div>`;
+                                } else {
+                                    // Other select options
                                     fieldHtml = `
                                         <div class="form-group mb-3">
                                             <label for="${fieldName}">${option.name}${isRequired ? ' <span class="text-danger">*</span>' : ''}</label>
                                             <select class="form-control" id="${fieldName}" name="${fieldName}" ${isRequired}>
-                                                <option value="">Select Client</option>
-                                                ${clients.map(c => `<option value="${c.id}" ${c.id == selectedValue ? 'selected' : ''}>${c.name}</option>`).join('')}
-                                            </select>
-                                        </div>`;
-                                } else {
-                                    let options = '';
+                                                <option value="">Select ${option.name}</option>`;
                                     if (option.options_json) {
                                         try {
-                                            const optionsList = JSON.parse(option.options_json);
-                                            options = optionsList.map(opt => `<option value="${opt}" ${opt == selectedValue ? 'selected' : ''}>${opt}</option>`).join('');
+                                            const options = JSON.parse(option.options_json);
+                                            options.forEach(function(opt) {
+                                                const selected = opt.value == selectedValue ? 'selected' : '';
+                                                fieldHtml += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
+                                            });
                                         } catch (e) {
-                                            console.error('Error parsing options_json:', e);
+                                            console.error('Error parsing options JSON:', e);
                                         }
                                     }
-                                    fieldHtml = `
-                                        <div class="form-group mb-3">
-                                            <label for="${fieldName}">${option.name}${isRequired ? ' <span class="text-danger">*</span>' : ''}</label>
-                                            <select class="form-control" id="${fieldName}" name="${fieldName}" ${isRequired}>
-                                                <option value="">Select ${option.name}</option>
-                                                ${options}
-                                            </select>
-                                        </div>`;
+                                    fieldHtml += `</select></div>`;
                                 }
-                            } else if (option.option_type === 'textarea') {
-                                fieldHtml = `
-                                    <div class="form-group mb-3">
-                                        <label for="${fieldName}">${option.name}${isRequired ? ' <span class="text-danger">*</span>' : ''}</label>
-                                        <textarea class="form-control" id="${fieldName}" name="${fieldName}" rows="3" ${isRequired}>${selectedValue}</textarea>
-                                    </div>`;
                             } else if (option.option_type === 'checkbox') {
-                                const isChecked = selectedValue == '1' || selectedValue === true ? 'checked' : '';
+                                const checked = selectedValue ? 'checked' : '';
                                 fieldHtml = `
                                     <div class="form-group mb-3">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" id="${fieldName}" name="${fieldName}" value="1" ${isChecked}>
+                                            <input type="checkbox" class="form-check-input" id="${fieldName}" name="${fieldName}" value="1" ${checked}>
                                             <label class="form-check-label" for="${fieldName}">
-                                                ${option.name}
+                                                ${option.name}${isRequired ? ' <span class="text-danger">*</span>' : ''}
                                             </label>
                                         </div>
                                     </div>`;
                             } else if (option.option_type === 'file') {
                                 let currentFileHtml = '';
                                 if (selectedValue) {
-                                    currentFileHtml = `<div class="mt-2"><small class="text-muted">Current file: <a href="/storage/${selectedValue}" target="_blank">View File</a></small></div>`;
+                                    currentFileHtml = `<small class="form-text text-muted">Current file: ${selectedValue}</small>`;
                                 }
                                 fieldHtml = `
                                     <div class="form-group mb-3">
@@ -285,6 +281,7 @@ $(document).ready(function() {
         }
     });
 
+    // Trigger change event if job type is already selected
     if ($('#job_type_id').val()) {
         $('#job_type_id').trigger('change');
     }

@@ -1,7 +1,4 @@
 <!-- Create: resources/views/components/employee-task-buttons.blade.php -->
-<!--
-Usage: @include('components.employee-task-buttons', ['task' => $task, 'jobEmployee' => $jobEmployee])
--->
 
 @if($jobEmployee && $jobEmployee->employee_id === auth()->user()->employee?->id)
     <div class="task-actions">
