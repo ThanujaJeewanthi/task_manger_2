@@ -107,7 +107,7 @@
                                     <label for="company_id">Company</label>
                                     <select class="form-control @error('company_id') is-invalid @enderror" id="company_id"
                                         name="company_id" required>
-                                        <option value="">Select a role</option>
+                                        <option value="">Select a company</option>
                                         @foreach ($companies as $company)
                                             <option value="{{ $company->id }}"
                                                 {{ old('company_id') == $company->id ? 'selected' : '' }}>
