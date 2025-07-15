@@ -553,7 +553,7 @@ JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees);
         }
         // log task update
         $assignedEmployees = Employee::whereIn('id', $request->employee_ids)->get();
-JobActivityLogger::logTaskUpdated($job, $task, $assignedEmployees);JobActivityLogger::logTaskUpdated($job, $task, $request->employee_ids, Auth::id());
+JobActivityLogger::logTaskUpdated($job, $task, $assignedEmployees);
 
         return redirect()->route('jobs.show', $job)->with('success', 'Task updated successfully.');
     }
@@ -750,7 +750,7 @@ public function storeItems(Request $request, Job $job)
         }
     }
     // job activity log
-    JobActivityLogger::logJobItemsAdded($job, $request->items, $request->new_items, Auth::id());
+  JobActivityLogger::logJobItemsAdded($job, $request->items ?? [], $request->new_items ?? []);
 
 
     return redirect()->route('jobs.show', $job)->with('success', $message);

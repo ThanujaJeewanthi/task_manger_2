@@ -275,41 +275,53 @@ public static function logTaskStarted(Job $job, $task, $employee)
         ]);
     }
 
-   public static function logJobItemsAdded(Job $job, $items, $notes = null)
+  public static function logJobItemsAdded(Job $job, $existingItems = [], $newItems = [], $notes = null)
 {
-    // items are added in different scenarios ,first one is when the assigned technical officer adds items and  second one is when the engineer edits
-    // items, in both cases the called function is this and entries added to the database are different
-    $itemNames = collect($items)->pluck('name')->join(', ');
-if (is_array($notes)) {
-    // If $notes is an array of arrays or non-string values, flatten and stringify
-    $notesString = collect($notes)->flatten()->map(function ($item) {
-        return is_scalar($item) ? (string)$item : json_encode($item);
-    })->implode(', ');
-} else {
-    $notesString = (string)$notes;
-}
+    $itemDescriptions = [];
+    
+    // Process existing items
+    if (!empty($existingItems)) {
+        foreach ($existingItems as $itemData) {
+            if (!empty($itemData['item_id']) && !empty($itemData['quantity'])) {
+                $item = \App\Models\Item::find($itemData['item_id']);
+                $itemName = $item ? $item->name : 'Unknown Item';
+                $itemDescriptions[] = "{$itemName} (Qty: {$itemData['quantity']})";
+            }
+        }
+    }
+    
+    // Process new items
+    if (!empty($newItems)) {
+        foreach ($newItems as $newItem) {
+            if (!empty($newItem['description']) && !empty($newItem['quantity'])) {
+                $itemDescriptions[] = "{$newItem['description']} (Qty: {$newItem['quantity']})";
+            }
+        }
+    }
+    
+    $itemsList = implode(', ', $itemDescriptions);
+    
     return self::log([
         'job_id' => $job->id,
         'activity_type' => 'items_added',
         'activity_category' => 'item',
         'priority_level' => 'medium',
         'is_major_activity' => true,
-'description' => "Items added: " . $itemNames . ($notesString ? " - {$notesString}" : ''),
-
-    'new_values' => [
-            'items' => $itemNames,
+        'description' => "Items added: " . $itemsList . ($notes ? " - {$notes}" : ''),
+        'new_values' => [
+            'items' => $itemsList,
             'notes' => $notes,
         ],
         'related_model_type' => 'JobItem',
-        'related_model_id' => null, // No specific item ID for bulk addition
-        'related_entity_name' => $itemNames,
+        'related_model_id' => null,
+        'related_entity_name' => $itemsList,
         'metadata' => [
-            'item_count' => count($items),
+            'existing_item_count' => count($existingItems ?? []),
+            'new_item_count' => count($newItems ?? []),
             'notes' => $notes,
         ],
     ]);
 }
-
    public static function logTaskUpdated(Job $job, $task, $assignedEmployees = [], $notes = null)
     {
         $employeeNames = collect($assignedEmployees)->pluck('name')->join(', ');
