@@ -117,10 +117,10 @@ public static function logTaskStarted(Job $job, $task, $employee)
         'activity_category' => 'task',
         'priority_level' => 'medium',
         'is_major_activity' => false,
-        'description' => "Task '{$task->task}' started by {$employee->username}",
+        'description' => "Task '{$task->task}' started by {$employee->name}",
         'affected_user_id' => $employee->user_id,
         'new_values' => [
-            'started_by' => $employee->username,
+            'started_by' => $employee->name,
             'started_at' => now()->format('Y-m-d H:i:s'),
         ],
         'related_model_type' => 'Task',
@@ -229,7 +229,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
         ]);
     }
 
-    public static  function logTaskExtended(Job $job, $task, $oldEndDate, $newEndDate, $notes = null)
+   public static function logTaskExtended(Job $job, $task, $oldEndDate, $newEndDate, $employee = null, $notes = null)
     {
         return self::log([
             'job_id' => $job->id,
@@ -237,7 +237,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => true,
-            'description' => "Task '{$task->task}' extended from {$oldEndDate} to {$newEndDate}" . ($notes ? " - {$notes}" : ''),
+           'description' => "Task '{$task->task}' extended from {$oldEndDate} to {$newEndDate}" . ($employee ? " by {$employee->name}" : '') . ($notes ? " - {$notes}" : ''),
             'old_values' => [
                 'end_date' => $oldEndDate,
             ],
@@ -310,30 +310,36 @@ if (is_array($notes)) {
     ]);
 }
 
-    public static function logTaskUpdated(Job $job, $task, $notes = null)
+   public static function logTaskUpdated(Job $job, $task, $assignedEmployees = [], $notes = null)
     {
+        $employeeNames = collect($assignedEmployees)->pluck('name')->join(', ');
         return self::log([
             'job_id' => $job->id,
             'activity_type' => 'task_updated',
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => true,
-            'description' => "Updated task '{$task->task}'" . ($notes ? " - " . (is_array($notes) ? json_encode($notes) : $notes) : ''),
+            'description' => "Updated task '{$task->task}'" . ($employeeNames ? " - assigned to: {$employeeNames}" : '') . ($notes ? " - " . (is_array($notes) ? json_encode($notes) : $notes) : ''),
             'old_values' => [
                 'task_name' => $task->getOriginal('task'),
                 'task_description' => $task->getOriginal('description'),
             ],
-            'new_values' => [
-                'task_name' => $task->task,
-                'task_description' => $task->description,
-                'notes' => $notes,
-            ],
+           'new_values' => [
+    'task_name' => $task->task,
+    'task_description' => $task->description,
+    'assigned_employees' => $employeeNames,
+    'notes' => $notes,
+],
             'related_model_type' => 'Task',
             'related_model_id' => $task->id,
             'related_entity_name' => $task->task,
             'metadata' => [
                 'notes' => $notes,
-            ],
+            ],'metadata' => [
+    'assigned_employee_count' => count($assignedEmployees),
+    'employee_ids' => collect($assignedEmployees)->pluck('id')->toArray(),
+    'notes' => $notes,
+],
         ]);
     }
 
@@ -399,7 +405,7 @@ if (is_array($notes)) {
      */
     public static function logTaskCreated(Job $job, $task, $assignedEmployees = [])
     {
-        $employeeNames = collect($assignedEmployees)->pluck('username')->join(', ');
+       $employeeNames = collect($assignedEmployees)->pluck('name')->join(', ');
 
         return self::log([
             'job_id' => $job->id,
@@ -435,12 +441,12 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => false,
-            'description' => "Assigned task '{$task->task}' to {$employee->username}" .
+            'description' => "Assigned task '{$task->task}' to {$employee->name}" .
                 ($startDate && $endDate ? " ({$startDate} to {$endDate})" : ''),
             'affected_user_id' => $employee->user_id,
             'new_values' => [
                 'task_name' => $task->task,
-                'assigned_to' => $employee->username,
+                'assigned_to' => $employee->name,
                 'start_date' => $startDate,
                 'end_date' => $endDate,
             ],
@@ -461,7 +467,7 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => false,
-            'description' => "Extension requested for task '{$task->task}' by {$employee->username} from {$currentEndDate} to {$requestedEndDate}",
+            'description' => "Extension requested for task '{$task->task}' by {$employee->name} from {$currentEndDate} to {$requestedEndDate}",
             'affected_user_id' => $employee->user_id,
             'old_values' => ['end_date' => $currentEndDate],
             'new_values' => ['requested_end_date' => $requestedEndDate],
@@ -486,7 +492,7 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'medium',
             'is_major_activity' => true,
-            'description' => "Task extension {$action} for '{$task->task}' assigned to {$employee->username}" .
+            'description' => "Task extension {$action} for '{$task->task}' assigned to {$employee->name}" .
                 ($notes ? " - {$notes}" : ''),
             'affected_user_id' => $employee->user_id,
             'new_values' => [
@@ -513,11 +519,11 @@ if (is_array($notes)) {
             'activity_category' => 'task',
             'priority_level' => 'high',
             'is_major_activity' => true,
-            'description' => "Task '{$task->task}' completed by {$employee->username}" .
+            'description' => "Task '{$task->task}' completed by {$employee->name}" .
                 ($completionNotes ? " - {$completionNotes}" : ''),
             'affected_user_id' => $employee->user_id,
             'new_values' => [
-                'completed_by' => $employee->username,
+                'completed_by' => $employee->name,
                 //  store  current date and time in a better format and save
                 'completed_at'=> now()->format('Y-m-d H:i:s'),
                 'completion_notes' => $completionNotes,
