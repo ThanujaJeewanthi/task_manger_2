@@ -490,7 +490,8 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
         }
 
         // log task creation
-        JobActivityLogger::logTaskCreated($job, $task, $request->employee_ids, Auth::id());
+        $assignedEmployees = Employee::whereIn('id', $request->employee_ids)->get();
+JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees);
 
         return redirect()->route('jobs.show', $job)->with('success', 'Task created and employees assigned successfully.');
     }
@@ -551,7 +552,8 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
             ]);
         }
         // log task update
-        JobActivityLogger::logTaskUpdated($job, $task, $request->employee_ids, Auth::id());
+        $assignedEmployees = Employee::whereIn('id', $request->employee_ids)->get();
+JobActivityLogger::logTaskUpdated($job, $task, $assignedEmployees);JobActivityLogger::logTaskUpdated($job, $task, $request->employee_ids, Auth::id());
 
         return redirect()->route('jobs.show', $job)->with('success', 'Task updated successfully.');
     }
@@ -1275,7 +1277,8 @@ public function processApproval(Request $request, Job $job)
             }
         }
         // Log task extension
-        JobActivityLogger::logTaskExtended($job, $task, $request->new_end_date, Auth::id());
+        $employee = Employee::where('user_id', Auth::id())->first();
+JobActivityLogger::logTaskExtended($job, $task, $currentEndDate, $request->new_end_date, $employee);
 
         return redirect()->route('jobs.index')->with('success', 'New job created with extended task duration.');
     }
