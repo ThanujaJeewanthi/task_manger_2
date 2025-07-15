@@ -61,6 +61,7 @@ class TechnicalOfficerDashboardController extends Controller
             ->where('assigned_user_id', Auth::id())
             ->where('active', true)
             ->whereNotIn('status', ['completed', 'cancelled'])
+            ->where('approval_status', null)
             ->orderBy('priority', 'asc')
             ->orderBy('due_date', 'asc')
             ->get()

@@ -42,11 +42,7 @@
                                         @endif
                                     @endif
 
-                                    @if ($job->jobEmployees->count() > 0)
-                                        <a href="{{ route('jobs.extend-task', $job) }}" class="btn btn-warning btn-sm">
-                                            <i class="fas fa-clock"></i> Extend Task
-                                        </a>
-                                    @endif
+
 
                                     @if(in_array(auth()->user()->userRole->name ?? '', ['Supervisor', 'Technical Officer', 'Engineer']))
                                         <a href="{{ route('tasks.extension.index') }}" class="btn btn-info btn-sm">
@@ -56,7 +52,8 @@
 
                                     @if ($job->assigned_user_id == auth()->user()->id && $job->status !='completed' && $job->status != 'cancelled' && $job->approval_status !='approved')
                                         <a href="{{ route('jobs.items.add', $job) }}" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-plus"></i> Add Item
+                                            <i class="fas fa-plus"></i> Modify Job
+                                           <span class="d-none d-md-inline">Add items or close job</span>
                                         </a>
                                     @endif
                                 @endif

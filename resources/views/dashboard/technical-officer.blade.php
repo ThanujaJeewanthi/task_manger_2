@@ -212,7 +212,7 @@
             <div class="card mb-3">
                 <div class="card-header">
                     <div class="d-component-title">
-                        <span>My Assigned Jobs</span>
+                        <span>My Assigned Jobs that require to be checked</span>
                     </div>
                 </div>
                 <div class="card-body">
