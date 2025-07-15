@@ -208,53 +208,61 @@ class JobHistoryController extends Controller
         }
     }
 
-     public function exportPdf(Job $job, Request $request)
-    {
-        try {
-            // Check company access
-            if ($job->company_id !== Auth::user()->company_id) {
-                abort(403, 'Access denied to this job.');
-            }
-
-            // Validate and get filter parameters
-            $filters = $request->only(['category', 'type', 'user_id', 'date_from', 'date_to', 'major_only']);
-
-            // Build the main query
-            $query = JobActivityLog::where('job_id', $job->id)
-                ->with(['user', 'affectedUser'])
-                ->where('active', true) // Only show active logs
-                ->orderBy('created_at', 'desc');
-
-            // Apply filters
-            $this->applyFilters($query, $filters);
-
-            // Get all activities for export
-            $activities = $query->get();
-
-            // Generate PDF
-
-            $pdf = Pdf::loadView('jobs.history.export.pdf', [
-                'job' => $job,
-                'activities' => $activities,
-                'filters' => $filters,
-                'stats' => $this->getJobActivityStats($job->id)
-            ]);
-
-            return $pdf->download("job_{$job->id}_history.pdf");
-
-        } catch (\Exception $e) {
-            Log::error('Job history export PDF error: ' . $e->getMessage(), [
-                'job_id' => $job->id,
-                'user_id' => Auth::id(),
-                'filters' => $filters ?? []
-            ]);
-
-            return redirect()->route('jobs.history.index', $job)
-                ->with('error', 'Unable to export PDF. Please try again.');
+    
+  public function exportPdf(Job $job, Request $request)
+{
+    try {
+        // Check company access
+        if ($job->company_id !== Auth::user()->company_id) {
+            abort(403, 'Access denied to this job.');
         }
 
+        // Validate and get filter parameters
+        $filters = $request->only(['category', 'type', 'user_id', 'date_from', 'date_to', 'major_only']);
 
+        // Build the main query
+        $query = JobActivityLog::where('job_id', $job->id)
+            ->with(['user', 'affectedUser'])
+            ->where('active', true)
+            ->orderBy('created_at', 'desc');
+
+        // Apply filters
+        $this->applyFilters($query, $filters);
+
+        // Get all activities for export (limit to prevent memory issues)
+        $activities = $query->limit(500)->get(); // Reasonable limit
+
+        // Load job relationships for display
+        $job->load(['jobType', 'client', 'equipment', 'company', 'assignedUser']);
+
+        // Generate PDF using the simplified view
+        $pdf = Pdf::loadView('jobs.history.pdf', [
+            'job' => $job,
+            'activities' => $activities,
+            'filters' => $filters,
+            'stats' => $this->getJobActivityStats($job->id)
+        ]);
+
+        // Set PDF options
+        $pdf->setPaper('A4', 'portrait');
+        $pdf->setWarnings(false);
+
+        return $pdf->download("job_{$job->id}_history.pdf");
+
+    } catch (\Exception $e) {
+        Log::error('Job history export PDF error: ' . $e->getMessage(), [
+            'job_id' => $job->id,
+            'user_id' => Auth::id(),
+            'filters' => $filters ?? [],
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return redirect()->route('jobs.history.index', $job)
+            ->with('error', 'Unable to export PDF. Please try again.');
     }
+}
+
+
 
     private function applyFilters($query, $filters)
     {

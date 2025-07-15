@@ -37,10 +37,10 @@
                                 <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-light btn-sm">
                                     <i class="fas fa-arrow-left"></i> Back to Job
                                 </a>
-                                <a href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
-                                   class="btn btn-outline-light btn-sm">
-                                    <i class="fas fa-file-pdf"></i> Export PDF
-                                </a>
+                            <a href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
+   class="btn btn-outline-light btn-sm">
+    <i class="fas fa-file-pdf"></i> Export PDF
+</a>
                             </div>
                         </div>
                     </div>
