@@ -139,55 +139,7 @@ class JobHistoryController extends Controller
                 ->with('error', 'Unable to load activity details.');
         }
     }
-    /**
-     * Export job history as PDF.
-     */
-     public function exportPdf(Job $job, Request $request)
-    {
-        try {
-            // Check company access
-            if ($job->company_id !== Auth::user()->company_id) {
-                abort(403, 'Access denied to this job.');
-            }
 
-            // Validate and get filter parameters
-            $filters = $request->only(['category', 'type', 'user_id', 'date_from', 'date_to', 'major_only']);
-
-            // Build the main query
-            $query = JobActivityLog::where('job_id', $job->id)
-                ->with(['user', 'affectedUser'])
-                ->where('active', true) // Only show active logs
-                ->orderBy('created_at', 'desc');
-
-            // Apply filters
-            $this->applyFilters($query, $filters);
-
-            // Get all activities for export
-            $activities = $query->get();
-
-            // Generate PDF
-            $pdf = Pdf::loadView('jobs.history.pdf', [
-                'job' => $job,
-                'activities' => $activities,
-                'filters' => $filters,
-                'stats' => $this->getJobActivityStats($job->id)
-            ]);
-
-            return $pdf->download("job_{$job->id}_history.pdf");
-
-        } catch (\Exception $e) {
-            Log::error('Job history export PDF error: ' . $e->getMessage(), [
-                'job_id' => $job->id,
-                'user_id' => Auth::id(),
-                'filters' => $filters ?? []
-            ]);
-
-            return redirect()->route('jobs.history.index', $job)
-                ->with('error', 'Unable to export PDF. Please try again.');
-        }
-
-
-    }
 
 
     /**
@@ -256,10 +208,55 @@ class JobHistoryController extends Controller
         }
     }
 
-    /**
-     * Apply filters to the activity query.
-     */
-   private function applyFilters($query, $filters)
+     public function exportPdf(Job $job, Request $request)
+    {
+        try {
+            // Check company access
+            if ($job->company_id !== Auth::user()->company_id) {
+                abort(403, 'Access denied to this job.');
+            }
+
+            // Validate and get filter parameters
+            $filters = $request->only(['category', 'type', 'user_id', 'date_from', 'date_to', 'major_only']);
+
+            // Build the main query
+            $query = JobActivityLog::where('job_id', $job->id)
+                ->with(['user', 'affectedUser'])
+                ->where('active', true) // Only show active logs
+                ->orderBy('created_at', 'desc');
+
+            // Apply filters
+            $this->applyFilters($query, $filters);
+
+            // Get all activities for export
+            $activities = $query->get();
+
+            // Generate PDF
+
+            $pdf = Pdf::loadView('jobs.history.export.pdf', [
+                'job' => $job,
+                'activities' => $activities,
+                'filters' => $filters,
+                'stats' => $this->getJobActivityStats($job->id)
+            ]);
+
+            return $pdf->download("job_{$job->id}_history.pdf");
+
+        } catch (\Exception $e) {
+            Log::error('Job history export PDF error: ' . $e->getMessage(), [
+                'job_id' => $job->id,
+                'user_id' => Auth::id(),
+                'filters' => $filters ?? []
+            ]);
+
+            return redirect()->route('jobs.history.index', $job)
+                ->with('error', 'Unable to export PDF. Please try again.');
+        }
+
+
+    }
+
+    private function applyFilters($query, $filters)
     {
         if (!empty($filters['category'])) {
             $query->where('activity_category', $filters['category']);
@@ -285,7 +282,6 @@ class JobHistoryController extends Controller
             $query->where('is_major_activity', true);
         }
     }
-
 
     /**
      * Get comprehensive job activity statistics.
