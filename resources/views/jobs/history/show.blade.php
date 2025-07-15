@@ -77,7 +77,7 @@
                         @if($activity->is_major_activity)
                             <i class="fas fa-star text-warning ms-2" title="Major Activity"></i>
                         @endif
-                        <span class="badge {{ $activity->priority_level === 'high' ? 'badge-danger' : ($activity->priority_level === 'medium' ? 'badge-warning' : 'badge-secondary') }} ms-2">
+                        <span class="badge text-dark ms-2">
                             {{ ucfirst($activity->priority_level ?? 'Normal') }}
                         </span>
                     </h5>

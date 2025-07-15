@@ -21,6 +21,7 @@ class EmployeeTaskController extends Controller
     {
         $user = Auth::user();
         $employee = Employee::where('user_id', $user->id)->first();
+        
 
         if (!$employee) {
             return response()->json(['success' => false, 'message' => 'Employee record not found'], 403);
