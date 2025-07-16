@@ -59,7 +59,7 @@
                                 <div class="form-group mb-4">
                                     <label for="phone_number">Phone Number </label>
                                     <input type="text" class="form-control @error('phone_number') is-invalid @enderror"
-                                        id="phone_number" name="phone_number" value="{{ old('phone_number') }}" required>
+                                        id="phone_number" name="phone_number" value="{{ old('phone_number') }}" >
                                     @error('phone_number')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror

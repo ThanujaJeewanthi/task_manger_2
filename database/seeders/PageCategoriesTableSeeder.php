@@ -27,8 +27,8 @@ class PageCategoriesTableSeeder extends Seeder
             ['id' => 9, 'name' => 'Equipment', 'active' => true],
             ['id' => 10, 'name' => 'Item', 'active' => true],
             ['id' => 11, 'name' => 'Job', 'active' => true],
-                 ['id' => 12, 'name' => 'Task Extension', 'active' => true],
-                      ['id' => 13, 'name' => 'Logs', 'active' => true],
+            ['id' => 12, 'name' => 'Task Extension', 'active' => true],
+            ['id' => 13, 'name' => 'Logs', 'active' => true],
 
 
 

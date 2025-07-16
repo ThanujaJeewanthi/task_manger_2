@@ -21,7 +21,7 @@ class EmployeeTaskController extends Controller
     {
         $user = Auth::user();
         $employee = Employee::where('user_id', $user->id)->first();
-        
+
 
         if (!$employee) {
             return response()->json(['success' => false, 'message' => 'Employee record not found'], 403);
@@ -46,7 +46,7 @@ class EmployeeTaskController extends Controller
             // Update job employee status for this specific employee
             $jobEmployee->update([
                 'status' => 'in_progress',
-                'start_date' => now()->toDateString(),
+                'start_date' => now()->format('Y-m-d H:i:s'),
             ]);
 
             // Update task status to in_progress if any employee started it
@@ -184,7 +184,7 @@ class EmployeeTaskController extends Controller
             $newStatus = 'completed';
             $job->update([
                 'status' => $newStatus,
-                'completed_date' => now()->toDateString(),
+                'completed_date' => now()->format('Y-m-d H:i:s'),
                 'updated_by' => Auth::id(),
             ]);
 

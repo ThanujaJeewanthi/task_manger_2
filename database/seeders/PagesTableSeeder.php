@@ -98,6 +98,9 @@ class PagesTableSeeder extends Seeder
             ['name' => 'View my assignments', 'code' => '11.20', 'page_category_id' => 11, 'active' => true],
             ['name' => 'Copy job', 'code' => '11.21', 'page_category_id' => 11, 'active' => true],
             ['name' => 'Extend job task', 'code' => '11.22', 'page_category_id' => 11, 'active' => true],
+            ['name' => 'View job history', 'code' => '11.23', 'page_category_id' => 11, 'active' => true],
+            ['name' => 'View job history details', 'code' => '11.24', 'page_category_id' => 11, 'active' => true],
+            ['name' => 'Job review', 'code' => '11.25', 'page_category_id' => 11, 'active' => true],
 
             // Task Extension permissions
             ['name' => 'Request task extension', 'code' => '12.1', 'page_category_id' => 12, 'active' => true],

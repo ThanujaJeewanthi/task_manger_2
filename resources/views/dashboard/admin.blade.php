@@ -25,7 +25,7 @@
                     <div class="row">
                         <!-- Overview Cards -->
                         <div class="col-md-2">
-                            <div class="card bg-primary text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_jobs'] }}</h5>
                                     <small>Total Jobs</small>
@@ -34,7 +34,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-success text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_employees'] }}</h5>
                                     <small>Employees</small>
@@ -43,7 +43,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-info text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_clients'] }}</h5>
                                     <small>Clients</small>
@@ -52,7 +52,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-warning text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_equipment'] }}</h5>
                                     <small>Equipment</small>
@@ -61,7 +61,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-secondary text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $stats['total_items'] }}</h5>
                                     <small>Items</small>
@@ -70,7 +70,7 @@
                         </div>
 
                         <div class="col-md-2">
-                            <div class="card bg-dark text-white mb-3">
+                            <div class="card bg-card text-white mb-3">
                                 <div class="card-body text-center">
                                     <h5>{{ $taskStats['pending_tasks'] }}</h5>
                                     <small>Pending Tasks</small>
@@ -101,7 +101,7 @@
                                         <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-list"></i> View All Jobs
                                         </a>
-                                        <a href="{{ route('jobs.create') }}" class="btn btn-sm btn-primary">
+                                        <a href="{{ route('jobs.create') }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-plus"></i> Create New Job
                                         </a>
                                         <a href="{{ route('job-types.index') }}" class="btn btn-sm btn-outline-primary">
@@ -117,19 +117,19 @@
 
                         <!-- Employee Management -->
                         <div class="col-md-3">
-                            <div class="card border-success">
-                                <div class="card-header bg-success text-white">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0"><i class="fas fa-users"></i> Employee Management</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-success">
+                                        <a href="{{ route('employees.index') }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-list"></i> View Employees
                                         </a>
                                         <a href="{{ route('employees.create') }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-user-plus"></i> Add Employee
                                         </a>
-                                        <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-success">
+                                        <a href="{{ route('admin.users.index') }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-users-cog"></i> Manage Users
                                         </a>
                                     </div>
@@ -139,22 +139,22 @@
 
                         <!-- Client & Resources -->
                         <div class="col-md-3">
-                            <div class="card border-info">
-                                <div class="card-header bg-info text-white">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0"><i class="fas fa-handshake"></i> Clients & Resources</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-info">
+                                        <a href="{{ route('clients.index') }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-handshake"></i> Manage Clients
                                         </a>
-                                        <a href="{{ route('equipments.index') }}" class="btn btn-sm btn-info">
+                                        <a href="{{ route('equipments.index') }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-tools"></i> Equipment
                                         </a>
-                                        <a href="{{ route('items.index') }}" class="btn btn-sm btn-outline-info">
+                                        <a href="{{ route('items.index') }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-boxes"></i> Items
                                         </a>
-                                        <a href="{{ route('suppliers.index') }}" class="btn btn-sm btn-outline-info">
+                                        <a href="{{ route('suppliers.index') }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-truck"></i> Suppliers
                                         </a>
                                     </div>
@@ -164,21 +164,16 @@
 
                         <!-- Reports & Analytics -->
                         <div class="col-md-3">
-                            <div class="card border-warning">
-                                <div class="card-header bg-warning text-white">
+                            <div class="card border-primary">
+                                <div class="card-header bg-primary text-white">
                                     <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Reports & Analytics</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="d-grid gap-2">
-                                        <a href="{{ route('logs.index') }}" class="btn btn-sm btn-outline-warning">
+                                        <a href="{{ route('logs.index') }}" class="btn btn-sm btn-success">
                                             <i class="fas fa-history"></i> Activity Logs
                                         </a>
-                                        <button class="btn btn-sm btn-warning" onclick="generateJobReport()">
-                                            <i class="fas fa-file-alt"></i> Job Report
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-warning" onclick="generateEmployeeReport()">
-                                            <i class="fas fa-user-chart"></i> Employee Report
-                                        </button>
+                                       
                                     </div>
                                 </div>
                             </div>
@@ -303,40 +298,28 @@
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
-                                <a href="{{ route('jobs.create') }}" class="btn btn-primary">
+                                <a href="{{ route('jobs.create') }}" class="btn btn-sm btn-primary">
                                     <i class="fas fa-plus"></i> Create New Job
                                 </a>
-                                <a href="{{ route('employees.create') }}" class="btn btn-success">
+                                <a href="{{ route('employees.create') }}" class="btn btn-sm btn-success">
                                     <i class="fas fa-user-plus"></i> Add Employee
                                 </a>
-                                <a href="{{ route('clients.create') }}" class="btn btn-info">
+                                <a href="{{ route('clients.create') }}" class="btn btn-sm btn-info">
                                     <i class="fas fa-handshake"></i> Add Client
                                 </a>
-                                <a href="{{ route('equipments.create') }}" class="btn btn-warning">
+                                <a href="{{ route('equipments.create') }}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-tools"></i> Add Equipment
                                 </a>
-                                <a href="{{ route('items.create') }}" class="btn btn-secondary">
+                                <a href="{{ route('items.create') }}" class="btn btn-sm btn-secondary">
                                     <i class="fas fa-box"></i> Add Item
                                 </a>
-                                <div class="dropdown">
-                                    <button class="btn btn-outline-primary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">
-                                        <i class="fas fa-cogs"></i> Job Actions
-                                    </button>
-                                    <ul class="dropdown-menu w-100">
-                                        <li><a class="dropdown-item" href="{{ route('job-types.create') }}">
-                                            <i class="fas fa-plus"></i> Add Job Type
-                                        </a></li>
-                                        <li><a class="dropdown-item" href="{{ route('job-options.create') }}">
-                                            <i class="fas fa-sliders-h"></i> Add Job Option
-                                        </a></li>
-                                    </ul>
-                                </div>
+                              
                             </div>
                         </div>
                     </div>
 
                     <!-- Equipment Status -->
-                    <div class="card mb-3">
+                    {{-- <div class="card mb-3">
                         <div class="card-header">
                             <div class="d-component-title">
                                 <span>Equipment Status</span>
@@ -358,7 +341,7 @@
                             </div>
                             @endforeach
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
 
