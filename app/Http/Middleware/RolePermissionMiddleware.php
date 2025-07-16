@@ -26,10 +26,10 @@ class RolePermissionMiddleware
         }
 
         $user = Auth::user();
-
-        // if ($user->type === 'admin') {
-        //     return $next($request);
-        // }
+        // if user_role_id=1
+        if ($user->user_role_id === 1) {
+            return $next($request);
+        }
 
         //if the route is exactly  'dashboard' proceed request
         if ($request->is('dashboard')) {

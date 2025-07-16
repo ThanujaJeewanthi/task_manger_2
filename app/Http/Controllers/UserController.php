@@ -50,7 +50,7 @@ class UserController extends Controller
             'email' => ['nullable','string', 'email', 'max:255', 'unique:users'],
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users'],
-            'phone_number' => ['required', 'string', 'max:15'],
+            'phone_number' => ['nullable', 'string', 'max:15'],
             'role_id' => ['required', 'exists:user_roles,id'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'company_id'=>['required', 'exists:companies,id'],

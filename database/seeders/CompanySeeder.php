@@ -16,13 +16,14 @@ class CompanySeeder extends Seeder
 
     public function run()
     {
-        Company::create([
-            'name' => 'ADD SOlutions Pvt Ltd',
-            'address' => '175, 14A Lake View Drive,Colombo 5,Sri Lanka',
+        
+         Company::create([
+            'name' => 'Cleanline Linen Management Pvt Ltd',
+            'address' => '142/2, Wathuraboda Road,Narampola, Dekatana, Sri Lanka.',
             'has_clients' => true,
-            'phone' => '0779447221',
-            'email' => 'info@addsolutions.lk',
-            'website' => 'www.addsolutions.lk',
+            'phone' => '0114 848 272',
+            'email' => 'info@cleanline.lk',
+            'website' => 'www.cleanline.lk',
 
             'active' => true
         ]);
