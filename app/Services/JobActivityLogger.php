@@ -615,20 +615,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
     /**
      * Get activity statistics for a job.
      */
-    public static function getJobActivityStats($jobId)
-    {
-        return [
-            'total_activities' => JobActivityLog::where('job_id', $jobId)->count(),
-            'major_activities' => JobActivityLog::where('job_id', $jobId)->majorActivities()->count(),
-            'users_involved' => JobActivityLog::where('job_id', $jobId)->distinct('user_id')->count('user_id'),
-            'last_activity' => JobActivityLog::where('job_id', $jobId)->latest()->first()?->created_at,
-            'activity_by_category' => JobActivityLog::where('job_id', $jobId)
-                ->selectRaw('activity_category, COUNT(*) as count')
-                ->groupBy('activity_category')
-                ->pluck('count', 'activity_category'),
-        ];
-    }
-
+  
 /**
      * Log job copy.
      */
@@ -670,4 +657,203 @@ public static function logTaskStarted(Job $job, $task, $employee)
             ],
         ]);
     }
+
+
+    public static function getJobActivityStats($jobId)
+{
+    // active job activity logs
+    $query = JobActivityLog::where('job_id', $jobId) 
+        ->where('active', true)
+        ->with(['user', 'affectedUser']);
+    
+    return [
+        'total_activities' => $query->count(),
+        'major_activities' => (clone $query)->where('is_major_activity', true)->count(),
+        'recent_activities' => (clone $query)->where('created_at', '>=', now()->subDays(7))->count(),
+        'activity_by_type' => (clone $query)
+            ->groupBy('activity_type')
+            ->selectRaw('activity_type, count(*) as count')
+            ->pluck('count', 'activity_type')
+            ->toArray(),
+        'activity_by_category' => (clone $query)
+            ->groupBy('activity_category')
+            ->selectRaw('activity_category, count(*) as count')
+            ->pluck('count', 'activity_category')
+            ->toArray(),
+        'activity_by_user' => (clone $query)
+            ->join('users', 'job_activity_logs.user_id', '=', 'users.id')
+            ->groupBy('users.name')
+            ->selectRaw('users.name, count(*) as count')
+            ->pluck('count', 'name')
+            ->toArray(),
+    ];
+}
+
+/**
+ * Get activity statistics for a date range and company.
+ */
+public static function getCompanyActivityStats($companyId, $startDate = null, $endDate = null)
+{
+    $query = JobActivityLog::whereHas('job', function($q) use ($companyId) {
+        $q->where('company_id', $companyId);
+    })->where('active', true);
+    
+    if ($startDate) {
+        $query->whereDate('created_at', '>=', $startDate);
+    }
+    
+    if ($endDate) {
+        $query->whereDate('created_at', '<=', $endDate);
+    }
+    
+    return [
+        'total_activities' => $query->count(),
+        'jobs_with_activity' => (clone $query)->distinct('job_id')->count('job_id'),
+        'major_activities' => (clone $query)->where('is_major_activity', true)->count(),
+        'activity_by_type' => (clone $query)
+            ->groupBy('activity_type')
+            ->selectRaw('activity_type, count(*) as count')
+            ->pluck('count', 'activity_type')
+            ->toArray(),
+        'activity_by_category' => (clone $query)
+            ->groupBy('activity_category')
+            ->selectRaw('activity_category, count(*) as count')
+            ->pluck('count', 'activity_category')
+            ->toArray(),
+        'activity_by_priority' => (clone $query)
+            ->groupBy('priority_level')
+            ->selectRaw('priority_level, count(*) as count')
+            ->pluck('count', 'priority_level')
+            ->toArray(),
+        'daily_activity' => (clone $query)
+            ->selectRaw('DATE(created_at) as date, count(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('count', 'date')
+            ->toArray(),
+    ];
+}
+
+/**
+ * Log equipment-related activity.
+ */
+public static function logEquipmentActivity(Job $job, $activityType, $description, $equipmentData = [])
+{
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => $activityType,
+        'activity_category' => 'equipment',
+        'priority_level' => 'medium',
+        'is_major_activity' => in_array($activityType, ['equipment_assigned', 'equipment_changed']),
+        'description' => $description,
+        'new_values' => $equipmentData,
+        'related_model_type' => 'Equipment',
+        'related_model_id' => $job->equipment_id,
+        'related_entity_name' => $job->equipment->name ?? null,
+    ]);
+}
+
+/**
+ * Log client-related activity.
+ */
+public static function logClientActivity(Job $job, $activityType, $description, $clientData = [])
+{
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => $activityType,
+        'activity_category' => 'client',
+        'priority_level' => 'medium',
+        'is_major_activity' => in_array($activityType, ['client_assigned', 'client_changed']),
+        'description' => $description,
+        'new_values' => $clientData,
+        'related_model_type' => 'Client',
+        'related_model_id' => $job->client_id,
+        'related_entity_name' => $job->client->name ?? null,
+    ]);
+}
+
+/**
+ * Log item-related activity.
+ */
+public static function logItemActivity(Job $job, $activityType, $description, $itemData = [], $itemId = null)
+{
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => $activityType,
+        'activity_category' => 'item',
+        'priority_level' => 'medium',
+        'is_major_activity' => in_array($activityType, ['item_added', 'item_approved', 'item_rejected']),
+        'description' => $description,
+        'new_values' => $itemData,
+        'related_model_type' => 'JobItem',
+        'related_model_id' => $itemId,
+        'metadata' => [
+            'item_data' => $itemData,
+        ],
+    ]);
+}
+
+/**
+ * Log approval-related activity.
+ */
+public static function logApprovalActivity(Job $job, $activityType, $approvalData = [])
+{
+    $descriptions = [
+        'approval_requested' => "Approval requested for job",
+        'approval_granted' => "Job approved",
+        'approval_rejected' => "Job approval rejected",
+        'approval_cancelled' => "Approval request cancelled",
+    ];
+
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => $activityType,
+        'activity_category' => 'approval',
+        'priority_level' => 'high',
+        'is_major_activity' => true,
+        'description' => $descriptions[$activityType] ?? "Approval activity: {$activityType}",
+        'new_values' => $approvalData,
+        'affected_user_id' => $approvalData['approval_user_id'] ?? null,
+        'metadata' => [
+            'approval_notes' => $approvalData['notes'] ?? null,
+            'previous_status' => $approvalData['previous_status'] ?? null,
+        ],
+    ]);
+}
+
+/**
+ * Log bulk operations.
+ */
+public static function logBulkOperation($jobs, $operation, $description, $metadata = [])
+{
+    $jobIds = is_array($jobs) ? $jobs : $jobs->pluck('id')->toArray();
+    
+    foreach ($jobIds as $jobId) {
+        self::log([
+            'job_id' => $jobId,
+            'activity_type' => 'bulk_operation',
+            'activity_category' => 'system',
+            'priority_level' => 'medium',
+            'is_major_activity' => false,
+            'description' => $description,
+            'metadata' => array_merge($metadata, [
+                'operation_type' => $operation,
+                'affected_jobs_count' => count($jobIds),
+                'all_affected_jobs' => $jobIds,
+            ]),
+        ]);
+    }
+}
+
+/**
+ * Clean up old activity logs.
+ */
+public static function cleanupOldLogs($daysToKeep = 90)
+{
+    $cutoffDate = now()->subDays($daysToKeep);
+    
+    return JobActivityLog::where('created_at', '<', $cutoffDate)
+        ->where('is_major_activity', false)
+        ->update(['active' => false]);
+}
 }

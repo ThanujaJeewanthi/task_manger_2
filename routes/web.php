@@ -214,11 +214,25 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('/users/{userId}', [UserController::class, 'delete'])->name('users.delete');
 });
 
+// Enhanced Logs Routes (add these to the existing logs section)
 Route::middleware(['auth'])->group(function () {
-
-Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])->name('logs.index')->middleware('role.permission:13.1');
-    Route::get('/logs/{id}', [App\Http\Controllers\LogController::class, 'show'])->name('logs.show')->middleware('role.permission:13.2');
-    Route::post('/logs/clear', [App\Http\Controllers\LogController::class, 'clear'])->name('logs.clear')->middleware('role.permission:13.2');
+    // Project Logs
+    Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])
+        ->name('logs.index')
+        ->middleware('role.permission:13.1');
+    
+    Route::get('/logs/{id}', [App\Http\Controllers\LogController::class, 'show'])
+        ->name('logs.show')
+        ->middleware('role.permission:13.2');
+    
+    Route::post('/logs/clear', [App\Http\Controllers\LogController::class, 'clear'])
+        ->name('logs.clear')
+        ->middleware('role.permission:13.2');
+    
+    // Export functionality
+    Route::get('/logs/export/project-logs', [App\Http\Controllers\LogController::class, 'export'])
+        ->name('logs.export')
+        ->middleware('role.permission:13.1');
 });
 
 //companies routes
