@@ -339,11 +339,12 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
         // Get activity statistics
         $activityStats = JobActivityLogger::getJobActivityStats($job->id);
 
-       $recentActivities =JobActivityLog::where('job_id', $job->id)
-            ->with(['user', 'affectedUser'])
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get();
+       $recentActivities = JobActivityLog::where('job_id', $job->id)
+    ->where('job_activity_logs.active', true) // Specify table name to avoid ambiguity
+    ->with(['user', 'affectedUser'])
+    ->orderBy('created_at', 'desc')
+    ->limit(10)
+    ->get();
 
         // Return your existing view with timeline data added
         return view('jobs.show', compact('job', 'employees', 'tasks', 'jobItems', 'timelineData', 'jobStats','recentActivities', 'activityStats'));
@@ -626,9 +627,9 @@ public function storeItems(Request $request, Job $job)
         $job->update([
             'status' => 'completed',
             'approval_status' => 'approved',
-            'approved_by' => Auth::id(),
+             'approved_by' => Auth::id(),
             'approved_at' => now(),
-            'approval_notes' => 'Closed as minor issue: ' . $request->issue_description,
+            'approval_notes' => 'Completed as minor issue: ' . $request->issue_description,
             'completed_date' => now(),
             'updated_by' => Auth::id(),
         ]);

@@ -38,7 +38,22 @@
                                         <tr>
                                             <th>Activity Type</th>
                                             <td>
-                                                <span class="badge bg-{{ $this->getActivityBadgeColor($log->activity_type) }}">
+                                                <span class="badge bg-{{ 
+                                                    match($log->activity_type) {
+                                                        'created' => 'success',
+                                                        'updated' => 'info',
+                                                        'assigned' => 'primary',
+                                                        'approved' => 'success',
+                                                        'completed' => 'success',
+                                                        'cancelled' => 'danger',
+                                                        'started' => 'warning',
+                                                        'task_created' => 'info',
+                                                        'task_assigned' => 'primary',
+                                                        'item_added' => 'secondary',
+                                                        'status_changed' => 'warning',
+                                                        default => 'secondary'
+                                                    }
+                                                }}">
                                                     {{ ucwords(str_replace('_', ' ', $log->activity_type)) }}
                                                 </span>
                                             </td>
@@ -54,7 +69,15 @@
                                         <tr>
                                             <th>Priority Level</th>
                                             <td>
-                                                <span class="badge bg-{{ $this->getPriorityBadgeColor($log->priority_level) }}">
+                                                <span class="badge bg-{{ 
+                                                    match($log->priority_level) {
+                                                        'low' => 'success',
+                                                        'medium' => 'warning',
+                                                        'high' => 'danger',
+                                                        'critical' => 'dark',
+                                                        default => 'secondary'
+                                                    }
+                                                }}">
                                                     {{ ucwords($log->priority_level) }}
                                                 </span>
                                             </td>
@@ -161,7 +184,17 @@
                                         <tr>
                                             <th>Status</th>
                                             <td>
-                                                <span class="badge bg-{{ $this->getJobStatusBadgeColor($log->job->status) }}">
+                                                <span class="badge bg-{{ 
+                                                    match($log->job->status) {
+                                                        'pending' => 'warning',
+                                                        'approved' => 'info',
+                                                        'in_progress' => 'primary',
+                                                        'completed' => 'success',
+                                                        'closed' => 'dark',
+                                                        'cancelled' => 'danger',
+                                                        default => 'secondary'
+                                                    }
+                                                }}">
                                                     {{ ucwords(str_replace('_', ' ', $log->job->status)) }}
                                                 </span>
                                             </td>
@@ -248,100 +281,13 @@
                         </div>
                     </div>
 
-                    <!-- Data Changes -->
-                    @if($log->old_values || $log->new_values)
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="card mb-4">
-                                <div class="card-header bg-secondary text-white">
-                                    <h6 class="mb-0"><i class="fas fa-exchange-alt"></i> Data Changes</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        @if($log->old_values)
-                                        <div class="col-md-6">
-                                            <h6 class="text-danger">Previous Values</h6>
-                                            <div class="bg-light p-3 rounded">
-                                                <pre class="mb-0">{{ json_encode($log->old_values, JSON_PRETTY_PRINT) }}</pre>
-                                            </div>
-                                        </div>
-                                        @endif
-                                        @if($log->new_values)
-                                        <div class="col-md-6">
-                                            <h6 class="text-success">New Values</h6>
-                                            <div class="bg-light p-3 rounded">
-                                                <pre class="mb-0">{{ json_encode($log->new_values, JSON_PRETTY_PRINT) }}</pre>
-                                            </div>
-                                        </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
+                
 
-                    <!-- Metadata -->
-                    @if($log->metadata)
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-header bg-info text-white">
-                                    <h6 class="mb-0"><i class="fas fa-database"></i> Additional Metadata</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="bg-light p-3 rounded">
-                                        <pre class="mb-0">{{ json_encode($log->metadata, JSON_PRETTY_PRINT) }}</pre>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
+                   
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-@php
-function getActivityBadgeColor($activityType) {
-    $colors = [
-        'created' => 'success',
-        'updated' => 'info',
-        'assigned' => 'primary',
-        'approved' => 'success',
-        'completed' => 'success',
-        'cancelled' => 'danger',
-        'started' => 'warning',
-        'task_created' => 'info',
-        'task_assigned' => 'primary',
-        'item_added' => 'secondary',
-        'status_changed' => 'warning',
-    ];
-    return $colors[$activityType] ?? 'secondary';
-}
-
-function getPriorityBadgeColor($priority) {
-    $colors = [
-        'low' => 'success',
-        'medium' => 'warning',
-        'high' => 'danger',
-        'critical' => 'dark',
-    ];
-    return $colors[$priority] ?? 'secondary';
-}
-
-function getJobStatusBadgeColor($status) {
-    $colors = [
-        'pending' => 'warning',
-        'approved' => 'info',
-        'in_progress' => 'primary',
-        'completed' => 'success',
-        'closed' => 'dark',
-        'cancelled' => 'danger',
-    ];
-    return $colors[$status] ?? 'secondary';
-}
-@endphp
 @endsection

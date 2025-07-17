@@ -52,8 +52,8 @@
 
                                     @if ($job->assigned_user_id == auth()->user()->id && $job->status !='completed' && $job->status != 'cancelled' && $job->approval_status !='approved')
                                         <a href="{{ route('jobs.items.add', $job) }}" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-plus"></i> Modify Job
-                                           <span class="d-none d-md-inline">Add items or close job</span>
+                                            <i class="fas fa-plus"></i> Modify Job 
+                                          
                                         </a>
                                     @endif
                                 @endif
@@ -245,24 +245,42 @@
             </div>
         </div>
         @endif
-
-
-
-
+      {{-- If exist, show the issue_description in the job items table for this job--}}
+@if ($job->jobItems->whereNotNull('issue_description')->count() > 0 && $job->status !== 'closed' && $job->status !== 'completed')
+    <div class="col-md-6 mb-3">
+        <div class="border p-3 h-100">
+            <label class="form-label fw-bold text-muted small">ISSUE </label>
+            <div class="fw-normal">
+            {{-- issue description of one job item is enough --}}
+            {{ $job->jobItems->whereNotNull('issue_description')->first()->issue_description }}
+            </div>
+        </div>
     </div>
-    @endif
-       <div class="mt-3 mb-3">
+@endif
+
+{{-- if job closed show the approval notes as Issue --}}
+@if($job->status === 'closed' || $job->status === 'completed' && $job->approval_notes)
+    <div class="col-md-6 mb-3">
+        <div class="border p-3 h-100">
+            <label class="form-label fw-bold text-muted small">ISSUE</label>
+            <div class="fw-normal">
+                {{ $job->approval_notes }}
+            </div>
+        </div>
+    </div>
+@endif
+@endif 
+<div class="mt-3 mb-3">
         <a href="{{ route('jobs.history.index', $job->id) }}" class="btn btn-outline-info btn-sm">
             <i class="fas fa-history"></i> View Job History
         </a>
-    </div>
     </div>
 
 
 
   @if($job->status === 'closed')
   <div class="d-component-container mb-4">
-    <div class="alert alert-success">
+    <div class="alert " style="background-color: #bbecd9; border-color: #a0d2fd;">
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <i class="fas fa-check-circle"></i>
@@ -270,7 +288,11 @@
                 <p class="mb-0">This job has been reviewed and closed by {{ $job->reviewer->name ?? 'Engineer' }}
                     on {{ $job->closed_at ? $job->closed_at->format('M d, Y') : 'N/A' }}.</p>
                 @if($job->review_notes)
-                    <small class="text-muted">Review Notes: {{ $job->review_notes }}</small>
+                {{-- highlighted review notes --}}
+                Review Notes:
+                <strong> {{ $job->review_notes }}</strong>
+                   
+                
                 @endif
             </div>
             <div>
@@ -591,6 +613,13 @@
                                     <span class="text-muted">-</span>
                                 @endif
                             @endif
+                            {{-- if the extension request is requested --}}
+                            @if($task->taskExtensionRequests->where('status', 'pending')->count() > 0)
+                                {{-- Show extension request badge --}}
+                                <span class="badge bg-warning">
+                                    <i class="fas fa-clock"></i> Extension Request pending
+                                </span>
+                            @endif
                         </td>
                     </tr>
                 @empty
@@ -603,11 +632,11 @@
     </div>
 </div>
 @endif
-                        </div>
+</div>
 
 
                         <div class="row me-2" style="margin-left:5px;">
-    <div class="col-12">
+<div class="col-12">
         @include('jobs.components.timeline')
     </div>
 </div>

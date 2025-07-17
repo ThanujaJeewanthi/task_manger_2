@@ -347,16 +347,12 @@
                         <!-- Approval Section -->
                         @if($job->approval_status !== 'requested')
                         <div id="approval-section" class="card mb-4">
-                            <div class="card-header">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-paper-plane"></i> Request Approval
-                                </h6>
-                            </div>
+                          
                             <div class="card-body">
                                 <div class="form-group">
                                     <label for="request_approval_from">Request approval from:</label>
                                     <select class="form-control" name="request_approval_from" id="request_approval_from">
-                                        <option value="">Select approver (optional)</option>
+                                        <option value="">Select approver </option>
                                         @foreach($approvalUsers as $user)
                                             <option value="{{ $user->id }}">
                                                 {{ $user->name }} ({{ $user->userRole->name ?? 'No Role' }})
@@ -399,7 +395,7 @@
                                 @if($job->approval_status === 'requested')
                                     Add Additional Items
                                 @else
-                                    Save & Process Items
+                                    Modify Job
                                 @endif
                             </button>
                             <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary btn-sm ms-2">
