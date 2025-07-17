@@ -88,7 +88,7 @@ class JobActivityLog extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('active', true);
+        return $query->where('job_activity_logs.active', true);
     }
 
     /**

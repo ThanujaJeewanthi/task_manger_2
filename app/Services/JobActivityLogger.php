@@ -659,12 +659,9 @@ public static function logTaskStarted(Job $job, $task, $employee)
     }
 
 
-    public static function getJobActivityStats($jobId)
+   public static function getJobActivityStats($jobId)
 {
-    // active job activity logs
-    $query = JobActivityLog::where('job_id', $jobId) 
-        ->where('active', true)
-        ->with(['user', 'affectedUser']);
+    $query = JobActivityLog::where('job_id', $jobId)->where('job_activity_logs.active', true);
     
     return [
         'total_activities' => $query->count(),
@@ -682,6 +679,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
             ->toArray(),
         'activity_by_user' => (clone $query)
             ->join('users', 'job_activity_logs.user_id', '=', 'users.id')
+            ->where('users.active', true) // Specify table name for users.active
             ->groupBy('users.name')
             ->selectRaw('users.name, count(*) as count')
             ->pluck('count', 'name')
@@ -696,7 +694,7 @@ public static function getCompanyActivityStats($companyId, $startDate = null, $e
 {
     $query = JobActivityLog::whereHas('job', function($q) use ($companyId) {
         $q->where('company_id', $companyId);
-    })->where('active', true);
+    })->where('job_activity_logs.active', true); // Specify table name
     
     if ($startDate) {
         $query->whereDate('created_at', '>=', $startDate);
@@ -734,6 +732,7 @@ public static function getCompanyActivityStats($companyId, $startDate = null, $e
     ];
 }
 
+
 /**
  * Log equipment-related activity.
  */
@@ -752,6 +751,7 @@ public static function logEquipmentActivity(Job $job, $activityType, $descriptio
         'related_entity_name' => $job->equipment->name ?? null,
     ]);
 }
+
 
 /**
  * Log client-related activity.
@@ -844,7 +844,6 @@ public static function logBulkOperation($jobs, $operation, $description, $metada
         ]);
     }
 }
-
 /**
  * Clean up old activity logs.
  */

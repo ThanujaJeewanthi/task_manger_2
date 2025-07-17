@@ -36,7 +36,7 @@
                         </div>
                     @endif
 
-                
+                    
 
                     <!-- Filter Form -->
                     <form method="GET" action="{{ route('logs.index') }}" class="mb-4" id="filterForm">
@@ -279,7 +279,22 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $this->getActivityBadgeColor($log->activity_type) }}">
+                                            <span class="badge bg-{{ 
+                                                match($log->activity_type) {
+                                                    'created' => 'success',
+                                                    'updated' => 'info',
+                                                    'assigned' => 'primary',
+                                                    'approved' => 'success',
+                                                    'completed' => 'success',
+                                                    'cancelled' => 'danger',
+                                                    'started' => 'warning',
+                                                    'task_created' => 'info',
+                                                    'task_assigned' => 'primary',
+                                                    'item_added' => 'secondary',
+                                                    'status_changed' => 'warning',
+                                                    default => 'secondary'
+                                                }
+                                            }}">
                                                 {{ ucwords(str_replace('_', ' ', $log->activity_type)) }}
                                             </span>
                                         </td>
@@ -289,7 +304,15 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-{{ $this->getPriorityBadgeColor($log->priority_level) }}">
+                                            <span class="badge bg-{{ 
+                                                match($log->priority_level) {
+                                                    'low' => 'success',
+                                                    'medium' => 'warning',
+                                                    'high' => 'danger',
+                                                    'critical' => 'dark',
+                                                    default => 'secondary'
+                                                }
+                                            }}">
                                                 {{ ucwords($log->priority_level) }}
                                                 @if($log->is_major_activity)
                                                     <i class="fas fa-star"></i>
@@ -385,7 +408,7 @@ function exportLogs() {
 
 // Auto-hide filter section on load if no filters are applied
 document.addEventListener('DOMContentLoaded', function() {
-    const hasFilters = {{ count(request()->except(['view', 'page'])) > 0 ? 'true' : 'false' }}
+    const hasFilters = {{ count(request()->except(['view', 'page'])) > 0 ? 'true' : 'false' }};
     if (!hasFilters) {
         const section = document.getElementById('filterSection');
         const toggle = document.getElementById('filterToggle');
@@ -396,32 +419,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-@php
-function getActivityBadgeColor($activityType) {
-    $colors = [
-        'created' => 'success',
-        'updated' => 'info',
-        'assigned' => 'primary',
-        'approved' => 'success',
-        'completed' => 'success',
-        'cancelled' => 'danger',
-        'started' => 'warning',
-        'task_created' => 'info',
-        'task_assigned' => 'primary',
-        'item_added' => 'secondary',
-        'status_changed' => 'warning',
-    ];
-    return $colors[$activityType] ?? 'secondary';
-}
-
-function getPriorityBadgeColor($priority) {
-    $colors = [
-        'low' => 'success',
-        'medium' => 'warning',
-        'high' => 'danger',
-        'critical' => 'dark',
-    ];
-    return $colors[$priority] ?? 'secondary';
-}
-@endphp
 @endsection
