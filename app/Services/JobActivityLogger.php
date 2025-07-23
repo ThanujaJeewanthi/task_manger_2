@@ -278,7 +278,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
   public static function logJobItemsAdded(Job $job, $existingItems = [], $newItems = [], $notes = null)
 {
     $itemDescriptions = [];
-    
+
     // Process existing items
     if (!empty($existingItems)) {
         foreach ($existingItems as $itemData) {
@@ -289,7 +289,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
             }
         }
     }
-    
+
     // Process new items
     if (!empty($newItems)) {
         foreach ($newItems as $newItem) {
@@ -298,9 +298,9 @@ public static function logTaskStarted(Job $job, $task, $employee)
             }
         }
     }
-    
+
     $itemsList = implode(', ', $itemDescriptions);
-    
+
     return self::log([
         'job_id' => $job->id,
         'activity_type' => 'items_added',
@@ -615,7 +615,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
     /**
      * Get activity statistics for a job.
      */
-  
+
 /**
      * Log job copy.
      */
@@ -662,7 +662,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
    public static function getJobActivityStats($jobId)
 {
     $query = JobActivityLog::where('job_id', $jobId)->where('job_activity_logs.active', true);
-    
+
     return [
         'total_activities' => $query->count(),
         'major_activities' => (clone $query)->where('is_major_activity', true)->count(),
@@ -695,15 +695,15 @@ public static function getCompanyActivityStats($companyId, $startDate = null, $e
     $query = JobActivityLog::whereHas('job', function($q) use ($companyId) {
         $q->where('company_id', $companyId);
     })->where('job_activity_logs.active', true); // Specify table name
-    
+
     if ($startDate) {
         $query->whereDate('created_at', '>=', $startDate);
     }
-    
+
     if ($endDate) {
         $query->whereDate('created_at', '<=', $endDate);
     }
-    
+
     return [
         'total_activities' => $query->count(),
         'jobs_with_activity' => (clone $query)->distinct('job_id')->count('job_id'),
@@ -827,7 +827,7 @@ public static function logApprovalActivity(Job $job, $activityType, $approvalDat
 public static function logBulkOperation($jobs, $operation, $description, $metadata = [])
 {
     $jobIds = is_array($jobs) ? $jobs : $jobs->pluck('id')->toArray();
-    
+
     foreach ($jobIds as $jobId) {
         self::log([
             'job_id' => $jobId,
@@ -850,9 +850,101 @@ public static function logBulkOperation($jobs, $operation, $description, $metada
 public static function cleanupOldLogs($daysToKeep = 90)
 {
     $cutoffDate = now()->subDays($daysToKeep);
-    
+
     return JobActivityLog::where('created_at', '<', $cutoffDate)
         ->where('is_major_activity', false)
         ->update(['active' => false]);
+}
+/**
+ * Log task creation with user assignments.
+ */
+public static function logTaskCreatedWithUsers(Job $job, $task, $assignedUsers = [])
+{
+    $userNames = collect($assignedUsers)->pluck('name')->join(', ');
+    $userRoles = collect($assignedUsers)->map(function ($user) {
+        return $user->userRole->name ?? 'Unknown';
+    })->join(', ');
+
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'task_created',
+        'activity_category' => 'task',
+        'priority_level' => 'medium',
+        'is_major_activity' => true,
+        'description' => "Created task '{$task->task}'" .
+            ($userNames ? " and assigned to users: {$userNames} (Roles: {$userRoles})" : ''),
+        'new_values' => [
+            'task_name' => $task->task,
+            'task_description' => $task->description,
+            'assigned_users' => $userNames,
+            'assigned_user_roles' => $userRoles,
+        ],
+        'related_model_type' => 'Task',
+        'related_model_id' => $task->id,
+        'related_entity_name' => $task->task,
+        'metadata' => [
+            'assigned_user_count' => count($assignedUsers),
+            'user_ids' => collect($assignedUsers)->pluck('id')->toArray(),
+            'assignment_type' => 'user_based',
+        ],
+    ]);
+}
+
+/**
+ * Log task assignment to user.
+ */
+public static function logTaskAssignedToUser(Job $job, $task, $user, $startDate = null, $endDate = null)
+{
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'task_assigned',
+        'activity_category' => 'task',
+        'priority_level' => 'medium',
+        'is_major_activity' => false,
+        'description' => "Assigned task '{$task->task}' to {$user->name} (" . ($user->userRole->name ?? 'Unknown role') . ")" .
+            (($startDate && $endDate) ? " ({$startDate} to {$endDate})" : ''),
+        'affected_user_id' => $user->id,
+        'new_values' => [
+            'task_name' => $task->task,
+            'assigned_to' => $user->name,
+            'assigned_role' => $user->userRole->name ?? 'Unknown',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ],
+        'related_model_type' => 'Task',
+        'related_model_id' => $task->id,
+        'related_entity_name' => $task->task,
+        'metadata' => [
+            'assignment_type' => 'user_based',
+            'user_role' => $user->userRole->name ?? 'Unknown',
+        ],
+    ]);
+}
+
+/**
+ * Log task extension request by user.
+ */
+public static function logTaskExtensionRequestedByUser(Job $job, $task, $user, $currentEndDate, $requestedEndDate, $reason)
+{
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'extension_requested',
+        'activity_category' => 'task',
+        'priority_level' => 'medium',
+        'is_major_activity' => false,
+        'description' => "Extension requested for task '{$task->task}' by {$user->name} (" . ($user->userRole->name ?? 'Unknown role') . ") from {$currentEndDate} to {$requestedEndDate}",
+        'affected_user_id' => $user->id,
+        'old_values' => ['end_date' => $currentEndDate],
+        'new_values' => ['requested_end_date' => $requestedEndDate],
+        'related_model_type' => 'Task',
+        'related_model_id' => $task->id,
+        'related_entity_name' => $task->task,
+        'metadata' => [
+            'reason' => $reason,
+            'extension_days' => \Carbon\Carbon::parse($requestedEndDate)->diffInDays(\Carbon\Carbon::parse($currentEndDate)),
+            'requester_role' => $user->userRole->name ?? 'Unknown',
+            'assignment_type' => 'user_based',
+        ],
+    ]);
 }
 }

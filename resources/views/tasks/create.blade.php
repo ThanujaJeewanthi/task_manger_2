@@ -32,6 +32,61 @@
                         @csrf
 
                         <div class="d-component-container">
+
+                            <div class="form-group">
+                                <label for="assignment_type">Assignment Type</label>
+                                <select class="form-control" id="assignment_type" name="assignment_type" onchange="toggleAssignmentFields()">
+                                    <option value="user">Assign Users (Recommended)</option>
+                                    <option value="employee">Assign Employees (Legacy)</option>
+                                </select>
+                            </div>
+
+                            <!-- User Assignment Section -->
+                            <div class="form-group" id="user_assignment_section">
+                                <label for="user_ids">Assign Users</label>
+                                <select class="form-control select2" id="user_ids" name="user_ids[]" multiple>
+                                    @foreach($assignableUsers as $user)
+                                        <option value="{{ $user->id }}">
+                                            {{ $user->name }} 
+                                            <span class="badge badge-{{ $user->userRole ? strtolower(str_replace(' ', '-', $user->userRole->name)) : 'secondary' }}">
+                                                {{ $user->userRole->name ?? 'No Role' }}
+                                            </span>
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <small class="form-text text-muted">
+                                    Select users to assign to this task. All roles except Admin and Super Admin can be assigned.
+                                </small>
+                            </div>
+
+                            <!-- Employee Assignment Section (for backward compatibility) -->
+                            <div class="form-group" id="employee_assignment_section" style="display: none;">
+                                <label for="employee_ids">Assign Employees (Legacy)</label>
+                                <select class="form-control select2" id="employee_ids" name="employee_ids[]" multiple>
+                                    @foreach($employees as $employee)
+                                        <option value="{{ $employee->id }}">{{ $employee->name }}</option>
+                                    @endforeach
+                                </select>
+                                <small class="form-text text-muted">
+                                    Legacy employee assignment. Use user assignment for better role management.
+                                </small>
+                            </div>
+
+                            <script>
+                            function toggleAssignmentFields() {
+                                const assignmentType = document.getElementById('assignment_type').value;
+                                const userSection = document.getElementById('user_assignment_section');
+                                const employeeSection = document.getElementById('employee_assignment_section');
+                                
+                                if (assignmentType === 'user') {
+                                    userSection.style.display = 'block';
+                                    employeeSection.style.display = 'none';
+                                } else {
+                                    userSection.style.display = 'none';
+                                    employeeSection.style.display = 'block';
+                                }
+                            }
+                            </script>
                             <!-- Task Name -->
                             <div class="form-group mb-4">
                                 <label for="task">Task Name <span class="text-danger">*</span></label>

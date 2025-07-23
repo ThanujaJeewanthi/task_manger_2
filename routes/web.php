@@ -220,15 +220,15 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])
         ->name('logs.index')
         ->middleware('role.permission:13.1');
-    
+
     Route::get('/logs/{id}', [App\Http\Controllers\LogController::class, 'show'])
         ->name('logs.show')
         ->middleware('role.permission:13.2');
-    
+
     Route::post('/logs/clear', [App\Http\Controllers\LogController::class, 'clear'])
         ->name('logs.clear')
         ->middleware('role.permission:13.2');
-    
+
     // Export functionality
     Route::get('/logs/export/project-logs', [App\Http\Controllers\LogController::class, 'export'])
         ->name('logs.export')
@@ -508,6 +508,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/jobs/{job}/history/timeline-data', [JobHistoryController::class, 'getTimelineData'])
         ->name('jobs.history.timeline-data')
         ->middleware('role.permission:11.24');
+});
+
+// Task User Assignment Routes
+Route::middleware(['auth'])->group(function () {
+    Route::prefix('jobs/{job}/tasks')->group(function () {
+        Route::get('/{task}/assign-users', [JobController::class, 'showAssignUsers'])->name('tasks.assign-users.show');
+        Route::post('/{task}/assign-users', [JobController::class, 'assignUsers'])->name('tasks.assign-users.store');
+        Route::delete('/{task}/users/{user}', [JobController::class, 'unassignUser'])->name('tasks.unassign-user');
+    });
+
+    // Enhanced task extension routes for user-based assignments
+    Route::prefix('tasks')->group(function () {
+        // Route::get('/my-assignments', [TaskController::class, 'myAssignments'])->name('tasks.my-assignments');
+        Route::get('/{task}/extension/create', [TaskExtensionController::class, 'create'])->name('tasks.extension.create');
+        Route::post('/{task}/extension', [TaskExtensionController::class, 'store'])->name('tasks.extension.store');
+    });
 });
 
 

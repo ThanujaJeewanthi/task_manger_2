@@ -2,151 +2,100 @@
 
 @section('content')
 <div class="container-fluid">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card" style="width:700px;">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
                 <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-component-title">
-                            <span>Request Task Extension</span>
-                        </div>
-                        <a href="{{ route('employee.dashboard') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
-                        </a>
-                    </div>
+                    <h5 class="mb-0">Request Task Extension</h5>
                 </div>
-
                 <div class="card-body">
-                    @if (session('success'))
-                        <div class="alert alert-success mt-3">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    @if (session('error'))
-                        <div class="alert alert-danger mt-3">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-
-                    <!-- Task Details Summary -->
-                    <div class="card mb-4 bg-light">
-                        <div class="card-body">
-                            <h6 class="card-title">Task Details</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Job ID:</strong> {{ $job->id }}</p>
-                                    <p><strong>Task:</strong> {{ $task->task }}</p>
-                                    <p><strong>Job Type:</strong> {{ $job->jobType->name ?? 'N/A' }}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Current Start Date:</strong>
-                                        {{ $jobEmployee->start_date ? $jobEmployee->start_date->format('Y-m-d') : 'N/A' }}
-                                    </p>
-                                    <p><strong>Current End Date:</strong>
-                                        <span class="badge bg-warning">
-                                            {{ $jobEmployee->end_date ? $jobEmployee->end_date->format('Y-m-d') : 'N/A' }}
-                                        </span>
-                                    </p>
-                                    <p><strong>Task Status:</strong>
-                                        <span class="badge bg-primary">{{ ucfirst($task->status) }}</span>
-                                    </p>
-                                </div>
-                            </div>
-                            @if($task->description)
-                                <div class="mt-2">
-                                    <strong>Description:</strong> {{ $task->description }}
-                                </div>
-                            @endif
-                        </div>
+                    {{-- Task Information --}}
+                    <div class="alert alert-info">
+                        <h6><strong>Task:</strong> {{ $task->task }}</h6>
+                        <p class="mb-1"><strong>Job:</strong> {{ $job->description ?? 'N/A' }}</p>
+                        <p class="mb-0"><strong>Current Status:</strong>
+                            <span class="badge badge-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'secondary') }}">
+                                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                            </span>
+                        </p>
                     </div>
 
-                    <form action="{{ route('tasks.extension.store', $task) }}" method="POST" id="extension-request-form">
+                    {{-- Assignment Information --}}
+                    @if(isset($userAssignment))
+                        <div class="alert alert-success">
+                            <h6><i class="fas fa-user"></i> User Assignment</h6>
+                            <p class="mb-1"><strong>Your Role:</strong>
+                                <span class="badge {{ $userAssignment->getUserRoleBadgeClass() }}">
+                                    {{ $userAssignment->getUserRoleName() }}
+                                </span>
+                            </p>
+                            <p class="mb-0"><strong>Current End Date:</strong>
+                                {{ $userAssignment->end_date ? $userAssignment->end_date->format('M d, Y') : 'Not set' }}
+                            </p>
+                        </div>
+                    @elseif(isset($employeeAssignment))
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-user-tie"></i> Employee Assignment (Legacy)</h6>
+                            <p class="mb-0"><strong>Current End Date:</strong>
+                                {{ $employeeAssignment->end_date ? $employeeAssignment->end_date->format('M d, Y') : 'Not set' }}
+                            </p>
+                        </div>
+                    @endif
+
+                    {{-- Extension Request Form --}}
+                    <form method="POST" action="{{ route('tasks.extension.store', $task) }}">
                         @csrf
-                        <input type="hidden" name="current_end_date" value="{{ $jobEmployee->end_date ? $jobEmployee->end_date->format('Y-m-d') : '' }}">
 
-                        <div class="d-component-container">
-                            <!-- New End Date -->
-                            <div class="form-group mb-4">
-                                <label for="requested_end_date">Requested New End Date <span class="text-danger">*</span></label>
-                                <input type="date"
-                                       class="form-control @error('requested_end_date') is-invalid @enderror"
-                                       id="requested_end_date"
-                                       name="requested_end_date"
-                                       value="{{ old('requested_end_date') }}"
-                                       min="{{ $jobEmployee->end_date ? $jobEmployee->end_date->addDay()->format('Y-m-d') : date('Y-m-d') }}"
-                                       required>
-                                <small class="form-text text-muted">
-                                    Select a date after the current end date ({{ $jobEmployee->end_date ? $jobEmployee->end_date->format('Y-m-d') : 'N/A' }})
-                                </small>
-                                @error('requested_end_date')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                        <input type="hidden" name="current_end_date" value="{{ $userAssignment ? $userAssignment->end_date : $employeeAssignment->end_date }}">
 
-                            <!-- Extension Days Display -->
-                            <div class="form-group mb-4">
-                                <label>Extension Period</label>
-                                <div class="alert alert-info" id="extension-info" style="display: none;">
-                                    <i class="fas fa-info-circle"></i>
-                                    <span id="extension-days-text">Please select a new end date to see extension period.</span>
-                                </div>
-                            </div>
+                        <div class="form-group">
+                            <label for="requested_end_date">Requested New End Date <span class="text-danger">*</span></label>
+                            <input type="date"
+                                   class="form-control @error('requested_end_date') is-invalid @enderror"
+                                   id="requested_end_date"
+                                   name="requested_end_date"
+                                   value="{{ old('requested_end_date') }}"
+                                   min="{{ now()->addDay()->format('Y-m-d') }}"
+                                   required>
+                            @error('requested_end_date')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                            <!-- Reason -->
-                            <div class="form-group mb-4">
-                                <label for="reason">Reason for Extension <span class="text-danger">*</span></label>
-                                <textarea class="form-control @error('reason') is-invalid @enderror"
-                                          id="reason"
-                                          name="reason"
-                                          rows="3"
-                                          maxlength="500"
-                                          placeholder="Briefly explain why you need this extension..."
-                                          required>{{ old('reason') }}</textarea>
-                                <small class="form-text text-muted">Maximum 500 characters</small>
-                                @error('reason')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                        <div class="form-group">
+                            <label for="reason">Reason for Extension <span class="text-danger">*</span></label>
+                            <textarea class="form-control @error('reason') is-invalid @enderror"
+                                      id="reason"
+                                      name="reason"
+                                      rows="3"
+                                      placeholder="Please provide a brief reason for the extension..."
+                                      maxlength="500"
+                                      required>{{ old('reason') }}</textarea>
+                            @error('reason')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Maximum 500 characters</small>
+                        </div>
 
-                            <!-- Justification -->
-                            <div class="form-group mb-4">
-                                <label for="justification">Additional Justification (Optional)</label>
-                                <textarea class="form-control @error('justification') is-invalid @enderror"
-                                          id="justification"
-                                          name="justification"
-                                          rows="4"
-                                          maxlength="1000"
-                                          placeholder="Provide additional details, work completed so far, challenges faced, etc...">{{ old('justification') }}</textarea>
-                                <small class="form-text text-muted">Maximum 1000 characters. Provide detailed explanation to help with approval decision.</small>
-                                @error('justification')
-                                    <span class="invalid-feedback">{{ $message }}</span>
-                                @enderror
-                            </div>
+                        <div class="form-group">
+                            <label for="justification">Additional Justification</label>
+                            <textarea class="form-control @error('justification') is-invalid @enderror"
+                                      id="justification"
+                                      name="justification"
+                                      rows="4"
+                                      placeholder="Provide detailed justification for the extension (optional)..."
+                                      maxlength="1000">{{ old('justification') }}</textarea>
+                            @error('justification')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="form-text text-muted">Maximum 1000 characters</small>
+                        </div>
 
-                            <!-- Important Notice -->
-                            <div class="card border-warning mb-4">
-                                <div class="card-header bg-warning text-dark text-sm">
-                                    <h6 class="mb-0">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        Important Notice
-                                    </h6>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="mb-0">
-                                        <li class="text-sm">Extension requests require approval from your supervisor or technical officer.</li>
-                                    </ul>
-                                </div>
-                            </div>
-
-                            <!-- Submit Buttons -->
-                            <div class="form-group mt-4">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-paper-plane"></i> Submit Extension Request
-                                </button>
-                                <a href="{{ route('employee.dashboard') }}" class="btn btn-secondary ms-2">
-                                    <i class="fas fa-times"></i> Cancel
-                                </a>
-                            </div>
+                        <div class="form-group text-right">
+                            <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Submit Extension Request
+                            </button>
                         </div>
                     </form>
                 </div>
