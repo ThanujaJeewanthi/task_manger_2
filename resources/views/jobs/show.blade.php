@@ -388,7 +388,7 @@
                             </div>
                         @endif
 
-                        {{-- if tasks exist for this job --}}
+                       
 {{-- if tasks exist for this job --}}
 {{-- Tasks Section - Updated to show both user and employee assignments --}}
 @if($job->tasks->count() > 0)
@@ -582,12 +582,6 @@
     </div>
 </div>
 
-{{-- Timeline Section - Always show if tasks exist --}}
-<div class="row me-2" style="margin-left:5px;">
-    <div class="col-12">
-        @include('jobs.components.timeline')
-    </div>
-</div>
 
 @else
     {{-- No tasks exist --}}
@@ -605,6 +599,14 @@
         </div>
     </div>
 @endif
+
+</div>
+
+{{-- Timeline Section - Always show if tasks exist --}}
+<div class="row me-2" style="margin-left:5px;">
+    <div class="col-12">
+        @include('jobs.components.timeline')
+    </div>
 </div>
 
 

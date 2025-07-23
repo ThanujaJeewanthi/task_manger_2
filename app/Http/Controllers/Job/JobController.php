@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Controllers\Job;
-
 use Carbon\Carbon;
 use App\Models\Job;
 use App\Models\Item;
@@ -11,9 +9,6 @@ use App\Models\Client;
 use App\Models\JobType;
 use App\Models\Employee;
 use App\Models\TaskUserAssignment;
-
-
-
 use App\Models\Equipment;
 use App\Models\JobOption;
 use App\Models\JobEmployee;
@@ -1496,7 +1491,7 @@ public function processReview(Request $request, Job $job)
             }
         } catch (\Exception $logError) {
             // Log the error but don't fail the transaction
-            \Log::warning('Failed to log job review activity', [
+            Log::warning('Failed to log job review activity', [
                 'job_id' => $job->id,
                 'error' => $logError->getMessage()
             ]);
@@ -1510,7 +1505,7 @@ public function processReview(Request $request, Job $job)
     } catch (\Exception $e) {
         DB::rollBack();
 
-        \Log::error('Failed to process job review', [
+        Log::error('Failed to process job review', [
             'job_id' => $job->id,
             'user_id' => Auth::id(),
             'error' => $e->getMessage()
