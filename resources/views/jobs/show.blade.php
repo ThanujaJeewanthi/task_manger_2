@@ -389,12 +389,13 @@
                         @endif
 
                         {{-- if tasks exist for this job --}}
+{{-- if tasks exist for this job --}}
 @if($job->tasks->count() > 0 || $job->jobEmployees->count() > 0)
 <!-- Tasks Card -->
 <div class="d-component-container mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5>Tasks</h5>
-        @if(auth()->user()->userRole->name == 'Employee' || auth()->user()->userRole)
+        @if(auth()->user()->userRole && auth()->user()->userRole->name)
             <div>
                 <a href="{{ route('tasks.extension.my-requests') }}" class="btn btn-info btn-sm">
                     <i class="fas fa-history"></i> My Extension Requests
@@ -421,6 +422,7 @@
                     $currentUser = auth()->user();
                     $userRole = $currentUser->userRole->name ?? '';
                     $currentEmployee = \App\Models\Employee::where('user_id', $currentUser->id)->first();
+                    $displayedTasks = collect(); // Track displayed tasks to avoid duplication
                 @endphp
 
                 {{-- Display tasks with user assignments --}}
@@ -430,10 +432,16 @@
                         $userIsAssigned = $allAssignedUsers->contains(function ($item) use ($currentUser) {
                             return $item['user']->id === $currentUser->id;
                         });
+                        $displayedTasks->push($task->id);
                     @endphp
 
                     <tr>
-                        <td>{{ $task->task }}</td>
+                        <td>
+                            <strong>{{ $task->task }}</strong>
+                            @if($task->hasUserAssignments())
+                                <span class="badge badge-success badge-sm ml-1">User Assignment</span>
+                            @endif
+                        </td>
                         <td>{{ $task->description ?? 'N/A' }}</td>
                         <td>
                             @if($allAssignedUsers->count() > 0)
@@ -444,9 +452,9 @@
                                             {{ $assignmentInfo['user']->userRole->name ?? 'No Role' }}
                                         </span>
                                         @if($assignmentInfo['assignment_type'] === 'user')
-                                            <span class="badge badge-success badge-sm">User Assignment</span>
+                                            <span class="badge badge-success badge-sm">User</span>
                                         @else
-                                            <span class="badge badge-warning badge-sm">Employee Assignment</span>
+                                            <span class="badge badge-warning badge-sm">Employee</span>
                                         @endif
                                     </div>
                                 @endforeach
@@ -463,18 +471,12 @@
                             @php
                                 $startDate = null;
                                 $endDate = null;
-
-                                // Get dates from user assignment or employee assignment
-                                $userAssignment = $allAssignedUsers->where('user.id', $currentUser->id)->where('assignment_type', 'user')->first();
-                                if ($userAssignment) {
-                                    $startDate = $userAssignment['assignment_data']->start_date;
-                                    $endDate = $userAssignment['assignment_data']->end_date;
-                                } else {
-                                    $employeeAssignment = $allAssignedUsers->where('user.id', $currentUser->id)->where('assignment_type', 'employee')->first();
-                                    if ($employeeAssignment) {
-                                        $startDate = $employeeAssignment['assignment_data']->start_date;
-                                        $endDate = $employeeAssignment['assignment_data']->end_date;
-                                    }
+                                
+                                // Get dates from the first assignment (user or employee)
+                                if ($allAssignedUsers->count() > 0) {
+                                    $firstAssignment = $allAssignedUsers->first();
+                                    $startDate = $firstAssignment['assignment_data']->start_date;
+                                    $endDate = $firstAssignment['assignment_data']->end_date;
                                 }
                             @endphp
                             {{ $startDate ? $startDate->format('M d, Y') : 'N/A' }}
@@ -488,7 +490,7 @@
                             @endif
 
                             @if(in_array($userRole, ['Engineer', 'Supervisor']))
-                                <a href="{{ route('tasks.edit', [$job, $task]) }}" class="btn btn-sm btn-outline-primary" title="Edit Task">
+                                <a href="{{ route('jobs.tasks.edit', [$job, $task]) }}" class="btn btn-sm btn-outline-primary" title="Edit Task">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             @endif
@@ -496,18 +498,21 @@
                     </tr>
                 @endforeach
 
-                {{-- Display legacy job employees (for backward compatibility) --}}
+                {{-- Display legacy job employees for tasks that haven't been displayed yet --}}
                 @foreach($job->jobEmployees->groupBy('task_id') as $taskId => $jobEmployees)
                     @php
+                        // Skip if this task was already displayed above
+                        if ($displayedTasks->contains($taskId)) continue;
+                        
                         $task = $job->tasks->find($taskId);
                         if (!$task) continue; // Skip if task doesn't exist
-
-                        // Skip if this task already has user assignments (avoid duplication)
-                        if ($task->activeTaskUserAssignments()->exists()) continue;
                     @endphp
 
                     <tr class="table-warning">
-                        <td>{{ $task->task }} <small class="text-muted">(Legacy)</small></td>
+                        <td>
+                            <strong>{{ $task->task }}</strong>
+                            <small class="text-muted d-block">(Legacy Employee Assignment)</small>
+                        </td>
                         <td>{{ $task->description ?? 'N/A' }}</td>
                         <td>
                             @foreach($jobEmployees as $jobEmployee)
@@ -515,7 +520,7 @@
                                     <div class="d-flex align-items-center mb-1">
                                         <span class="mr-2">{{ $jobEmployee->employee->name }}</span>
                                         <span class="badge badge-primary mr-1">Employee</span>
-                                        <span class="badge badge-warning badge-sm">Legacy Assignment</span>
+                                        <span class="badge badge-warning badge-sm">Legacy</span>
                                     </div>
                                 @endif
                             @endforeach
@@ -533,9 +538,31 @@
                                     <i class="fas fa-clock"></i> Extend
                                 </a>
                             @endif
+                            
+                            @if(in_array($userRole, ['Engineer', 'Supervisor']))
+                                <a href="{{ route('jobs.tasks.edit', [$job, $task]) }}" class="btn btn-sm btn-outline-primary" title="Edit Task">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
+
+                {{-- Show message if no tasks exist --}}
+                @if($job->tasks->count() === 0 && $job->jobEmployees->count() === 0)
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">
+                            <i class="fas fa-tasks fa-2x mb-2 d-block"></i>
+                            No tasks have been created for this job yet.
+                            @if(in_array($userRole, ['Engineer', 'Supervisor']))
+                                <br>
+                                <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-primary btn-sm mt-2">
+                                    <i class="fas fa-plus"></i> Create First Task
+                                </a>
+                            @endif
+                        </td>
+                    </tr>
+                @endif
             </tbody>
         </table>
     </div>

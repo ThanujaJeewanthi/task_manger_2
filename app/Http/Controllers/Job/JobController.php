@@ -304,56 +304,58 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
 }
 
 
-         public function show(Job $job)
-    {
-        // Check if job belongs to current user's company
-        if ($job->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
-        // Load relationships for timeline view
-        $job->load([
-            'jobType.jobOptions',
-            'client',
-            'equipment',
-            'jobEmployees.employee',
-            'jobEmployees.task',
-            'tasks.jobEmployees.employee',
-            'tasks.taskExtensionRequests' => function($query) {
-                $query->where('status', 'pending');
-            }
-        ]);
-
-        // Get employees and tasks (your existing code)
-        $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
-        $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
-        $jobItems = JobItems::where('job_id', $job->id)->where('active', true)->get();
-
-        // Get timeline data
-        $timelineData = $this->getTimelineData($job);
-
-        // Get basic job stats
-        $jobStats = $this->getJobStats($job);
-
-
-
-        // Get activity statistics
-        $activityStats = JobActivityLogger::getJobActivityStats($job->id);
-
-       $recentActivities = JobActivityLog::where('job_id', $job->id)
-    ->where('job_activity_logs.active', true) // Specify table name to avoid ambiguity
-    ->with(['user', 'affectedUser'])
-    ->orderBy('created_at', 'desc')
-    ->limit(10)
-    ->get();
-
-        // Return your existing view with timeline data added
-        return view('jobs.show', compact('job', 'employees', 'tasks', 'jobItems', 'timelineData', 'jobStats','recentActivities', 'activityStats'));
-        // Get recent activities (last 10)
-
-
+public function show(Job $job)
+{
+    // Check if job belongs to current user's company
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
     }
 
+    // Load relationships for timeline view - UPDATED WITH PROPER EAGER LOADING
+    $job->load([
+        'jobType.jobOptions',
+        'client',
+        'equipment',
+        'jobEmployees.employee.user.userRole',
+        'jobEmployees.task',
+        'tasks' => function($query) {
+            $query->where('active', true)
+                  ->with([
+                      'taskUserAssignments' => function($q) {
+                          $q->where('active', true)->with('user.userRole');
+                      },
+                      'jobEmployees.employee.user.userRole'
+                  ]);
+        },
+        'tasks.taskExtensionRequests' => function($query) {
+            $query->where('status', 'pending');
+        }
+    ]);
+
+    // Get employees and tasks (your existing code)
+    $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
+    $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
+    $jobItems = JobItems::where('job_id', $job->id)->where('active', true)->get();
+
+    // Get timeline data
+    $timelineData = $this->getTimelineData($job);
+
+    // Get basic job stats
+    $jobStats = $this->getJobStats($job);
+
+    // Get activity statistics
+    $activityStats = JobActivityLogger::getJobActivityStats($job->id);
+
+    $recentActivities = JobActivityLog::where('job_id', $job->id)
+        ->where('job_activity_logs.active', true) // Specify table name to avoid ambiguity
+        ->with(['user', 'affectedUser'])
+        ->orderBy('created_at', 'desc')
+        ->limit(10)
+        ->get();
+
+    // Return your existing view with timeline data added
+    return view('jobs.show', compact('job', 'employees', 'tasks', 'jobItems', 'timelineData', 'jobStats','recentActivities', 'activityStats'));
+}
 
 
 
@@ -463,7 +465,6 @@ public function createTask(Job $job)
     return view('tasks.create', compact('job', 'assignableUsers', 'employees'));
 }
 
-// Update the storeTask method
 public function storeTask(Request $request, Job $job)
 {
     if ($job->company_id !== Auth::user()->company_id) {
@@ -473,6 +474,7 @@ public function storeTask(Request $request, Job $job)
     $request->validate([
         'task' => 'required|string|max:255',
         'description' => 'nullable|string',
+        'assignment_type' => 'required|in:user,employee',
         'user_ids' => 'nullable|array',
         'user_ids.*' => 'exists:users,id',
         'employee_ids' => 'nullable|array', // Keep for backward compatibility
@@ -481,6 +483,15 @@ public function storeTask(Request $request, Job $job)
         'end_date' => 'nullable|date|after_or_equal:start_date',
         'notes' => 'nullable|string',
     ]);
+
+    // Validate that at least one assignment is provided
+    if ($request->assignment_type === 'user' && (!$request->filled('user_ids') || count($request->user_ids) === 0)) {
+        return redirect()->back()->withErrors(['user_ids' => 'Please select at least one user to assign.'])->withInput();
+    }
+
+    if ($request->assignment_type === 'employee' && (!$request->filled('employee_ids') || count($request->employee_ids) === 0)) {
+        return redirect()->back()->withErrors(['employee_ids' => 'Please select at least one employee to assign.'])->withInput();
+    }
 
     try {
         DB::beginTransaction();
@@ -496,7 +507,7 @@ public function storeTask(Request $request, Job $job)
         ]);
 
         // Handle user-based assignments
-        if ($request->filled('user_ids')) {
+        if ($request->assignment_type === 'user' && $request->filled('user_ids')) {
             foreach ($request->user_ids as $userId) {
                 TaskUserAssignment::create([
                     'job_id' => $job->id,
@@ -505,7 +516,7 @@ public function storeTask(Request $request, Job $job)
                     'assigned_by' => Auth::id(),
                     'start_date' => $request->start_date,
                     'end_date' => $request->end_date,
-                    'duration_in_days' => $request->start_date && $request->end_date ?
+                    'duration_in_days' => $request->start_date && $request->end_date ? 
                         Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
                     'status' => 'pending',
                     'notes' => $request->notes,
@@ -515,12 +526,12 @@ public function storeTask(Request $request, Job $job)
             }
 
             // Log task creation with user assignments
-            $assignedUsers = User::whereIn('id', $request->user_ids)->get();
+            $assignedUsers = User::whereIn('id', $request->user_ids)->with('userRole')->get();
             JobActivityLogger::logTaskCreatedWithUsers($job, $task, $assignedUsers);
         }
 
         // Handle employee-based assignments (backward compatibility)
-        if ($request->filled('employee_ids')) {
+        if ($request->assignment_type === 'employee' && $request->filled('employee_ids')) {
             foreach ($request->employee_ids as $employeeId) {
                 JobEmployee::create([
                     'job_id' => $job->id,
@@ -528,7 +539,7 @@ public function storeTask(Request $request, Job $job)
                     'task_id' => $task->id,
                     'start_date' => $request->start_date,
                     'end_date' => $request->end_date,
-                    'duration_in_days' => $request->start_date && $request->end_date ?
+                    'duration_in_days' => $request->start_date && $request->end_date ? 
                         Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
                     'status' => 'pending',
                     'notes' => $request->notes,
@@ -546,12 +557,20 @@ public function storeTask(Request $request, Job $job)
 
         DB::commit();
 
-        return redirect()->route('jobs.show', $job)->with('success', 'Task added successfully.');
+        return redirect()->route('jobs.show', $job)->with('success', 'Task created and assigned successfully.');
 
     } catch (\Exception $e) {
         DB::rollBack();
-        Log::error('Task creation failed: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Failed to create task. Please try again.');
+        Log::error('Task creation failed: ' . $e->getMessage(), [
+            'job_id' => $job->id,
+            'user_id' => Auth::id(),
+            'request_data' => $request->all(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
+        return redirect()->back()
+            ->with('error', 'Failed to create task. Please try again.')
+            ->withInput();
     }
 }
 // make edit task and update task methods to match create task and store task methods

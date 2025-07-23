@@ -92,18 +92,32 @@ public function getAllAssignedUsers()
     $users = collect();
 
     // Get users from new user-based assignments
-    $userAssignments = $this->activeTaskUserAssignments()->with('user.userRole')->get();
+    // Check if the relationship is already loaded to avoid N+1 queries
+    if ($this->relationLoaded('taskUserAssignments')) {
+        $userAssignments = $this->taskUserAssignments->where('active', true);
+    } else {
+        $userAssignments = $this->taskUserAssignments()->where('active', true)->with('user.userRole')->get();
+    }
+
     foreach ($userAssignments as $assignment) {
-        $users->push([
-            'user' => $assignment->user,
-            'assignment_type' => 'user',
-            'assignment_data' => $assignment,
-            'role_badge_class' => $assignment->getUserRoleBadgeClass()
-        ]);
+        if ($assignment->user) {
+            $users->push([
+                'user' => $assignment->user,
+                'assignment_type' => 'user',
+                'assignment_data' => $assignment,
+                'role_badge_class' => $assignment->getUserRoleBadgeClass()
+            ]);
+        }
     }
 
     // Get users from old employee-based assignments (for backward compatibility)
-    $employeeAssignments = $this->jobEmployees()->with('employee.user.userRole')->get();
+    // Check if the relationship is already loaded to avoid N+1 queries
+    if ($this->relationLoaded('jobEmployees')) {
+        $employeeAssignments = $this->jobEmployees;
+    } else {
+        $employeeAssignments = $this->jobEmployees()->with('employee.user.userRole')->get();
+    }
+
     foreach ($employeeAssignments as $jobEmployee) {
         if ($jobEmployee->employee && $jobEmployee->employee->user) {
             $users->push([
@@ -116,5 +130,14 @@ public function getAllAssignedUsers()
     }
 
     return $users;
+}
+
+// Add this helper method to check if task has user assignments
+public function hasUserAssignments()
+{
+    if ($this->relationLoaded('taskUserAssignments')) {
+        return $this->taskUserAssignments->where('active', true)->count() > 0;
+    }
+    return $this->taskUserAssignments()->where('active', true)->exists();
 }
 }

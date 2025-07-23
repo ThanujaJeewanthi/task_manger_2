@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-12">
-            <div class="card" style="width:600px;">
+            <div class="card" style="width:800px;">
                 <div class="card-header">
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-component-title">
@@ -33,60 +33,111 @@
 
                         <div class="d-component-container">
 
-                            <div class="form-group">
+                            <!-- Assignment Type Selection -->
+                            <div class="form-group mb-4">
                                 <label for="assignment_type">Assignment Type</label>
                                 <select class="form-control" id="assignment_type" name="assignment_type" onchange="toggleAssignmentFields()">
-                                    <option value="user">Assign Users (Recommended)</option>
-                                    <option value="employee">Assign Employees (Legacy)</option>
+                                    <option value="user" {{ old('assignment_type', 'user') == 'user' ? 'selected' : '' }}>Assign Users (Recommended)</option>
+                                    <option value="employee" {{ old('assignment_type') == 'employee' ? 'selected' : '' }}>Assign Employees (Legacy)</option>
                                 </select>
                             </div>
 
                             <!-- User Assignment Section -->
-                            <div class="form-group" id="user_assignment_section">
-                                <label for="user_ids">Assign Users</label>
-                                <select class="form-control select2" id="user_ids" name="user_ids[]" multiple>
-                                    @foreach($assignableUsers as $user)
-                                        <option value="{{ $user->id }}">
-                                            {{ $user->name }} 
-                                            <span class="badge badge-{{ $user->userRole ? strtolower(str_replace(' ', '-', $user->userRole->name)) : 'secondary' }}">
-                                                {{ $user->userRole->name ?? 'No Role' }}
-                                            </span>
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <small class="form-text text-muted">
-                                    Select users to assign to this task. All roles except Admin and Super Admin can be assigned.
-                                </small>
+                            <div class="form-group mb-4" id="user_assignment_section">
+                                <label for="user_search">Assign Users</label>
+                                <div class="card border">
+                                    <div class="card-header bg-light py-2">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="user_search" placeholder="Search users by name or role..." onkeyup="filterUsers()">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-2" style="max-height: 200px; overflow-y: auto;">
+                                        <div id="user_list">
+                                            @foreach($assignableUsers as $user)
+                                                <div class="user-item border rounded p-2 mb-2" data-user-id="{{ $user->id }}" data-user-name="{{ strtolower($user->name) }}" data-user-role="{{ strtolower($user->userRole->name ?? '') }}">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input user-checkbox" type="checkbox" name="user_ids[]" value="{{ $user->id }}" id="user_{{ $user->id }}" {{ collect(old('user_ids', []))->contains($user->id) ? 'checked' : '' }}>
+                                                        <label class="form-check-label w-100" for="user_{{ $user->id }}">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <strong>{{ $user->name }}</strong>
+                                                                    <br>
+                                                                    <small class="text-muted">{{ $user->email ?? 'No email' }}</small>
+                                                                </div>
+                                                                <div>
+                                                                    @php
+                                                                        $roleName = $user->userRole->name ?? 'No Role';
+                                                                        $badgeClass = \App\Helpers\UserRoleHelper::getRoleBadgeClass($roleName);
+                                                                    @endphp
+                                                                    <span class="badge {{ $badgeClass }}">{{ $roleName }}</span>
+                                                                </div>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div class="card-footer py-2">
+                                        <small class="text-muted">
+                                            <span id="selected_users_count">0</span> user(s) selected
+                                            • All roles except Admin and Super Admin can be assigned
+                                        </small>
+                                    </div>
+                                </div>
+                                @error('user_ids')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <!-- Employee Assignment Section (for backward compatibility) -->
-                            <div class="form-group" id="employee_assignment_section" style="display: none;">
-                                <label for="employee_ids">Assign Employees (Legacy)</label>
-                                <select class="form-control select2" id="employee_ids" name="employee_ids[]" multiple>
-                                    @foreach($employees as $employee)
-                                        <option value="{{ $employee->id }}">{{ $employee->name }}</option>
-                                    @endforeach
-                                </select>
-                                <small class="form-text text-muted">
-                                    Legacy employee assignment. Use user assignment for better role management.
-                                </small>
+                            <!-- Employee Assignment Section (Legacy) -->
+                            <div class="form-group mb-4" id="employee_assignment_section" style="display: none;">
+                                <label for="employee_search">Assign Employees (Legacy)</label>
+                                <div class="card border">
+                                    <div class="card-header bg-light py-2">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="employee_search" placeholder="Search employees..." onkeyup="filterEmployees()">
+                                            <div class="input-group-append">
+                                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-2" style="max-height: 200px; overflow-y: auto;">
+                                        <div id="employee_list">
+                                            @foreach($employees as $employee)
+                                                <div class="employee-item border rounded p-2 mb-2" data-employee-name="{{ strtolower($employee->name) }}">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input employee-checkbox" type="checkbox" name="employee_ids[]" value="{{ $employee->id }}" id="employee_{{ $employee->id }}" {{ collect(old('employee_ids', []))->contains($employee->id) ? 'checked' : '' }}>
+                                                        <label class="form-check-label w-100" for="employee_{{ $employee->id }}">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <div>
+                                                                    <strong>{{ $employee->name }}</strong>
+                                                                    <br>
+                                                                    <small class="text-muted">{{ $employee->job_title ?? 'No job title' }} • {{ $employee->department ?? 'No department' }}</small>
+                                                                </div>
+                                                                <span class="badge badge-primary">Employee</span>
+                                                            </div>
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div class="card-footer py-2">
+                                        <small class="text-muted">
+                                            <span id="selected_employees_count">0</span> employee(s) selected
+                                            • Legacy employee assignment. Use user assignment for better role management.
+                                        </small>
+                                    </div>
+                                </div>
+                                @error('employee_ids')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                             </div>
 
-                            <script>
-                            function toggleAssignmentFields() {
-                                const assignmentType = document.getElementById('assignment_type').value;
-                                const userSection = document.getElementById('user_assignment_section');
-                                const employeeSection = document.getElementById('employee_assignment_section');
-                                
-                                if (assignmentType === 'user') {
-                                    userSection.style.display = 'block';
-                                    employeeSection.style.display = 'none';
-                                } else {
-                                    userSection.style.display = 'none';
-                                    employeeSection.style.display = 'block';
-                                }
-                            }
-                            </script>
                             <!-- Task Name -->
                             <div class="form-group mb-4">
                                 <label for="task">Task Name <span class="text-danger">*</span></label>
@@ -99,14 +150,14 @@
                             <!-- Description -->
                             <div class="form-group mb-4">
                                 <label for="description">Description</label>
-                                <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="4">{{ old('description') }}</textarea>
+                                <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" placeholder="Optional task description...">{{ old('description') }}</textarea>
                                 @error('description')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
 
+                            <!-- Date Range -->
                             <div class="row">
-                                <!-- Start Date -->
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="start_date">Start Date</label>
@@ -116,8 +167,6 @@
                                         @enderror
                                     </div>
                                 </div>
-
-                                <!-- End Date -->
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="end_date">End Date</label>
@@ -129,115 +178,21 @@
                                 </div>
                             </div>
 
-                            <!-- Enhanced Employee Selection -->
-                            <div class="form-group mb-4">
-                                <label>Assign Employees <span class="text-danger">*</span></label>
-
-                                <!-- Search Input -->
-                                <div class="employee-search-container mb-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-search"></i>
-                                        </span>
-                                        <input type="text"
-                                               class="form-control"
-                                               id="employee-search"
-                                               placeholder="Search employees by name or department...">
-                                    </div>
-                                </div>
-
-                                <!-- Selected Employees Display -->
-                                <div class="selected-employees-container mb-3" id="selected-employees" style="display: none;">
-                                    <label class="form-label text-muted small">Selected Employees:</label>
-                                    <div class="selected-employees-list" id="selected-employees-list"></div>
-                                </div>
-
-                                <!-- Available Employees List -->
-                                <div class="available-employees-container">
-                                    <div class="employee-list" id="employee-list">
-                                        @foreach($employees->take(5) as $employee)
-                                            <div class="employee-item"
-                                                 data-id="{{ $employee->id }}"
-                                                 data-name="{{ strtolower($employee->name ?? 'n/a') }}"
-                                                 data-department="{{ strtolower($employee->department ?? 'no department') }}">
-                                                <div class="employee-card">
-                                                    <div class="employee-info">
-                                                        <div class="employee-name">{{ $employee->name ?? 'N/A' }}</div>
-                                                        <div class="employee-department">{{ $employee->department ?? 'No Department' }}</div>
-                                                    </div>
-                                                    <div class="employee-action">
-                                                        <button type="button" class="btn btn-sm btn-outline-primary add-employee">
-                                                            <i class="fas fa-plus"></i> Add
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-
-                                        <div id="remaining-employees" style="display: none;">
-                                            @foreach($employees->skip(5) as $employee)
-                                                <div class="employee-item"
-                                                     data-id="{{ $employee->id }}"
-                                                     data-name="{{ strtolower($employee->name ?? 'n/a') }}"
-                                                     data-department="{{ strtolower($employee->department ?? 'no department') }}">
-                                                    <div class="employee-card">
-                                                        <div class="employee-info">
-                                                            <div class="employee-name">{{ $employee->name ?? 'N/A' }}</div>
-                                                            <div class="employee-department">{{ $employee->department ?? 'No Department' }}</div>
-                                                        </div>
-                                                        <div class="employee-action">
-                                                            <button type="button" class="btn btn-sm btn-outline-primary add-employee">
-                                                                <i class="fas fa-plus"></i> Add
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-
-                                        @if($employees->count() > 5)
-                                            <div class="text-center mt-3">
-                                                <button type="button" class="btn btn-link" id="show-more-btn">
-                                                    Show More Employees
-                                                </button>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-
-                                <!-- Hidden inputs for selected employees -->
-                                <div id="hidden-employee-inputs"></div>
-
-                                @error('employee_ids')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                            </div>
-
                             <!-- Notes -->
                             <div class="form-group mb-4">
                                 <label for="notes">Notes</label>
-                                <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
+                                <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3" placeholder="Optional notes for the assignment...">{{ old('notes') }}</textarea>
                                 @error('notes')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                             </div>
 
-                            <!-- Active Status Toggle -->
-                            <div class="d-com-flex justify-content-start mb-4">
-                                <label class="d-label-text me-2">Active</label>
-                                <label class="d-toggle position-relative" style="margin-top: 5px; margin-bottom: 3px;">
-                                    <input type="checkbox" class="form-check-input d-section-toggle" name="is_active" {{ old('is_active', true) ? 'checked' : '' }} />
-                                    <span class="d-slider">
-                                        <span class="d-icon active"><i class="fa-solid fa-check"></i></span>
-                                        <span class="d-icon inactive"><i class="fa-solid fa-minus"></i></span>
-                                    </span>
-                                </label>
-                            </div>
-
                             <!-- Submit Button -->
-                            <div class="form-group mt-4">
-                                <button type="submit" class="btn btn-primary">Create Task</button>
-                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary ms-2">Cancel</a>
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Create Task
+                                </button>
+                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary ml-2">Cancel</a>
                             </div>
                         </div>
                     </form>
@@ -247,225 +202,129 @@
     </div>
 </div>
 
-<style>
-.employee-list {
-    max-height: 300px;
-    overflow-y: auto;
-    border: 1px solid #dee2e6;
-    border-radius: 0.375rem;
-    padding: 0.3rem;
-    background: #f8f9fa;
-}
-
-.employee-item {
-    margin-bottom: 0.2rem;
-}
-
-.employee-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.25rem;
-    background: white;
-    border: 1px solid #dee2e6;
-    border-radius: 0.15rem;
-    transition: all 0.2s ease;
-}
-
-.employee-card:hover {
-    border-color: #0d6efd;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.employee-info {
-    flex: 1;
-}
-
-.employee-name {
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 0.25rem;
-}
-
-.employee-department {
-    font-size: 0.875rem;
-    color: #6c757d;
-    font-style: italic;
-}
-
-.employee-action {
-    margin-left: 1rem;
-}
-
-.selected-employees-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-}
-
-.selected-employee-tag {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.5rem 0.75rem;
-    background: #0d6efd;
-    color: white;
-    border-radius: 1.5rem;
-    font-size: 0.875rem;
-    gap: 0.5rem;
-}
-
-.selected-employee-tag .remove-employee {
-    background: none;
-    border: none;
-    color: white;
-    cursor: pointer;
-    padding: 0;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    transition: background-color 0.2s;
-}
-
-.selected-employee-tag .remove-employee:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-.employee-item.hidden {
-    display: none;
-}
-
-.no-employees-message {
-    text-align: center;
-    color: #6c757d;
-    padding: 2rem;
-    font-style: italic;
-}
-</style>
-
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-$(document).ready(function() {
-    let selectedEmployees = [];
+// Toggle between user and employee assignment sections
+function toggleAssignmentFields() {
+    const assignmentType = document.getElementById('assignment_type').value;
+    const userSection = document.getElementById('user_assignment_section');
+    const employeeSection = document.getElementById('employee_assignment_section');
+    
+    if (assignmentType === 'user') {
+        userSection.style.display = 'block';
+        employeeSection.style.display = 'none';
+        // Clear employee selections
+        document.querySelectorAll('.employee-checkbox').forEach(cb => cb.checked = false);
+        updateSelectedEmployeesCount();
+    } else {
+        userSection.style.display = 'none';
+        employeeSection.style.display = 'block';
+        // Clear user selections
+        document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
+        updateSelectedUsersCount();
+    }
+}
 
-    // Initialize with old values if form was submitted with errors
-    @if(old('employee_ids'))
-        const oldEmployeeIds = @json(old('employee_ids'));
-        oldEmployeeIds.forEach(function(employeeId) {
-            const employeeItem = $(`.employee-item[data-id="${employeeId}"]`);
-            if (employeeItem.length) {
-                addEmployeeToSelected(employeeId, employeeItem.find('.employee-name').text(), employeeItem.find('.employee-department').text());
-            }
-        });
-    @endif
-
-    // Search functionality
-    $('#employee-search').on('input', function() {
-        const searchTerm = $(this).val().toLowerCase();
-
-        $('.employee-item').each(function() {
-            const employeeName = $(this).data('name');
-            const employeeDepartment = $(this).data('department');
-
-            if (employeeName.includes(searchTerm) || employeeDepartment.includes(searchTerm)) {
-                $(this).removeClass('hidden');
-            } else {
-                $(this).addClass('hidden');
-            }
-        });
-
-        // Show "no results" message if no employees visible
-        const visibleEmployees = $('.employee-item:not(.hidden)').length;
-        $('.no-employees-message').remove();
-
-        if (visibleEmployees === 0 && searchTerm.length > 0) {
-            $('#employee-list').append('<div class="no-employees-message">No employees found matching your search.</div>');
+// Filter users based on search input
+function filterUsers() {
+    const searchTerm = document.getElementById('user_search').value.toLowerCase();
+    const userItems = document.querySelectorAll('.user-item');
+    
+    userItems.forEach(item => {
+        const userName = item.getAttribute('data-user-name');
+        const userRole = item.getAttribute('data-user-role');
+        
+        if (userName.includes(searchTerm) || userRole.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
         }
     });
+}
 
-    // Add employee
-    $(document).on('click', '.add-employee', function() {
-        const employeeItem = $(this).closest('.employee-item');
-        const employeeId = employeeItem.data('id');
-        const employeeName = employeeItem.find('.employee-name').text();
-        const employeeDepartment = employeeItem.find('.employee-department').text();
-
-        addEmployeeToSelected(employeeId, employeeName, employeeDepartment);
-    });
-
-    // Remove employee
-    $(document).on('click', '.remove-employee', function() {
-        const employeeId = $(this).data('id');
-        removeEmployeeFromSelected(employeeId);
-    });
-
-    function addEmployeeToSelected(employeeId, employeeName, employeeDepartment) {
-        // Check if already selected
-        if (selectedEmployees.includes(employeeId.toString())) {
-            return;
+// Filter employees based on search input
+function filterEmployees() {
+    const searchTerm = document.getElementById('employee_search').value.toLowerCase();
+    const employeeItems = document.querySelectorAll('.employee-item');
+    
+    employeeItems.forEach(item => {
+        const employeeName = item.getAttribute('data-employee-name');
+        
+        if (employeeName.includes(searchTerm)) {
+            item.style.display = 'block';
+        } else {
+            item.style.display = 'none';
         }
+    });
+}
 
-        selectedEmployees.push(employeeId.toString());
+// Update selected users count
+function updateSelectedUsersCount() {
+    const checkedUsers = document.querySelectorAll('.user-checkbox:checked').length;
+    document.getElementById('selected_users_count').textContent = checkedUsers;
+}
 
-        // Create selected employee tag
-        const employeeTag = `
-            <div class="selected-employee-tag" data-id="${employeeId}">
-                <span>${employeeName}</span>
-                <button type="button" class="remove-employee" data-id="${employeeId}">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
+// Update selected employees count
+function updateSelectedEmployeesCount() {
+    const checkedEmployees = document.querySelectorAll('.employee-checkbox:checked').length;
+    document.getElementById('selected_employees_count').textContent = checkedEmployees;
+}
 
-        $('#selected-employees-list').append(employeeTag);
-        $('#selected-employees').show();
-
-        // Hide from available list
-        $(`.employee-item[data-id="${employeeId}"]`).addClass('hidden');
-
-        // Add hidden input
-        $('#hidden-employee-inputs').append(`<input type="hidden" name="employee_ids[]" value="${employeeId}">`);
-
-        updateEmployeeSearch();
-    }
-
-    function removeEmployeeFromSelected(employeeId) {
-        selectedEmployees = selectedEmployees.filter(id => id !== employeeId.toString());
-
-        // Remove tag
-        $(`.selected-employee-tag[data-id="${employeeId}"]`).remove();
-
-        // Show in available list
-        $(`.employee-item[data-id="${employeeId}"]`).removeClass('hidden');
-
-        // Remove hidden input
-        $(`input[name="employee_ids[]"][value="${employeeId}"]`).remove();
-
-        // Hide selected section if no employees selected
-        if (selectedEmployees.length === 0) {
-            $('#selected-employees').hide();
+// Initialize event listeners when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize assignment type
+    toggleAssignmentFields();
+    
+    // Update counts initially
+    updateSelectedUsersCount();
+    updateSelectedEmployeesCount();
+    
+    // Add event listeners for checkbox changes
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelectedUsersCount);
+    });
+    
+    document.querySelectorAll('.employee-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSelectedEmployeesCount);
+    });
+    
+    // Date validation - end date should be after start date
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    
+    startDate.addEventListener('change', function() {
+        if (this.value) {
+            endDate.min = this.value;
         }
-
-        updateEmployeeSearch();
-    }
-
-    function updateEmployeeSearch() {
-        // Trigger search to refresh the list
-        $('#employee-search').trigger('input');
-    }
-
-    // Form validation
-    $('#task-create-form').on('submit', function(e) {
-        if (selectedEmployees.length === 0) {
-            e.preventDefault();
-            alert('Please select at least one employee for this task.');
-            return false;
+    });
+    
+    endDate.addEventListener('change', function() {
+        if (startDate.value && this.value && this.value < startDate.value) {
+            alert('End date cannot be before start date');
+            this.value = '';
         }
     });
 });
 </script>
+
+<style>
+.user-item:hover, .employee-item:hover {
+    background-color: #f8f9fa;
+}
+
+.user-item .form-check-input:checked + .form-check-label {
+    background-color: #e3f2fd;
+}
+
+.employee-item .form-check-input:checked + .form-check-label {
+    background-color: #e8f5e8;
+}
+
+.badge-primary { background-color: #007bff; }
+.badge-info { background-color: #17a2b8; }
+.badge-success { background-color: #28a745; }
+.badge-warning { background-color: #ffc107; color: #212529; }
+.badge-danger { background-color: #dc3545; }
+.badge-dark { background-color: #343a40; }
+.badge-secondary { background-color: #6c757d; }
+</style>
 @endsection
