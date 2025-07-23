@@ -1552,68 +1552,101 @@ public static function getStatusLabel($status)
 
     return $statusLabels[$status] ?? ucfirst(str_replace('_', ' ', $status));
 }
-
-// timeline
 private function getTimelineData(Job $job)
-    {
-        // Get tasks with proper relationships
-        $tasks = $job->tasks()
-            ->where('active', true)
-            ->with([
-                'jobEmployees' => function($query) {
-                    $query->with('employee');
-                },
-                'taskExtensionRequests' => function($query) {
-                    $query->where('status', 'pending');
-                }
-            ])
-            ->get();
+{
+    // Get all tasks for this job (both with user assignments and employee assignments)
+    $tasks = Task::where('job_id', $job->id)
+        ->where('active', true)
+        ->with([
+            'taskUserAssignments' => function($query) {
+                $query->where('active', true)->with('user');
+            },
+            'jobEmployees.employee',
+            'taskExtensionRequests'
+        ])
+        ->get();
 
-        $timelineData = [
-            'job_start' => $job->start_date ? Carbon::parse($job->start_date) : null,
-            'job_end' => $job->due_date ? Carbon::parse($job->due_date) : null,
-            'tasks' => collect() // Use collection for easier manipulation
+    if ($tasks->isEmpty()) {
+        return [
+            'start_date' => now()->format('Y-m-d'),
+            'end_date' => now()->addDays(7)->format('Y-m-d'),
+            'tasks' => [],
+            'total_days' => 7
         ];
+    }
 
-        foreach ($tasks as $task) {
-            $taskEmployees = $task->jobEmployees;
+    $timelineTasks = [];
+    $allStartDates = [];
+    $allEndDates = [];
 
-            // Skip tasks with no employee assignments
-            if ($taskEmployees->isEmpty()) {
-                continue;
+    foreach ($tasks as $task) {
+        // Get assignments for this task (both user and employee)
+        $assignments = [];
+        
+        // Get user assignments
+        foreach ($task->taskUserAssignments as $userAssignment) {
+            if ($userAssignment->start_date && $userAssignment->end_date) {
+                $assignments[] = [
+                    'type' => 'user',
+                    'user' => $userAssignment->user,
+                    'start_date' => $userAssignment->start_date,
+                    'end_date' => $userAssignment->end_date,
+                    'status' => $userAssignment->status,
+                ];
+                $allStartDates[] = $userAssignment->start_date;
+                $allEndDates[] = $userAssignment->end_date;
             }
+        }
+        
+        // Get employee assignments
+        foreach ($task->jobEmployees as $jobEmployee) {
+            if ($jobEmployee->start_date && $jobEmployee->end_date && $jobEmployee->employee) {
+                $assignments[] = [
+                    'type' => 'employee',
+                    'user' => $jobEmployee->employee->user,
+                    'start_date' => $jobEmployee->start_date,
+                    'end_date' => $jobEmployee->end_date,
+                    'status' => $jobEmployee->status,
+                ];
+                $allStartDates[] = $jobEmployee->start_date;
+                $allEndDates[] = $jobEmployee->end_date;
+            }
+        }
 
-            $taskStart = $taskEmployees->min('start_date');
-            $taskEnd = $taskEmployees->max('end_date');
-
-            // Calculate basic progress
-            $progress = $this->calculateTaskProgress($task, $taskEmployees);
-
-            // Check for extension requests
-            $hasExtensionRequest = $task->taskExtensionRequests->isNotEmpty();
-
-            $timelineData['tasks']->push([
+        if (!empty($assignments)) {
+            $timelineTasks[] = [
                 'id' => $task->id,
                 'name' => $task->task,
                 'description' => $task->description,
                 'status' => $task->status,
-                'start_date' => $taskStart ? Carbon::parse($taskStart) : null,
-                'end_date' => $taskEnd ? Carbon::parse($taskEnd) : null,
-                'progress' => $progress,
-                'employees' => $taskEmployees->map(function($jobEmployee) {
-                    return [
-                        'id' => $jobEmployee->employee->id,
-                        'name' => $jobEmployee->employee->name,
-                        'initials' => $this->getInitials($jobEmployee->employee->name)
-                    ];
-                }),
-                'has_extension_request' => $hasExtensionRequest
-            ]);
+                'assignments' => $assignments,
+                'has_extension_request' => $task->taskExtensionRequests->where('status', 'pending')->count() > 0
+            ];
         }
-
-        return $timelineData;
     }
 
+    // Calculate timeline boundaries
+    if (!empty($allStartDates) && !empty($allEndDates)) {
+        $startDate = min($allStartDates);
+        $endDate = max($allEndDates);
+        
+        // Add some padding
+        $startDate = \Carbon\Carbon::parse($startDate)->subDays(2);
+        $endDate = \Carbon\Carbon::parse($endDate)->addDays(2);
+    } else {
+        $startDate = now();
+        $endDate = now()->addDays(7);
+    }
+
+    $totalDays = $startDate->diffInDays($endDate) + 1;
+
+    return [
+        'start_date' => $startDate->format('Y-m-d'),
+        'end_date' => $endDate->format('Y-m-d'),
+        'tasks' => $timelineTasks,
+        'total_days' => $totalDays
+    ];
+}
    private function calculateTaskProgress(Task $task, $taskEmployees)
 {
     if ($task->status === 'completed') return 100;

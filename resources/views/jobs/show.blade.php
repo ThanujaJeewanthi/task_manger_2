@@ -390,7 +390,8 @@
 
                         {{-- if tasks exist for this job --}}
 {{-- if tasks exist for this job --}}
-@if($job->tasks->count() > 0 || $job->jobEmployees->count() > 0)
+{{-- Tasks Section - Updated to show both user and employee assignments --}}
+@if($job->tasks->count() > 0)
 <!-- Tasks Card -->
 <div class="d-component-container mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -403,7 +404,7 @@
             </div>
         @endif
     </div>
-
+    
     <div class="table-responsive table-compact">
         <table class="table table-bordered">
             <thead>
@@ -422,17 +423,29 @@
                     $currentUser = auth()->user();
                     $userRole = $currentUser->userRole->name ?? '';
                     $currentEmployee = \App\Models\Employee::where('user_id', $currentUser->id)->first();
-                    $displayedTasks = collect(); // Track displayed tasks to avoid duplication
+                    $statusColors = [
+                        'pending' => 'warning',
+                        'in_progress' => 'primary', 
+                        'completed' => 'success',
+                        'cancelled' => 'danger'
+                    ];
                 @endphp
 
-                {{-- Display tasks with user assignments --}}
                 @foreach($job->tasks as $task)
                     @php
+                        // Get all assigned users (both user-based and employee-based)
                         $allAssignedUsers = $task->getAllAssignedUsers();
+                        
+                        // Check if current user is assigned to this task
                         $userIsAssigned = $allAssignedUsers->contains(function ($item) use ($currentUser) {
                             return $item['user']->id === $currentUser->id;
                         });
-                        $displayedTasks->push($task->id);
+
+                        // Get current user's assignment data
+                        $currentUserAssignment = $allAssignedUsers->where('user.id', $currentUser->id)->first();
+                        
+                        // Check for pending extension requests
+                        $pendingExtension = $task->taskExtensionRequests->where('status', 'pending')->first();
                     @endphp
 
                     <tr>
@@ -440,6 +453,8 @@
                             <strong>{{ $task->task }}</strong>
                             @if($task->hasUserAssignments())
                                 <span class="badge badge-success badge-sm ml-1">User Assignment</span>
+                            @else
+                                <span class="badge badge-warning badge-sm ml-1">Employee Assignment</span>
                             @endif
                         </td>
                         <td>{{ $task->description ?? 'N/A' }}</td>
@@ -454,7 +469,7 @@
                                         @if($assignmentInfo['assignment_type'] === 'user')
                                             <span class="badge badge-success badge-sm">User</span>
                                         @else
-                                            <span class="badge badge-warning badge-sm">Employee</span>
+                                            <span class="badge badge-primary badge-sm">Employee</span>
                                         @endif
                                     </div>
                                 @endforeach
@@ -463,7 +478,7 @@
                             @endif
                         </td>
                         <td>
-                            <span class="badge badge-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'secondary') }}">
+                            <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
                                 {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                             </span>
                         </td>
@@ -472,8 +487,11 @@
                                 $startDate = null;
                                 $endDate = null;
                                 
-                                // Get dates from the first assignment (user or employee)
-                                if ($allAssignedUsers->count() > 0) {
+                                // Get dates from the current user's assignment or first assignment
+                                if ($currentUserAssignment) {
+                                    $startDate = $currentUserAssignment['assignment_data']->start_date;
+                                    $endDate = $currentUserAssignment['assignment_data']->end_date;
+                                } elseif ($allAssignedUsers->count() > 0) {
                                     $firstAssignment = $allAssignedUsers->first();
                                     $startDate = $firstAssignment['assignment_data']->start_date;
                                     $endDate = $firstAssignment['assignment_data']->end_date;
@@ -483,78 +501,74 @@
                         </td>
                         <td>{{ $endDate ? $endDate->format('M d, Y') : 'N/A' }}</td>
                         <td>
-                            @if($userIsAssigned && in_array($task->status, ['pending', 'in_progress']))
-                                <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-sm btn-outline-warning" title="Request Extension">
-                                    <i class="fas fa-clock"></i> Extend
-                                </a>
-                            @endif
-
-                            @if(in_array($userRole, ['Engineer', 'Supervisor']))
-                                <a href="{{ route('jobs.tasks.edit', [$job, $task]) }}" class="btn btn-sm btn-outline-primary" title="Edit Task">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-
-                {{-- Display legacy job employees for tasks that haven't been displayed yet --}}
-                @foreach($job->jobEmployees->groupBy('task_id') as $taskId => $jobEmployees)
-                    @php
-                        // Skip if this task was already displayed above
-                        if ($displayedTasks->contains($taskId)) continue;
-                        
-                        $task = $job->tasks->find($taskId);
-                        if (!$task) continue; // Skip if task doesn't exist
-                    @endphp
-
-                    <tr class="table-warning">
-                        <td>
-                            <strong>{{ $task->task }}</strong>
-                            <small class="text-muted d-block">(Legacy Employee Assignment)</small>
-                        </td>
-                        <td>{{ $task->description ?? 'N/A' }}</td>
-                        <td>
-                            @foreach($jobEmployees as $jobEmployee)
-                                @if($jobEmployee->employee)
-                                    <div class="d-flex align-items-center mb-1">
-                                        <span class="mr-2">{{ $jobEmployee->employee->name }}</span>
-                                        <span class="badge badge-primary mr-1">Employee</span>
-                                        <span class="badge badge-warning badge-sm">Legacy</span>
+                            @if($userIsAssigned)
+                                {{-- User is assigned to this task - show task control buttons --}}
+                                <div class="btn-group" role="group">
+                                    @if($task->status === 'pending')
+                                        <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="button" class="btn btn-primary btn-sm"
+                                                onclick="showStartTaskSwal(this)">
+                                                <i class="fas fa-play"></i> Start
+                                            </button>
+                                        </form>
+                                    @elseif($task->status === 'in_progress')
+                                        <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="button" class="btn btn-success btn-sm"
+                                                onclick="handleCompleteTaskSwal(event, this.form)">
+                                                <i class="fas fa-check"></i> Complete
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
+                                            <i class="fas fa-clock"></i> Extend
+                                        </a>
+                                    @elseif($task->status === 'completed')
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle"></i> Completed
+                                        </span>
+                                    @endif
+                                </div>
+                            @else
+                                {{-- User is not assigned - show management buttons based on role --}}
+                                @if(in_array($userRole, ['Engineer', 'Supervisor', 'Technical Officer', 'admin']))
+                                    <div class="btn-group" role="group">
+                                        @if($task->status !== 'completed' && in_array($userRole, ['Engineer', 'Supervisor']))
+                                            <a href="{{ route('jobs.tasks.edit', ['job' => $job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                        @endif
+                                        
+                                        @if(in_array($userRole, ['Engineer']))
+                                            <a href="{{ route('tasks.assign-users.show', ['job' => $job->id, 'task' => $task->id]) }}" class="btn btn-info btn-sm" title="Assign Users">
+                                                <i class="fas fa-user-plus"></i> Assign
+                                            </a>
+                                        @endif
                                     </div>
+                                @else
+                                    <span class="text-muted">-</span>
                                 @endif
-                            @endforeach
-                        </td>
-                        <td>
-                            <span class="badge badge-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'secondary') }}">
-                                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
-                            </span>
-                        </td>
-                        <td>{{ $jobEmployees->first()->start_date ? $jobEmployees->first()->start_date->format('M d, Y') : 'N/A' }}</td>
-                        <td>{{ $jobEmployees->first()->end_date ? $jobEmployees->first()->end_date->format('M d, Y') : 'N/A' }}</td>
-                        <td>
-                            @if($currentEmployee && $jobEmployees->contains('employee_id', $currentEmployee->id) && in_array($task->status, ['pending', 'in_progress']))
-                                <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-sm btn-outline-warning" title="Request Extension">
-                                    <i class="fas fa-clock"></i> Extend
-                                </a>
                             @endif
-                            
-                            @if(in_array($userRole, ['Engineer', 'Supervisor']))
-                                <a href="{{ route('jobs.tasks.edit', [$job, $task]) }}" class="btn btn-sm btn-outline-primary" title="Edit Task">
-                                    <i class="fas fa-edit"></i>
-                                </a>
+
+                            {{-- Show extension request status --}}
+                            @if($pendingExtension)
+                                <div class="mt-1">
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock"></i> Extension Pending
+                                    </span>
+                                </div>
                             @endif
                         </td>
                     </tr>
                 @endforeach
 
                 {{-- Show message if no tasks exist --}}
-                @if($job->tasks->count() === 0 && $job->jobEmployees->count() === 0)
+                @if($job->tasks->count() === 0)
                     <tr>
                         <td colspan="7" class="text-center text-muted py-4">
                             <i class="fas fa-tasks fa-2x mb-2 d-block"></i>
                             No tasks have been created for this job yet.
-                            @if(in_array($userRole, ['Engineer', 'Supervisor']))
+                            @if(in_array($userRole, ['Engineer', 'Supervisor']) && $job->approval_status === 'approved')
                                 <br>
                                 <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-primary btn-sm mt-2">
                                     <i class="fas fa-plus"></i> Create First Task
@@ -567,17 +581,112 @@
         </table>
     </div>
 </div>
+
+{{-- Timeline Section - Always show if tasks exist --}}
+<div class="row me-2" style="margin-left:5px;">
+    <div class="col-12">
+        @include('jobs.components.timeline')
+    </div>
+</div>
+
+@else
+    {{-- No tasks exist --}}
+    <div class="d-component-container mb-4">
+        <h5>Tasks</h5>
+        <div class="text-center text-muted py-4">
+            <i class="fas fa-tasks fa-3x mb-3 d-block"></i>
+            <h6>No tasks created yet</h6>
+            <p>Tasks will appear here once they are created and assigned.</p>
+            @if(in_array($userRole ?? '', ['Engineer', 'Supervisor']) && $job->approval_status === 'approved')
+                <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Create First Task
+                </a>
+            @endif
+        </div>
+    </div>
 @endif
 </div>
 
 
-                        <div class="row me-2" style="margin-left:5px;">
-<div class="col-12">
-        @include('jobs.components.timeline')
-    </div>
-</div>
                     </div>
                 </div>
             </div>
         </div>
+        <script>
+// SweetAlert defaults
+const swalDefaults = {
+    customClass: {
+        popup: 'swal2-consistent-ui',
+        confirmButton: 'btn btn-success btn-action-xs',
+        cancelButton: 'btn btn-secondary btn-action-xs',
+        denyButton: 'btn btn-danger btn-action-xs',
+        input: 'form-control',
+        title: '',
+        htmlContainer: '',
+    },
+    buttonsStyling: false,
+    background: '#fff',
+    width: 420,
+    showClass: { popup: 'swal2-show' },
+    hideClass: { popup: 'swal2-hide' },
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+};
+
+function showStartTaskSwal(btn) {
+    Swal.fire({
+        ...swalDefaults,
+        icon: 'question',
+        title: '<span style="font-size:1.05rem;font-weight:600;">Start this task?</span>',
+        html: `<div style="font-size:0.92rem;">Are you sure you want to start this task?</div>`,
+        showCancelButton: true,
+        confirmButtonText: 'Start',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Find the parent form and submit
+            let form = btn.closest('form');
+            if(form) {
+                btn.disabled = true;
+                form.submit();
+            }
+        }
+    });
+}
+
+function handleCompleteTaskSwal(event, form) {
+    event.preventDefault();
+    Swal.fire({
+        ...swalDefaults,
+        icon: 'question',
+        title: '<span style="font-size:1.05rem;font-weight:600;">Complete this task?</span>',
+        html: `<div style="font-size:0.92rem;">
+            This action will mark the task as completed.<br><br>
+            <label for="swal-complete-notes" style="font-size:0.85rem;font-weight:500;">Completion Notes (optional):</label>
+            <textarea id="swal-complete-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
+        </div>`,
+        showCancelButton: true,
+        confirmButtonText: 'Complete',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        preConfirm: () => {
+            return document.getElementById('swal-complete-notes').value;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Add notes to form if provided
+            let notesInput = form.querySelector('input[name="completion_notes"]');
+            if (!notesInput) {
+                notesInput = document.createElement('input');
+                notesInput.type = 'hidden';
+                notesInput.name = 'completion_notes';
+                form.appendChild(notesInput);
+            }
+            notesInput.value = result.value || '';
+            form.submit();
+        }
+    });
+    return false;
+}
+</script>
 @endsection
