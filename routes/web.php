@@ -220,19 +220,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/logs', [App\Http\Controllers\LogController::class, 'index'])
         ->name('logs.index')
         ->middleware('role.permission:13.1');
-
+    
     Route::get('/logs/{id}', [App\Http\Controllers\LogController::class, 'show'])
         ->name('logs.show')
         ->middleware('role.permission:13.2');
-
+    
     Route::post('/logs/clear', [App\Http\Controllers\LogController::class, 'clear'])
         ->name('logs.clear')
         ->middleware('role.permission:13.2');
-
+    
     // Export functionality
     Route::get('/logs/export/project-logs', [App\Http\Controllers\LogController::class, 'export'])
         ->name('logs.export')
-        ->middleware('role.permission:13.1');
+        ->middleware('role.permission:13.3');
 });
 
 //companies routes
@@ -420,7 +420,7 @@ Route::middleware(['auth'])->group(function () {
     // View pending extension requests for approval
     Route::get('/extension-requests', [TaskExtensionController::class, 'index'])
         ->name('tasks.extension.index')
-        ->middleware('role.permission:12.3'); 
+        ->middleware('role.permission:12.3'); // Technical Officer, Supervisor, and Engineer permissions
 
     // Show specific extension request
     Route::get('/extension-requests/{extensionRequest}', [TaskExtensionController::class, 'show'])
@@ -447,11 +447,11 @@ Route::middleware(['auth'])->group(function () {
 // Employee Task Management Routes
 Route::middleware(['auth'])->group(function () {
     Route::post('/tasks/{task}/start', [EmployeeTaskController::class, 'startTask'])
-        ->name('tasks.start');
+        ->name('tasks.start')->middleware('role.permission:11.31');
 
 
     Route::post('/tasks/{task}/complete', [EmployeeTaskController::class, 'completeTask'])
-        ->name('tasks.complete');
+        ->name('tasks.complete')->middleware('role.permission:11.32');
 
 });
 
@@ -502,28 +502,12 @@ Route::middleware(['auth'])->group(function () {
     // Export job history as PDF (only PDF export, Word removed)
     Route::get('/jobs/{job}/history/export/pdf', [JobHistoryController::class, 'exportPdf'])
         ->name('jobs.history.export.pdf')
-        ->middleware('role.permission:11.29');
+        ->middleware('role.permission:11.24');
 
     // AJAX endpoint for timeline data (for visual timeline components)
     Route::get('/jobs/{job}/history/timeline-data', [JobHistoryController::class, 'getTimelineData'])
         ->name('jobs.history.timeline-data')
         ->middleware('role.permission:11.24');
-});
-
-// Task User Assignment Routes
-Route::middleware(['auth'])->group(function () {
-    Route::prefix('jobs/{job}/tasks')->group(function () {
-        Route::get('/{task}/assign-users', [JobController::class, 'showAssignUsers'])->name('tasks.assign-users.show');
-        Route::post('/{task}/assign-users', [JobController::class, 'assignUsers'])->name('tasks.assign-users.store');
-        Route::delete('/{task}/users/{user}', [JobController::class, 'unassignUser'])->name('tasks.unassign-user');
-    });
-
-    // Enhanced task extension routes for user-based assignments
-    Route::prefix('tasks')->group(function () {
-        // Route::get('/my-assignments', [TaskController::class, 'myAssignments'])->name('tasks.my-assignments');
-        Route::get('/{task}/extension/create', [TaskExtensionController::class, 'create'])->name('tasks.extension.create');
-        Route::post('/{task}/extension', [TaskExtensionController::class, 'store'])->name('tasks.extension.store');
-    });
 });
 
 
@@ -536,6 +520,5 @@ Route::middleware(['auth'])->group(function () {
 // Route::get('/test', function () {
 //     return view('test');
 // })->name('test')->middleware('role.permission:7.1');
-
 
 
