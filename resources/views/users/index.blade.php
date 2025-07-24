@@ -10,9 +10,11 @@
                             <div class="d-component-title">
                                 <span>System Users</span>
                             </div>
+                            @if(App\Helpers\UserRoleHelper::hasPermission('4.2'))
                             <a href="{{ route('admin.users.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New User
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -56,7 +58,7 @@
                                             </td>
                                             <td>{{ $user->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-
+@if(App\Helpers\UserRoleHelper::hasPermission('4.3'))
                                                 <form action="{{ route('admin.users.edit', $user->id) }}" method="GET"
                                                     class="d-inline">
                                                     @csrf
@@ -65,8 +67,9 @@
                                                     </button>
 
                                                 </form>
+                                                @endif
 
-
+@if(App\Helpers\UserRoleHelper::hasPermission('4.4'))
                                                 <form action="{{ route('admin.users.delete', $user->id) }}" method="POST"
                                                     class="d-inline">
                                                     @csrf
@@ -76,6 +79,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
