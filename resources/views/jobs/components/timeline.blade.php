@@ -2,7 +2,7 @@
 
 <div class="timeline-section ">
     <div class="card">
-  
+
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
@@ -114,7 +114,7 @@
                                         <div>
                                             <div class="task-name">{{ $task['name'] }}</div>
                                             <div class="task-employees">
-                                                {{ implode(', ', array_column($task->assignedUsers->toArray(), 'name')) }}
+                                                {{ implode(', ', array_column($task['employees']->toArray(), 'name')) }}
                                             </div>
                                         </div>
                                     </div>
@@ -176,13 +176,11 @@
                                 </div>
                             </div>
                         </div>
-                        @if(App\Helpers\UserRoleHelper::hasPermission('11.16'))
-                        <div class="col-md-4 text-end">
+                        {{-- <div class="col-md-4 text-end">
                             <button class="btn btn-outline-secondary btn-sm" id="editTaskBtn" style="display: none;">
-                                <i class="fas fa-edit"></i>Edit Task
+                                <i class="fas fa-edit"></i> Edit Task
                             </button>
-                        </div>
-                        @endif
+                        </div> --}}
                     </div>
 
                     <div class="mt-3">

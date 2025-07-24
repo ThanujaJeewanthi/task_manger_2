@@ -287,20 +287,17 @@
                 <button type="submit" name="action" value="reject" class="btn btn-sm btn-danger me-2">
                     <i class="fas fa-times"></i> Reject Job
                 </button>
+                @if(App\Helpers\UserRoleHelper::hasPermission('11.9'))
                 <a href="{{ route('jobs.index') }}" class="btn btn-sm btn-secondary">
                     <i class="fas fa-arrow-left"></i> Back to Jobs
                 </a>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
-                        <!-- Back Button -->
-                        <div class="text-center">
-                            <a href="{{ route('jobs.index') }}" class="btn btn-secondary">
-                                <i class="fas fa-arrow-left"></i> Back to Jobs
-                            </a>
-                        </div>
+                      
                     </form>
                 </div>
             </div>

@@ -7,7 +7,6 @@ use App\Models\Job;
 use App\Models\Task;
 use App\Models\Employee;
 use App\Models\JobEmployee;
-use App\Models\TaskUserAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\JobActivityLogger;
@@ -54,144 +53,148 @@ class TaskExtensionController extends Controller
 
         return view('tasks.extension.index', compact('extensionRequests'));
     }
-// Update the create method
-public function create(Task $task)
-{
-    $currentUser = Auth::user();
 
-    // Check if user is assigned to this task (either through user assignment or employee assignment)
-    $userAssignment = TaskUserAssignment::where('task_id', $task->id)
-        ->where('user_id', $currentUser->id)
-        ->where('active', true)
-        ->first();
+    /**
+     * Show form for requesting task extension (Employees)
+     */
+    public function create(Task $task)
+    {
+        $employee = Employee::where('user_id', Auth::id())->first();
 
-    $employeeAssignment = null;
-    if (!$userAssignment) {
-        $employee = Employee::where('user_id', $currentUser->id)->first();
-        if ($employee) {
-            $employeeAssignment = JobEmployee::where('task_id', $task->id)
-                ->where('employee_id', $employee->id)
-                ->first();
+        if (!$employee) {
+            abort(403, 'Employee record not found.');
         }
-    }
 
-    if (!$userAssignment && !$employeeAssignment) {
-        abort(403, 'You are not assigned to this task.');
-    }
+        // Get the job of this task
+        $job = Job::findOrFail($task->job_id);
 
-    // Get the job of this task
-    $job = Job::findOrFail($task->job_id);
+        // Check if employee is assigned to this task
+        $jobEmployee = JobEmployee::where('task_id', $task->id)
+            ->where('employee_id', $employee->id)
+            ->first();
 
-    // Check if task is not completed
-    if ($task->status === 'completed') {
-        return redirect()->back()->with('error', 'Cannot request extension for completed task.');
-    }
-
-    // Check if there's already a pending request for this task
-    $existingRequest = TaskExtensionRequest::where('task_id', $task->id)
-        ->where(function ($query) use ($currentUser, $employee) {
-            $query->where('user_id', $currentUser->id);
-            if ($employee) {
-                $query->orWhere('employee_id', $employee->id);
-            }
-        })
-        ->where('status', 'pending')
-        ->first();
-
-    if ($existingRequest) {
-        return redirect()->back()->with('error', 'You already have a pending extension request for this task.');
-    }
-
-    return view('tasks.extension.create', compact('task', 'job', 'userAssignment', 'employeeAssignment'));
-}
-
-// Update the store method
-public function requestTaskExtension(Request $request, Task $task)
-{
-    $request->validate([
-        'requested_end_date' => 'required|date|after:current_end_date',
-        'reason' => 'required|string|max:500',
-        'justification' => 'nullable|string|max:1000',
-    ]);
-
-    $currentUser = Auth::user();
-
-    // Determine which type of assignment this is
-    $userAssignment = TaskUserAssignment::where('task_id', $task->id)
-        ->where('user_id', $currentUser->id)
-        ->where('active', true)
-        ->first();
-
-    $employee = null;
-    $employeeAssignment = null;
-
-    if (!$userAssignment) {
-        $employee = Employee::where('user_id', $currentUser->id)->first();
-        if ($employee) {
-            $employeeAssignment = JobEmployee::where('task_id', $task->id)
-                ->where('employee_id', $employee->id)
-                ->first();
+        if (!$jobEmployee) {
+            abort(403, 'You are not assigned to this task.');
         }
+
+        // Check if task is not completed
+        if ($task->status === 'completed') {
+            return redirect()->back()->with('error', 'Cannot request extension for completed task.');
+        }
+
+        // Check if there's already a pending request for this task
+        $existingRequest = TaskExtensionRequest::where('task_id', $task->id)
+            ->where('employee_id', $employee->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($existingRequest) {
+            return redirect()->back()->with('error', 'You already have a pending extension request for this task.');
+        }
+
+        return view('tasks.extension.create', compact('task', 'jobEmployee', 'employee', 'job'));
     }
 
-    if (!$userAssignment && !$employeeAssignment) {
-        abort(403, 'You are not assigned to this task.');
-    }
-
-    $currentEndDate = $userAssignment ? $userAssignment->end_date : $employeeAssignment->end_date;
-
-    try {
-        DB::beginTransaction();
-
-        $extensionRequest = TaskExtensionRequest::create([
-            'job_id' => $task->job_id,
-            'task_id' => $task->id,
-            'user_id' => $userAssignment ? $currentUser->id : null,
-            'employee_id' => $employeeAssignment ? $employee->id : null,
-            'requested_by' => $currentUser->id,
-            'current_end_date' => $currentEndDate,
-            'requested_end_date' => $request->requested_end_date,
-            'reason' => $request->reason,
-            'justification' => $request->justification,
-            'status' => 'pending',
-            'created_by' => $currentUser->id,
-            'updated_by' => $currentUser->id,
+    /**
+     * Store task extension request (THIS IS THE METHOD THAT HANDLES THE FORM SUBMISSION)
+     */
+    public function requestTaskExtension(Request $request, Task $task)
+    {
+        // Validate the request
+        $request->validate([
+            'requested_end_date' => 'required|date|after:today',
+            'reason' => 'required|string|max:1000',
+            'justification' => 'nullable|string|max:1000',
         ]);
 
-        // Log the extension request
-        if ($userAssignment) {
-            JobActivityLogger::logTaskExtensionRequestedByUser(
-                $task->job,
-                $task,
-                $currentUser,
-                $currentEndDate,
-                $request->requested_end_date,
-                $request->reason
-            );
-        } else {
-            JobActivityLogger::logTaskExtensionRequested(
-                $task->job,
-                $task,
-                $employee,
-                $currentEndDate,
-                $request->requested_end_date,
-                $request->reason
-            );
+        try {
+            DB::beginTransaction();
+
+            $job = Job::findOrFail($task->job_id);
+            $employee = Employee::where('user_id', Auth::id())->first();
+
+            if (!$employee) {
+                throw new \Exception('Employee record not found.');
+            }
+
+            // Get current end date
+            $jobEmployee = JobEmployee::where('task_id', $task->id)
+                ->where('employee_id', $employee->id)
+                ->first();
+
+            if (!$jobEmployee) {
+                throw new \Exception('Task assignment not found.');
+            }
+
+            // Check for duplicate request again (to prevent race conditions)
+            $existingRequest = TaskExtensionRequest::where('task_id', $task->id)
+                ->where('employee_id', $employee->id)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($existingRequest) {
+                DB::rollBack();
+                return redirect()->route('tasks.extension.create', $task)
+                    ->with('error', 'You already have a pending extension request for this task.');
+            }
+
+            $currentEndDate = $jobEmployee->end_date;
+            $requestedEndDate = $request->requested_end_date;
+
+            // Calculate extension days correctly
+            $extensionDays = Carbon::parse($requestedEndDate)->diffInDays(Carbon::parse($currentEndDate));
+
+            // Create extension request
+            $extensionRequest = TaskExtensionRequest::create([
+                'job_id' => $job->id,
+                'task_id' => $task->id,
+                'employee_id' => $employee->id,
+                'requested_by' => Auth::id(),
+                'current_end_date' => $currentEndDate,
+                'requested_end_date' => $requestedEndDate,
+                'extension_days' => $extensionDays,
+                'reason' => $request->reason,
+                'justification' => $request->justification,
+                'status' => 'pending',
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+
+            // Log extension request - wrap in try-catch to prevent blocking
+            try {
+                JobActivityLogger::logTaskExtensionRequested(
+                    $job,
+                    $task,
+                    $employee,
+                    $currentEndDate,
+                    $requestedEndDate,
+                    $request->reason
+                );
+            } catch (\Exception $logError) {
+                Log::warning('Failed to log task extension request: ' . $logError->getMessage());
+                // Don't fail the entire request if logging fails
+            }
+
+            DB::commit();
+
+            // FIXED: Redirect to employee dashboard or back to task view instead of same page
+            return redirect()->route('employee.dashboard')
+                ->with('success', 'Extension request submitted successfully! Your request is pending approval.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Task extension request failed: ' . $e->getMessage(), [
+                'task_id' => $task->id,
+                'user_id' => Auth::id(),
+                'exception' => $e->getTraceAsString()
+            ]);
+
+            return redirect()->route('tasks.extension.create', $task)
+                ->with('error', 'Failed to submit extension request. Please try again.')
+                ->withInput();
         }
-
-        DB::commit();
-
-        return redirect()->route('jobs.show', $task->job)
-                        ->with('success', 'Extension request submitted successfully. Your request is pending approval.');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Task extension request failed: ' . $e->getMessage());
-        return redirect()->route('tasks.extension.create', $task)
-            ->with('error', 'Failed to submit extension request. Please try again.')
-            ->withInput();
     }
-}
+
     /**
      * Show specific extension request
      */

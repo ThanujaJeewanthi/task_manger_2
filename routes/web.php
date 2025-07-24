@@ -420,7 +420,7 @@ Route::middleware(['auth'])->group(function () {
     // View pending extension requests for approval
     Route::get('/extension-requests', [TaskExtensionController::class, 'index'])
         ->name('tasks.extension.index')
-        ->middleware('role.permission:12.3'); // Technical Officer, Supervisor, and Engineer permissions
+        ->middleware('role.permission:12.3'); 
 
     // Show specific extension request
     Route::get('/extension-requests/{extensionRequest}', [TaskExtensionController::class, 'show'])

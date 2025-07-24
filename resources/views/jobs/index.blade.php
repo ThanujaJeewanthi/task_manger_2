@@ -11,10 +11,13 @@
                             <div class="d-component-title">
                                 <span>Jobs</span>
                             </div>
-                            <a href="{{ route('jobs.create') }}" class="btn btn-primary">
+                            @if (App\Helpers\UserRoleHelper::hasPermission('11.10'))
+                                 <a href="{{ route('jobs.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Create New Job
 
                             </a>
+                            @endif
+                           
                         </div>
                     </div>
 
@@ -150,14 +153,19 @@
                                             <td>{{ $job->start_date ? $job->start_date->format('Y-m-d') : 'N/A' }}</td>
                                             <td>{{ $job->due_date ? $job->due_date->format('Y-m-d') : 'N/A' }}</td>
                                                                                         <td>
+                                                                                            @if (App\Helpers\UserRoleHelper::hasPermission('11.12'))
                                                                                             <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
                                                                                                </i> View
                                                                                             </a>
-                                                                                            {{-- if the job is not completed or closed --}}
+                                                                                            @endif
+                                                                                   
                                                                                             @if ($job->status !== 'completed' && $job->status !== 'closed')
+                                                                                            @if(App\Helpers\UserRoleHelper::hasPermission('11.11'))
                                                                                             <a href="{{ route('jobs.edit', $job) }}" class="btn btn-sm btn-info">
                                                                                               </i> Edit
                                                                                             </a>
+                                                                                            @endif
+                                                                                              @if(App\Helpers\UserRoleHelper::hasPermission('11.13'))
                                                                                             <form action="{{ route('jobs.destroy', $job) }}" method="POST" class="d-inline">
                                                                                                 @csrf
                                                                                                 @method('DELETE')
@@ -165,6 +173,7 @@
                                                                                                     </i> Delete
                                                                                                 </button>
                                                                                             </form>
+                                                                                            @endif
                                                                                             @endif
                                                                                         </td>
                                         </tr>

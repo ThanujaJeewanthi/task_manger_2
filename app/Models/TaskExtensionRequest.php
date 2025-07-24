@@ -154,7 +154,30 @@ class TaskExtensionRequest extends Model
         });
     }
 
-    
+    /**
+     * Check if user can process this request
+     */
+    public function canBeProcessedBy(User $user)
+    {
+        if ($this->status !== 'pending') {
+            return false;
+        }
+
+        $userRole = $user->userRole->name ?? '';
+
+        // Technical Officers and Engineers can process any request in their company
+        if (in_array($userRole, ['Technical Officer', 'Engineer'])) {
+            return $this->job->company_id === $user->company_id;
+        }
+
+        // Supervisors can only process requests for jobs they created
+        if ($userRole === 'Supervisor') {
+            return $this->job->created_by === $user->id;
+        }
+
+        return false;
+    }
+
     /**
      * Get approval impact on job deadline
      */
@@ -178,59 +201,4 @@ class TaskExtensionRequest extends Model
             'days_extension' => $willExtendJob ? $job->due_date->diffInDays($this->requested_end_date) : 0
         ];
     }
-    // Add this relationship method
-public function assignedUser()
-{
-    return $this->belongsTo(User::class, 'user_id');
-}
-
-// Update the existing scopes to support both employee and user
-public function scopeForUser($query, $userId)
-{
-    return $query->where(function ($q) use ($userId) {
-        $q->where('user_id', $userId)
-          ->orWhereHas('employee', function ($empQuery) use ($userId) {
-              $empQuery->where('user_id', $userId);
-          });
-    });
-}
-
-// Add method to get the requesting user (whether through employee or direct user assignment)
-public function getRequestingUser()
-{
-    if ($this->user_id) {
-        return $this->assignedUser;
-    } elseif ($this->employee_id) {
-        return $this->employee->user;
-    }
-    return null;
-}
-
-// Add method to determine if this is a user-based or employee-based assignment
-public function isUserBasedAssignment()
-{
-    return !is_null($this->user_id);
-}
-
-// Update canBeProcessedBy method to handle both assignment types
-public function canBeProcessedBy(User $user)
-{
-    if ($this->status !== 'pending') {
-        return false;
-    }
-
-    $userRole = $user->userRole->name ?? '';
-
-    // Technical Officers and Engineers can process any request in their company
-    if (in_array($userRole, ['Technical Officer', 'Engineer'])) {
-        return $this->job->company_id === $user->company_id;
-    }
-
-    // Supervisors can only process requests for jobs they created
-    if ($userRole === 'Supervisor') {
-        return $this->job->created_by === $user->id;
-    }
-
-    return false;
-}
 }

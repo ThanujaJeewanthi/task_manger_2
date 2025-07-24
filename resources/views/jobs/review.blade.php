@@ -13,14 +13,18 @@
                             Review Completed Job
                         </h5>
                         <div>
+                            @if(\App\Helpers\UserRoleHelper::hasPermission('11.12'))
                             <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary btn-sm">
                                 <i class="fas fa-arrow-left"></i> Back to Job
                             </a>
+                            @endif
                             {{-- Add task button if engineer wants to add more tasks without closing --}}
                             @if($job->approval_status === 'approved')
+                              @if(\App\Helpers\UserRoleHelper::hasPermission('11.15'))
                             <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> Add More Tasks
                             </a>
+                            @endif
                             @endif
                         </div>
                     </div>

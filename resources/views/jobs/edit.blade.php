@@ -171,9 +171,18 @@
                             <!-- Submit Button -->
                             <div class="form-group mt-4">
                                 <button type="submit" class="btn btn-primary">Update Job</button>
-                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary ms-2">Cancel</a>
-                                <a href="{{ route('jobs.index') }}" class="btn btn-outline-secondary ms-2">Back to Jobs</a>
-                                <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-outline-secondary ms-2">Add Task</a>
+                                @if (App\Helpers\UserRoleHelper::hasPermission('11.12'))
+                                       <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary ms-2">Cancel</a>
+                                @endif
+                             
+                                
+                                @if (\App\Helpers\UserRoleHelper::hasPermission('11.9'))
+                                     <a href="{{ route('jobs.index') }}" class="btn btn-outline-secondary ms-2">Back to Jobs</a>
+                                @endif
+                               @if (\App\Helpers\UserRoleHelper::hasPermission('11.15'))
+                                 <a href="{{ route('jobs.tasks.create', $job) }}" class="btn btn-outline-secondary ms-2">Add Task</a>  
+                               @endif
+                              
                             </div>
                         </div>
                     </form>
