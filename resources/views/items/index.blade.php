@@ -10,9 +10,11 @@
                             <div class="d-component-title">
                                 <span>Items</span>
                             </div>
+                            @if(App\Helpers\UserRoleHelper::hasPermission('10.2'))
                             <a href="{{ route('items.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Item
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -68,15 +70,14 @@
                                             </td>
                                             <td>{{ $item->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                {{-- <a href="{{ route('items.show', $item->id) }}"
-                                                    class="btn btn-sm btn-secondary">
-                                                    <i class="fas fa-eye"></i> View
-                                                </a> --}}
-
+                                              
+@if(App\Helpers\UserRoleHelper::hasPermission('10.3'))
                                                 <a href="{{ route('items.edit', $item->id) }}"
                                                     class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
+                                                @endif
+                                                @if(App\Helpers\UserRoleHelper::hasPermission('10.4'))
 
                                                 <form action="{{ route('items.destroy', $item->id) }}" method="POST"
                                                     class="d-inline">
@@ -87,6 +88,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

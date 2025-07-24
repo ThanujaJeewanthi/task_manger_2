@@ -2,10 +2,7 @@
 
 <div class="timeline-section ">
     <div class="card">
-    {{-- @if  auth()->user()->hasPermission('13.1') 
-    how to use the middleware like above
-   --}}
-
+  
         <div class="card-header">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">
@@ -179,11 +176,13 @@
                                 </div>
                             </div>
                         </div>
+                        @if(App\Helpers\UserRoleHelper::hasPermission('11.16'))
                         <div class="col-md-4 text-end">
                             <button class="btn btn-outline-secondary btn-sm" id="editTaskBtn" style="display: none;">
                                 <i class="fas fa-edit"></i>Edit Task
                             </button>
                         </div>
+                        @endif
                     </div>
 
                     <div class="mt-3">

@@ -502,7 +502,7 @@ Route::middleware(['auth'])->group(function () {
     // Export job history as PDF (only PDF export, Word removed)
     Route::get('/jobs/{job}/history/export/pdf', [JobHistoryController::class, 'exportPdf'])
         ->name('jobs.history.export.pdf')
-        ->middleware('role.permission:11.24');
+        ->middleware('role.permission:11.29');
 
     // AJAX endpoint for timeline data (for visual timeline components)
     Route::get('/jobs/{job}/history/timeline-data', [JobHistoryController::class, 'getTimelineData'])

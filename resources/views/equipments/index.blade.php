@@ -10,9 +10,11 @@
                         <div class="d-component-title">
                             <span>Equipment</span>
                         </div>
+                        @if(App\Helpers\UserRoleHelper::hasPermission('9.2'))
                         <a href="{{ route('equipments.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add New Equipment
                         </a>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body">
@@ -56,19 +58,22 @@
                                         </td>
                                         <td>{{ $equipment->created_at->format('Y-m-d H:i') }}</td>
                                         <td>
-                                            {{-- <a href="{{ route('equipments.show', $equipment) }}" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-eye"></i> View
-                                            </a> --}}
-                                            <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-sm btn-info">
-                                                <i class="fas fa-edit"></i> Edit
-                                            </a>
-                                            <form action="{{ route('equipments.destroy', $equipment) }}" method="POST" class="d-inline">
+                                            @if(App\Helpers\UserRoleHelper::hasPermission('9.3'))
+                                                <a href="{{ route('equipments.edit', $equipment) }}" class="btn btn-sm btn-info">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                            @endif
+                                            @if (App\Models\User::hasPermission('9.4'))
+                                               <form action="{{ route('equipments.destroy', $equipment) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                                     <i class="fas fa-trash"></i> Delete
                                                 </button>
                                             </form>
+                                                
+                                            @endif
+                                           
                                         </td>
                                     </tr>
                                 @empty

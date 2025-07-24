@@ -58,13 +58,19 @@
                         @endif
 
                         <div class="mt-4">
+                            @if(App\Helpers\UserRoleHelper::hasPermission('6.4'))
                             <a href="{{ route('employees.edit', $employee) }}" class="btn btn-info">Edit Employee</a>
+                           @endif
+                            @if(App\Helpers\UserRoleHelper::hasPermission('6.5'))
                             <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this employee?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger ms-2">Delete Employee</button>
                             </form>
+                            @endif
+                            @if (App\Helpers\UserRoleHelper::hasPermission('6.1'))
                             <a href="{{ route('employees.index') }}" class="btn btn-secondary ms-2">Back to Employees</a>
+                            @endif
                         </div>
                     </div>
                 </div>

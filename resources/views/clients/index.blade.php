@@ -10,9 +10,11 @@
                             <div class="d-component-title">
                                 <span>Clients</span>
                             </div>
+                        @if(\App\Helpers\UserRoleHelper::hasPermission('7.2'))
                             <a href="{{ route( 'clients.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Client
                             </a>
+                        @endif
                         </div>
                     </div>
 
@@ -48,12 +50,12 @@
                                             </td>
                                             <td>{{ $client->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                {{-- <a href="{{ route( 'clients.show', $client) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-eye"></i> View
-                                                </a> --}}
+                                            @if(\App\Helpers\UserRoleHelper::hasPermission('7.3'))
                                                 <a href="{{ route( 'clients.edit', $client) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
+                                                @endif
+                                                @if(\App\Helpers\UserRoleHelper::hasPermission('7.4'))
                                                 <form action="{{ route( 'clients.destroy', $client) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
@@ -61,6 +63,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty

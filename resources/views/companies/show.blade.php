@@ -52,13 +52,20 @@
                         </div>
 
                         <div class="mt-4">
+                            @if(\App\Helpers\UserRoleHelper::hasPermission('5.4'))
                             <a href="{{ route('companies.edit', $company) }}" class="btn btn-info">Edit Company</a>
+                            @endif
+                            @if(\App\Helpers\UserRoleHelper::hasPermission('5.5'))
                             <form action="{{ route('companies.destroy', $company) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this company?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-danger ms-2">Delete Company</button>
                             </form>
-                            <a href="{{ route('companies.index') }}" class="btn btn-secondary ms-2">Back to Companies</a>
+                            @endif
+                            @if (\App\Helpers\UserRoleHelper::hasPermission('5.1'))
+                                 <a href="{{ route('companies.index') }}" class="btn btn-secondary ms-2">Back to Companies</a>
+                            @endif
+                           
                         </div>
                     </div>
                 </div>

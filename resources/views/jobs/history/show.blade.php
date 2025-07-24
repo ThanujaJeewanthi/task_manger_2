@@ -418,9 +418,12 @@
                                 <i class="fas fa-user"></i> Same User
                             </a>
                         @endif
+                        @if(App\Helpers\UserRoleHelper::hasPermission('11.12'))
+                            
                         <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-primary btn-sm">
                             <i class="fas fa-briefcase"></i> Back to Job
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>

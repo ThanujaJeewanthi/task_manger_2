@@ -10,9 +10,11 @@
                             <div class="d-component-title">
                                 <span>Companies</span>
                             </div>
+                            @if(\App\Helpers\UserRoleHelper::hasPermission('5.2'))
                             <a href="{{ route( 'companies.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Company
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -52,12 +54,17 @@
                                             </td>
                                             <td>{{ $company->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                <a href="{{ route( 'companies.show', $company) }}" class="btn btn-sm btn-primary">
-                                                    <i class="fas fa-eye"></i> View
+                                                @if(\App\Helpers\UserRoleHelper::hasPermission('5.3'))
+                                                    <a href="{{ route( 'companies.show', $company) }}" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-eye"></i> View
+                                                    </a>
+                                                @endif
+                                                @if(\App\Helpers\UserRoleHelper::hasPermission('5.4'))
+                                                    <a href="{{ route( 'companies.edit', $company) }}" class="btn btn-sm btn-info">
+                                                        <i class="fas fa-edit"></i> Edit
                                                 </a>
-                                                <a href="{{ route( 'companies.edit', $company) }}" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </a>
+                                                @endif
+                                                @if(\App\Helpers\UserRoleHelper::hasPermission('5.5'))
                                                 <form action="{{ route( 'companies.destroy', $company) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
@@ -65,6 +72,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty

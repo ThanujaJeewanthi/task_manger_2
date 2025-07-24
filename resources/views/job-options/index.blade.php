@@ -10,9 +10,11 @@
                             <div class="d-component-title">
                                 <span>Job Options</span>
                             </div>
+                            @if(App\Helpers\UserRoleHelper::hasPermission('11.6'))
                             <a href="{{ route('job-options.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Job Option
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -53,9 +55,12 @@
                                                 {{-- <a href="{{ route('job-options.show', $option->id) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i> View
                                                 </a> --}}
+                                                @if(App\Helpers\UserRoleHelper::hasPermission('11.7'))
                                                 <a href="{{ route('job-options.edit', $option->id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
+                                                @endif
+                                                @if(App\Helpers\UserRoleHelper::hasPermission('11.8'))
                                                 <form action="{{ route('job-options.destroy', $option->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
@@ -63,6 +68,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

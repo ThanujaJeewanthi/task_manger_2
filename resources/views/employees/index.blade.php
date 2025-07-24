@@ -10,9 +10,11 @@
                         <div class="d-component-title">
                             <span>Employees</span>
                         </div>
+                        @if(App\Helpers\UserRoleHelper::hasPermission('6.2'))
                         <a href="{{ route('employees.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add New Employee
                         </a>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body">
@@ -51,14 +53,19 @@
                                         <td>{{ $employee->notes ?? 'N/A' }}</td>
                                         <td>{{ $employee->created_at->format('Y-m-d H:i') }}</td>
                                         <td>
+                                            @if(App\Helpers\UserRoleHelper::hasPermission('6.3'))
                                             <a href="{{ route('employees.show', $employee) }}" class="btn btn-sm btn-primary">
                                                 {{-- <i class="fas fa-eye"></i> --}}
                                                  View
                                             </a>
+                                            @endif
+                                            @if(App\Helpers\UserRoleHelper::hasPermission('6.4'))
                                             <a href="{{ route('employees.edit', $employee) }}" class="btn btn-sm btn-info">
                                                 {{-- <i class="fas fa-edit"></i> --}}
                                                  Edit
                                             </a>
+                                            @endif
+                                            @if(App\Helpers\UserRoleHelper::hasPermission('6.5'))
                                             <form action="{{ route('employees.destroy', $employee) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -67,6 +74,7 @@
                                                      Delete
                                                 </button>
                                             </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty

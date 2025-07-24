@@ -10,9 +10,11 @@
                             <div class="d-component-title">
                                 <span>Job Types</span>
                             </div>
+                            @if(App\Helpers\UserRoleHelper::hasPermission('11.2'))
                             <a href="{{ route('job-types.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Job Type
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -50,12 +52,12 @@
                                             </td>
                                             <td>{{ $jobType->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
-                                                {{-- <a href="{{ route('job-types.show', $jobType->id) }}" class="btn btn-sm btn-info">
-                                                    <i class="fas fa-eye"></i> View
-                                                </a> --}}
+                                                @if(App\Helpers\UserRoleHelper::hasPermission('11.3'))
                                                 <a href="{{ route('job-types.edit', $jobType->id) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
+                                                @endif
+                                                @if(App\Helpers\UserRoleHelper::hasPermission('11.4'))
                                                 <form action="{{ route('job-types.destroy', $jobType->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
@@ -63,6 +65,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

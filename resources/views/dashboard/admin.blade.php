@@ -12,12 +12,16 @@
                             <span>Company Admin Dashboard</span>
                         </div>
                         <div>
+                            @if(App\Helpers\UserRoleHelper::hasPermission('11.8'))
                             <a href="{{ route('jobs.create') }}" class="btn btn-primary btn-sm">
                                 <i class="fas fa-plus"></i> New Job
                             </a>
+                            @endif
+                            @if(App\Helpers\UserRoleHelper::hasPermission('6.2'))
                             <a href="{{ route('employees.create') }}" class="btn btn-success btn-sm">
                                 <i class="fas fa-user-plus"></i> Add Employee
                             </a>
+                            @endif
                         </div>
                     </div>
                 </div>

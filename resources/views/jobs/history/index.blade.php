@@ -10,13 +10,19 @@
         <div class="col-12">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb bg-light rounded p-3">
+                    @if(App\Helpers\UserRoleHelper::hasPermission('11.9'))
                     <li class="breadcrumb-item">
                         <a href="{{ route('jobs.index') }}">Jobs</a>
                     </li>
+                    @endif
+                    @if(App\Helpers\UserRoleHelper::hasPermission('11.12'))
                     <li class="breadcrumb-item">
                         <a href="{{ route('jobs.show', $job) }}">Job #{{ $job->id }}</a>
                     </li>
+                    @endif
+                    @if(App\Helpers\UserRoleHelper::hasPermission('11.27'))
                     <li class="breadcrumb-item active" aria-current="page">History</li>
+                    @endif
                 </ol>
             </nav>
         </div>
@@ -34,13 +40,17 @@
                         </div>
                         <div class="text-end">
                             <div class="btn-group">
+                                @if(App\Helpers\UserRoleHelper::hasPermission('11.12'))
                                 <a href="{{ route('jobs.show', $job) }}" class="btn btn-outline-light btn-sm">
                                     <i class="fas fa-arrow-left"></i> Back to Job
                                 </a>
+                                @endif
+                                @if(App\Helpers\UserRoleHelper::hasPermission('11.29'))
                             <a href="{{ route('jobs.history.export.pdf', $job) }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}"
-   class="btn btn-outline-light btn-sm">
-    <i class="fas fa-file-pdf"></i> Export PDF
-</a>
+                          class="btn btn-outline-light btn-sm">
+                      <i class="fas fa-file-pdf"></i> Export PDF
+                                </a>
+                         @endif
                             </div>
                         </div>
                     </div>
@@ -130,7 +140,7 @@
                                         <option value="{{ $category }}" {{ request('category') === $category ? 'selected' : '' }}>
                                             {{ ucfirst($category) }}
                                         </option>
-                                    @endforeach
+                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-2">
@@ -271,11 +281,13 @@
                                                             </span>
                                                         </div>
                                                     </div>
+                                                    @if(App\Helpers\UserRoleHelper::hasPermission('11.28'))
                                                     <div class="timeline-actions">
                                                         <a href="{{ route('jobs.history.show', [$job, $activity]) }}" class="btn btn-outline-primary btn-sm">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     </div>
+                                                    @endif
                                                 </div>
                                             </div>
 
