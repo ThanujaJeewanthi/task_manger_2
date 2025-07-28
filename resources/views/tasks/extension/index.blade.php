@@ -96,9 +96,20 @@
                             <br>
                             <small class="text-muted" style="font-size:0.875rem;">Review and approve employee extension requests</small>
                         </div>
-                        <a href="{{ route('supervisor.dashboard') }}" class="btn btn-secondary btn-lg">
-                        Back to Dashboard
-                        </a>
+                       {{-- back to any userRole dashboard based on role --}}
+                     @php
+    $userRole = strtolower(str_replace(' ', '', Auth::user()->userRole->name ?? 'admin'));
+    $dashboardRoute = "{$userRole}.dashboard";
+@endphp
+
+                        <div>
+                           <a href="{{ route($dashboardRoute) }}" class="dashboard-link mt-0">
+    <h5>
+        {{ Auth::user()->userRole->name ?? 'Admin' }} Dashboard
+    </h5>
+</a>
+                        </div>
+
                     </div>
                 </div>
 

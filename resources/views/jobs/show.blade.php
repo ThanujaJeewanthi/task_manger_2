@@ -33,12 +33,12 @@
                                     @endif
 
                                     @if ($job->approval_status == 'requested')
-                                       
+
                                           @if(App\Helpers\UserRoleHelper::hasPermission('11.19'))
                                             <a href="{{ route('jobs.items.show-approval', $job) }}" class="btn btn-success btn-sm">
                                                 <i class="fas fa-check"></i> Approve Job
                                             </a>
-                                           
+
                                         @endif
                                     @endif
 
@@ -61,14 +61,14 @@
                                     @if ($job->assigned_user_id == auth()->user()->id && $job->status !='completed' && $job->status != 'cancelled' && $job->approval_status !='approved')
                                        @if(App\Helpers\UserRoleHelper::hasPermission('11.18'))
                                     <a href="{{ route('jobs.items.add', $job) }}" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-plus"></i> Modify Job 
-                                          
+                                            <i class="fas fa-plus"></i> Modify Job
+
                                         </a>
                                         @endif
                                     @endif
                                 @endif
                                          @if(App\Helpers\UserRoleHelper::hasPermission('11.9'))
-                                          
+
                                 <a href="{{ route('jobs.index') }}" class="btn btn-secondary btn-sm">
                                     <i class="fas fa-arrow-left"></i> Back to Jobs
                                 </a>
@@ -281,7 +281,7 @@
         </div>
     </div>
 @endif
-@endif 
+@endif
 @if(App\Helpers\UserRoleHelper::hasPermission('11.27'))
     <div class="mt-3 mb-3">
         <a href="{{ route('jobs.history.index', $job->id) }}" class="btn btn-outline-info btn-sm">
@@ -305,8 +305,8 @@
                 {{-- highlighted review notes --}}
                 Review Notes:
                 <strong> {{ $job->review_notes }}</strong>
-                   
-                
+
+
                 @endif
             </div>
             @if(App\Helpers\UserRoleHelper::hasPermission('11.25'))
@@ -411,7 +411,7 @@
 <div class="d-component-container mb-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h5>Tasks</h5>
-    
+
         @if(App\Helpers\UserRoleHelper::hasPermission('12.2'))
             <div>
                 <a href="{{ route('tasks.extension.my-requests') }}" class="btn btn-info btn-sm">
@@ -614,12 +614,10 @@
                                 </div>
                             @else
                                 <!-- Non-employee or unassigned users see view/edit options -->
-                                @if(in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor', 'Technical Officer', 'admin']))
+                                @if(App\Helpers\UserRoleHelper::hasPermission('11.16')|| )
                                     <div class="btn-group" role="group">
-                                        {{-- <a href="{{ route('tasks.show', ['job' => $job->id, 'task' => $task->id]) }}" class="btn btn-info btn-sm" title="View Details">
-                                            <i class="fas fa-eye"></i>
-                                        </a> --}}
-                                        @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
+
+                                        @if($task->status !== 'completed')
                                             <a href="{{ route('jobs.tasks.edit', ['job' => $job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
                                                 <i class="fas fa-edit"></i>
                                             </a>

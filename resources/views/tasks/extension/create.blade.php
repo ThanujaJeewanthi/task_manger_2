@@ -10,9 +10,7 @@
                         <div class="d-component-title">
                             <span>Request Task Extension</span>
                         </div>
-                        <a href="{{ route('employee.dashboard') }}" class="btn btn-secondary btn-sm">
-                            <i class="fas fa-arrow-left"></i> Back to Dashboard
-                        </a>
+
                     </div>
                 </div>
 
