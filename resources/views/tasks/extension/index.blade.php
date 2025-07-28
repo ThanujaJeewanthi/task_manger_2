@@ -103,9 +103,9 @@
 @endphp
 
                         <div>
-                           <a href="{{ route($dashboardRoute) }}" class="dashboard-link mt-0">
+                           <a href="{{ route($dashboardRoute) }}" class="btn btn-secondary btn-sm w-100">
     <h5>
-        {{ Auth::user()->userRole->name ?? 'Admin' }} Dashboard
+        Back to Dashboard
     </h5>
 </a>
                         </div>

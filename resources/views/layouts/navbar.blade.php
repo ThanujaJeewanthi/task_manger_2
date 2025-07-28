@@ -43,9 +43,11 @@
                 </div>
 
                 <!-- Register button -->
+                 @if (App\Helpers\UserRoleHelper::hasPermission('1.2') || App\Helpers\UserRoleHelper::hasPermission('1.3'))
                 <div class="d-flex me-3">
                     <a href="{{ route('register') }}" class="btn btn-primary">Register / Add User</a>
                 </div>
+                @endif
             @else
                 <!-- Login button -->
                 <div class="d-flex">

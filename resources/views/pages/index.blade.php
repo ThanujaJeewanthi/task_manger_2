@@ -10,9 +10,12 @@
                             <div class="d-component-title">
                                 <span>Pages</span>
                             </div>
+                             
+                                                 @if (App\Helpers\UserRoleHelper::hasPermission('2.6'))
                             <a href="{{ route('admin.pages.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Page
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -56,10 +59,13 @@
                                             </td>
                                             <td>{{ $page->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
+                                                    @if (App\Helpers\UserRoleHelper::hasPermission('2.7'))
                                                 <a href="{{ route('admin.pages.edit', $page->id) }}"
                                                     class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
+                                                @endif
+                                                   @if (App\Helpers\UserRoleHelper::hasPermission('2.8'))
 
                                                 <form action="{{ route('admin.pages.destroy', $page->id) }}" method="POST"
                                                     class="d-inline">
@@ -70,6 +76,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

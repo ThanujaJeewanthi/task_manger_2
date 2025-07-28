@@ -47,7 +47,7 @@ class PagesTableSeeder extends Seeder
             ['name' => 'Edit user', 'code' => '4.3', 'page_category_id' => 4, 'active' => true],
             ['name' => 'Delete user', 'code' => '4.4', 'page_category_id' => 4, 'active' => true],
             ['name' => 'View user details', 'code' => '4.5', 'page_category_id' => 4, 'active' => true],
-           
+
 
             // Company permissions
             ['name' => 'View companies', 'code' => '5.1', 'page_category_id' => 5, 'active' => true],
@@ -85,7 +85,7 @@ class PagesTableSeeder extends Seeder
             ['name' => 'View items', 'code' => '10.1', 'page_category_id' => 10, 'active' => true],
             ['name' => 'Create item', 'code' => '10.2', 'page_category_id' => 10, 'active' => true],
             ['name' => 'Edit item', 'code' => '10.3', 'page_category_id' => 10, 'active' => true],
-            ['name' => 'Delete item', 'code' => '10.4', 'page_category_id' => 10, 'active' => true], 
+            ['name' => 'Delete item', 'code' => '10.4', 'page_category_id' => 10, 'active' => true],
 
             // Job permissions
             ['name' => 'View job types', 'code' => '11.1', 'page_category_id' => 11, 'active' => true],
@@ -118,6 +118,8 @@ class PagesTableSeeder extends Seeder
             ['name' => 'View job history details', 'code' => '11.28', 'page_category_id' => 11, 'active' => true],
             ['name' => 'export job history pdf', 'code' => '11.29', 'page_category_id' => 11, 'active' => true],
             ['name' => 'Job review', 'code' => '11.30', 'page_category_id' => 11, 'active' => true],
+            ['name' => 'Start task', 'code' => '11.31', 'page_category_id' => 11, 'active' => true],
+            ['name' => 'Complete task', 'code' => '11.32', 'page_category_id' => 11, 'active' => true],
 
             // Task Extension permissions
             ['name' => 'Request task extension', 'code' => '12.1', 'page_category_id' => 12, 'active' => true],
@@ -130,6 +132,7 @@ class PagesTableSeeder extends Seeder
             // Log permissions
             ['name' => 'View logs', 'code' => '13.1', 'page_category_id' => 13, 'active' => true],
             ['name' => 'Log details', 'code' => '13.2', 'page_category_id' => 13, 'active' => true],
+            ['name' => 'Export logs', 'code' => '13.3', 'page_category_id' => 13, 'active' => true],
         ];
 
         foreach ($pages as $page) {

@@ -614,7 +614,7 @@
                                 </div>
                             @else
                                 <!-- Non-employee or unassigned users see view/edit options -->
-                                @if(App\Helpers\UserRoleHelper::hasPermission('11.16')|| )
+                                @if(App\Helpers\UserRoleHelper::hasPermission('11.16') )
                                     <div class="btn-group" role="group">
 
                                         @if($task->status !== 'completed')

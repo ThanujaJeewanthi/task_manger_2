@@ -183,35 +183,35 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         ->middleware('role.permission:2.3');
     Route::delete('/page-categories/{pageCategory}', [PageCategoryController::class, 'destroy'])
         ->name('page-categories.destroy')
-        ->middleware('role.permission:2.1');
+        ->middleware('role.permission:2.4');
     // Pages
-    Route::get('/pages', [PageController::class, 'index'])->name('pages.index')->middleware('role.permission:2.4');
-    Route::get('/pages/create', [PageController::class, 'create'])->name('pages.create')->middleware('role.permission:2.5');
-    Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
-    Route::get('/pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit')->middleware('role.permission:2.6');
-    Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update');
-    Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+    Route::get('/pages', [PageController::class, 'index'])->name('pages.index')->middleware('role.permission:2.5');
+    Route::get('/pages/create', [PageController::class, 'create'])->name('pages.create')->middleware('role.permission:2.6');
+    Route::post('/pages', [PageController::class, 'store'])->name('pages.store')->middleware('role.permission:2.6');
+    Route::get('/pages/{page}/edit', [PageController::class, 'edit'])->name('pages.edit')->middleware('role.permission:2.7');
+    Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update')->middleware('role.permission:2.7');
+    Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy')->middleware('role.permission:2.8');
 
     // User Roles
     Route::get('/roles', [UserRoleController::class, 'index'])->name('roles.index')->middleware('role.permission:3.1');
     Route::get('/roles/create', [UserRoleController::class, 'create'])->name('roles.create')->middleware('role.permission:3.2');
-    Route::post('/roles', [UserRoleController::class, 'store'])->name('roles.store');
+    Route::post('/roles', [UserRoleController::class, 'store'])->name('roles.store')->middleware('role.permission:3.2');
     Route::get('/roles/{roleId}/edit', [UserRoleController::class, 'edit'])->name('roles.edit')->middleware('role.permission:3.3');
-    Route::put('/roles/{roleId}', [UserRoleController::class, 'update'])->name('roles.update');
-    Route::delete('/roles/{roleId}', [UserRoleController::class, 'destroy'])->name('roles.destroy');
+    Route::put('/roles/{roleId}', [UserRoleController::class, 'update'])->name('roles.update')->middleware('role.permission:3.3');
+    Route::delete('/roles/{roleId}', [UserRoleController::class, 'destroy'])->name('roles.destroy')->middleware('role.permission:3.4');
 
     // Permission management
-    Route::get('/permissions/manage/{roleId}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:3.4');
+    Route::get('/permissions/manage/{roleId}', [PermissionController::class, 'manage'])->name('permissions.manage')->middleware('role.permission:3.5');
     Route::put('/permissions/update/{roleId}', [PermissionController::class, 'update'])->name('permissions.update');
     Route::post('/permissions/search', [PermissionController::class, 'search'])->name('permissions.search');
 
     // Users
     Route::get('/users', [UserController::class, 'index'])->name('users.index')->middleware('role.permission:4.1');
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create')->middleware('role.permission:4.2');
-    Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::post('/users', [UserController::class, 'store'])->name('users.store')->middleware('role.permission:4.2');
     Route::get('/users/{userId}/edit', [UserController::class, 'edit'])->name('users.edit')->middleware('role.permission:4.3');
-    Route::put('/users/{userId}', [UserController::class, 'update'])->name('users.update');
-    Route::delete('/users/{userId}', [UserController::class, 'delete'])->name('users.delete');
+    Route::put('/users/{userId}', [UserController::class, 'update'])->name('users.update')->middleware('role.permission:4.3');
+    Route::delete('/users/{userId}', [UserController::class, 'delete'])->name('users.delete')->middleware('role.permission:4.4');
 });
 
 // Enhanced Logs Routes (add these to the existing logs section)
@@ -243,7 +243,7 @@ Route::prefix('companies')->name('companies.')->middleware(['auth'])->group(func
     Route::post('/', [\App\Http\Controllers\CompanyController::class, 'store'])->name('store')->middleware('role.permission:5.2');
     Route::get('/{company}/edit', [\App\Http\Controllers\CompanyController::class, 'edit'])->name('edit')->middleware('role.permission:5.4');
     Route::put('/{company}', [\App\Http\Controllers\CompanyController::class, 'update'])->name('update')->middleware('role.permission:5.4');
-    Route::delete('/{company}', [\App\Http\Controllers\CompanyController::class, 'destroy'])->name('destroy')->middleware('role.permission:5.4');
+    Route::delete('/{company}', [\App\Http\Controllers\CompanyController::class, 'destroy'])->name('destroy')->middleware('role.permission:5.5');
 });
 
 //clients
@@ -253,7 +253,7 @@ Route::prefix('clients')->name('clients.')->middleware(['auth'])->group(function
     Route::post('/', [\App\Http\Controllers\ClientController::class, 'store'])->name('store')->middleware('role.permission:7.2');
     Route::get('/{client}/edit', [\App\Http\Controllers\ClientController::class, 'edit'])->name('edit')->middleware('role.permission:7.3');
     Route::put('/{client}', [\App\Http\Controllers\ClientController::class, 'update'])->name('update')->middleware('role.permission:7.3');
-    Route::delete('/{client}', [\App\Http\Controllers\ClientController::class, 'destroy'])->name('destroy')->middleware('role.permission:7.3');
+    Route::delete('/{client}', [\App\Http\Controllers\ClientController::class, 'destroy'])->name('destroy')->middleware('role.permission:7.4');
 });
 //employees
 Route::prefix('employees')->name('employees.')->middleware(['auth'])->group(function () {
@@ -263,26 +263,26 @@ Route::prefix('employees')->name('employees.')->middleware(['auth'])->group(func
     Route::post('/', [\App\Http\Controllers\EmployeeController::class, 'store'])->name('store')->middleware('role.permission:6.2');
     Route::get('/{employee}/edit', [\App\Http\Controllers\EmployeeController::class, 'edit'])->name('edit')->middleware('role.permission:6.4');
     Route::put('/{employee}', [\App\Http\Controllers\EmployeeController::class, 'update'])->name('update')->middleware('role.permission:6.4');
-    Route::delete('/{employee}', [\App\Http\Controllers\EmployeeController::class, 'destroy'])->name('destroy')->middleware('role.permission:6.4');
+    Route::delete('/{employee}', [\App\Http\Controllers\EmployeeController::class, 'destroy'])->name('destroy')->middleware('role.permission:6.5');
 });
 //jobs
 Route::prefix('jobs')->name('jobs.')->middleware(['auth'])->group(function () {
-    Route::get('/', [JobController::class, 'index'])->name('index')->middleware('role.permission:11.7');
-    Route::get('/create', [JobController::class, 'create'])->name('create')->middleware('role.permission:11.8');
-    Route::post('/', [JobController::class, 'store'])->name('store')->middleware('role.permission:11.8');
-    Route::get('/{job}/edit', [JobController::class, 'edit'])->name('edit')->middleware('role.permission:11.9');
-    Route::put('/{job}', [JobController::class, 'update'])->name('update')->middleware('role.permission:11.9');
-    Route::delete('/{job}', [JobController::class, 'destroy'])->name('destroy')->middleware('role.permission:11.9');
-    Route::get('/{job}', [JobController::class, 'show'])->name('show')->middleware('role.permission:11.10');
+    Route::get('/', [JobController::class, 'index'])->name('index')->middleware('role.permission:11.9');
+    Route::get('/create', [JobController::class, 'create'])->name('create')->middleware('role.permission:11.10');
+    Route::post('/', [JobController::class, 'store'])->name('store')->middleware('role.permission:11.10');
+    Route::get('/{job}/edit', [JobController::class, 'edit'])->name('edit')->middleware('role.permission:11.11');
+    Route::put('/{job}', [JobController::class, 'update'])->name('update')->middleware('role.permission:11.11');
+    Route::delete('/{job}', [JobController::class, 'destroy'])->name('destroy')->middleware('role.permission:11.13');
+    Route::get('/{job}', [JobController::class, 'show'])->name('show')->middleware('role.permission:11.12');
 });
 //job options
 Route::prefix('job-options')->name('job-options.')->middleware(['auth'])->group(function () {
-    Route::get('/', [JobOptionController::class, 'index'])->name('index')->middleware('role.permission:11.4');
-    Route::get('/create', [JobOptionController::class, 'create'])->name('create')->middleware('role.permission:11.5');
-    Route::post('/', [JobOptionController::class, 'store'])->name('store')->middleware('role.permission:11.5');
-    Route::get('/{jobOption}/edit', [JobOptionController::class, 'edit'])->name('edit')->middleware('role.permission:11.6');
-    Route::put('/{jobOption}', [JobOptionController::class, 'update'])->name('update')->middleware('role.permission:11.6');
-    Route::delete('/{jobOption}', [JobOptionController::class, 'destroy'])->name('destroy')->middleware('role.permission:11.6');
+    Route::get('/', [JobOptionController::class, 'index'])->name('index')->middleware('role.permission:11.5');
+    Route::get('/create', [JobOptionController::class, 'create'])->name('create')->middleware('role.permission:11.6');
+    Route::post('/', [JobOptionController::class, 'store'])->name('store')->middleware('role.permission:11.6');
+    Route::get('/{jobOption}/edit', [JobOptionController::class, 'edit'])->name('edit')->middleware('role.permission:11.7');
+    Route::put('/{jobOption}', [JobOptionController::class, 'update'])->name('update')->middleware('role.permission:11.7');
+    Route::delete('/{jobOption}', [JobOptionController::class, 'destroy'])->name('destroy')->middleware('role.permission:11.8');
 });
 
 Route::prefix('job-types')->name('job-types.')->middleware(['auth'])->group(function () {
@@ -291,7 +291,7 @@ Route::prefix('job-types')->name('job-types.')->middleware(['auth'])->group(func
     Route::post('/', [JobTypeController::class, 'store'])->name('store')->middleware('role.permission:11.2');
     Route::get('/{jobType}/edit', [JobTypeController::class, 'edit'])->name('edit')->middleware('role.permission:11.3');
     Route::put('/{jobType}', [JobTypeController::class, 'update'])->name('update')->middleware('role.permission:11.3');
-    Route::delete('/{jobType}', [JobTypeController::class, 'destroy'])->name('destroy')->middleware('role.permission:11.3');
+    Route::delete('/{jobType}', [JobTypeController::class, 'destroy'])->name('destroy')->middleware('role.permission:11.4');
 });
 
 //items
@@ -301,7 +301,7 @@ Route::prefix('items')->name('items.')->middleware(['auth'])->group(function () 
     Route::post('/', [\App\Http\Controllers\ItemController::class, 'store'])->name('store')->middleware('role.permission:10.2');
     Route::get('/{item}/edit', [\App\Http\Controllers\ItemController::class, 'edit'])->name('edit')->middleware('role.permission:10.3');
     Route::put('/{item}', [\App\Http\Controllers\ItemController::class, 'update'])->name('update')->middleware('role.permission:10.3');
-    Route::delete('/{item}', [\App\Http\Controllers\ItemController::class, 'destroy'])->name('destroy')->middleware('role.permission:10.3');
+    Route::delete('/{item}', [\App\Http\Controllers\ItemController::class, 'destroy'])->name('destroy')->middleware('role.permission:10.4');
 });
 //equipments
 Route::prefix('equipments')->name('equipments.')->middleware(['auth'])->group(function () {
@@ -310,7 +310,7 @@ Route::prefix('equipments')->name('equipments.')->middleware(['auth'])->group(fu
     Route::post('/', [\App\Http\Controllers\EquipmentController::class, 'store'])->name('store')->middleware('role.permission:9.2');
     Route::get('/{equipment}/edit', [\App\Http\Controllers\EquipmentController::class, 'edit'])->name('edit')->middleware('role.permission:9.3');
     Route::put('/{equipment}', [\App\Http\Controllers\EquipmentController::class, 'update'])->name('update')->middleware('role.permission:9.3');
-    Route::delete('/{equipment}', [\App\Http\Controllers\EquipmentController::class, 'destroy'])->name('destroy')->middleware('role.permission:9.3');
+    Route::delete('/{equipment}', [\App\Http\Controllers\EquipmentController::class, 'destroy'])->name('destroy')->middleware('role.permission:9.4');
 });
 //suppliers
 Route::prefix('suppliers')->name('suppliers.')->middleware(['auth'])->group(function () {
@@ -319,60 +319,60 @@ Route::prefix('suppliers')->name('suppliers.')->middleware(['auth'])->group(func
     Route::post('/', [\App\Http\Controllers\SupplierController::class, 'store'])->name('store')->middleware('role.permission:8.2');
     Route::get('/{supplier}/edit', [\App\Http\Controllers\SupplierController::class, 'edit'])->name('edit')->middleware('role.permission:8.3');
     Route::put('/{supplier}', [\App\Http\Controllers\SupplierController::class, 'update'])->name('update')->middleware('role.permission:8.3');
-    Route::delete('/{supplier}', [\App\Http\Controllers\SupplierController::class, 'destroy'])->name('destroy')->middleware('role.permission:8.3');
+    Route::delete('/{supplier}', [\App\Http\Controllers\SupplierController::class, 'destroy'])->name('destroy')->middleware('role.permission:8.4');
 });
 
 Route::middleware(['auth'])->group(function () {
     // Job Assignment Management
     Route::get('/job-assignments', [\App\Http\Controllers\Job\JobAssignmentController::class, 'index'])
         ->name('job-assignments.index')
-        ->middleware('role.permission:11.16');
+        ->middleware('role.permission:11.20');
 
     Route::get('/jobs/{job}/assign', [\App\Http\Controllers\Job\JobAssignmentController::class, 'create'])
         ->name('job-assignments.create')
-        ->middleware('role.permission:11.17');
+        ->middleware('role.permission:11.21');
 
     Route::post('/jobs/{job}/assign', [\App\Http\Controllers\Job\JobAssignmentController::class, 'store'])
         ->name('job-assignments.store')
-        ->middleware('role.permission:11.17');
+        ->middleware('role.permission:11.21');
 
     Route::get('/job-assignments/{assignment}', [\App\Http\Controllers\Job\JobAssignmentController::class, 'show'])
         ->name('job-assignments.show')
-        ->middleware('role.permission:11.18');
+        ->middleware('role.permission:11.22');
 
     Route::post('/job-assignments/{assignment}/status', [\App\Http\Controllers\Job\JobAssignmentController::class, 'updateStatus'])
         ->name('job-assignments.update-status')
-        ->middleware('role.permission:11.19');
+        ->middleware('role.permission:11.23');
 
     Route::delete('/job-assignments/{assignment}', [\App\Http\Controllers\Job\JobAssignmentController::class, 'destroy'])
         ->name('job-assignments.destroy')
-        ->middleware('role.permission:11.19');
+        ->middleware('role.permission:11.23');
 
     Route::get('/my-assignments', [\App\Http\Controllers\Job\JobAssignmentController::class, 'myAssignments'])
         ->name('job-assignments.my-assignments')
-        ->middleware('role.permission:11.20');
+        ->middleware('role.permission:11.24');
 });
 
 
 //tasks
 Route::prefix('jobs')->name('jobs.tasks.')->middleware(['auth'])->group(function () {
-    Route::get('/{job}/tasks/', [JobController::class, 'index'])->name('index')->middleware('role.permission:11.11');
-    Route::get('/{job}/tasks/create', [JobController::class, 'createTask'])->name('create')->middleware('role.permission:11.12');
-    Route::post('/{job}/tasks', [JobController::class, 'storeTask'])->name('store')->middleware('role.permission:11.12');
-    Route::get('/{job}/tasks/{task}/edit', [JobController::class, 'editTask'])->name('edit')->middleware('role.permission:11.13');
-    Route::put('/{job}/tasks/{task}', [JobController::class, 'updateTask'])->name('update')->middleware('role.permission:11.13');
-    Route::delete('/{job}/tasks/{task}', [JobController::class, 'destroyTask'])->name('destroy')->middleware('role.permission:11.13');
+    Route::get('/{job}/tasks/', [JobController::class, 'index'])->name('index')->middleware('role.permission:11.14');
+    Route::get('/{job}/tasks/create', [JobController::class, 'createTask'])->name('create')->middleware('role.permission:11.15');
+    Route::post('/{job}/tasks', [JobController::class, 'storeTask'])->name('store')->middleware('role.permission:11.15');
+    Route::get('/{job}/tasks/{task}/edit', [JobController::class, 'editTask'])->name('edit')->middleware('role.permission:11.16');
+    Route::put('/{job}/tasks/{task}', [JobController::class, 'updateTask'])->name('update')->middleware('role.permission:11.16');
+    Route::delete('/{job}/tasks/{task}', [JobController::class, 'destroyTask'])->name('destroy')->middleware('role.permission:11.17');
 
 });
 
 Route::prefix('jobs')->name('jobs.items.')->middleware(['auth'])->group(function () {
     // Item addition routes
-    Route::get('/{job}/add-items', [JobController::class, 'addItems'])->name('add')->middleware('role.permission:11.14');
-    Route::post('/{job}/store-items', [JobController::class, 'storeItems'])->name('store')->middleware('role.permission:11.14');
+    Route::get('/{job}/add-items', [JobController::class, 'addItems'])->name('add')->middleware('role.permission:11.18');
+    Route::post('/{job}/store-items', [JobController::class, 'storeItems'])->name('store')->middleware('role.permission:11.18');
 
     // Job approval routes
-    Route::get('/{job}/approval', [JobController::class, 'showApproval'])->name('show-approval')->middleware('role.permission:11.15');
-    Route::post('/{job}/process-approval', [JobController::class, 'processApproval'])->name('process-approval')->middleware('role.permission:11.15');
+    Route::get('/{job}/approval', [JobController::class, 'showApproval'])->name('show-approval')->middleware('role.permission:11.19');
+    Route::post('/{job}/process-approval', [JobController::class, 'processApproval'])->name('process-approval')->middleware('role.permission:11.19');
 
 });
 
@@ -384,19 +384,19 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('jobs/{job}/copy', [JobController::class, 'copy'])
         ->name('jobs.copy')
-        ->middleware('role.permission:11.21');
+        ->middleware('role.permission:11.25');
 
     Route::post('jobs/{job}/copy', [JobController::class, 'storeCopy'])
         ->name('jobs.copy.store')
-        ->middleware('role.permission:11.21');
+        ->middleware('role.permission:11.25');
 
     Route::get('jobs/{job}/extend-task', [JobController::class, 'extendTask'])
         ->name('jobs.extend-task')
-        ->middleware('role.permission:11.22');
+        ->middleware('role.permission:11.26');
 
     Route::post('jobs/{job}/extend-task', [JobController::class, 'storeExtendTask'])
         ->name('jobs.extend-task.store')
-        ->middleware('role.permission:11.22');
+        ->middleware('role.permission:11.26');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -458,10 +458,10 @@ Route::middleware(['auth'])->group(function () {
 // Engineer Job Review Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/jobs/{job}/review', [JobController::class, 'showReview'])
-        ->name('jobs.review')->middleware('role.permission:11.25');;
+        ->name('jobs.review')->middleware('role.permission:11.30');
 
     Route::post('/jobs/{job}/review', [JobController::class, 'processReview'])
-        ->name('jobs.review.process')->middleware('role.permission:11.25');;
+        ->name('jobs.review.process')->middleware('role.permission:11.30');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -487,12 +487,12 @@ Route::middleware(['auth'])->group(function () {
     // Job History Timeline
     Route::get('/jobs/{job}/history', [JobHistoryController::class, 'index'])
         ->name('jobs.history.index')
-        ->middleware('role.permission:11.23');
+        ->middleware('role.permission:11.27');
 
     // View specific activity details
     Route::get('/jobs/{job}/history/{activity}', [JobHistoryController::class, 'show'])
         ->name('jobs.history.show')
-        ->middleware('role.permission:11.24');
+        ->middleware('role.permission:11.28');
 
     // Export job history
     // Route::get('/jobs/{job}/history/export', [JobHistoryController::class, 'export'])
@@ -502,12 +502,12 @@ Route::middleware(['auth'])->group(function () {
     // Export job history as PDF (only PDF export, Word removed)
     Route::get('/jobs/{job}/history/export/pdf', [JobHistoryController::class, 'exportPdf'])
         ->name('jobs.history.export.pdf')
-        ->middleware('role.permission:11.24');
+        ->middleware('role.permission:11.29');
 
     // AJAX endpoint for timeline data (for visual timeline components)
     Route::get('/jobs/{job}/history/timeline-data', [JobHistoryController::class, 'getTimelineData'])
-        ->name('jobs.history.timeline-data')
-        ->middleware('role.permission:11.24');
+        ->name('jobs.history.timeline-data');
+
 });
 
 

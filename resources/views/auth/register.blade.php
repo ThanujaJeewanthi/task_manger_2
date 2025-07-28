@@ -115,7 +115,7 @@
                         </div>
 
 
-@if($currentUser && strtolower($userRoles->find($currentUser->user_role_id)->name) === 'super admin')
+        @if($currentUser && strtolower($userRoles->find($currentUser->user_role_id)->name) === 'super admin')
                         <div class="form-group row mb-3">
                             <label for="company_id" class="col-md-4 col-form-label text-md-right">{{ __('Company') }}</label>
 

@@ -261,6 +261,7 @@
                                     <div class="card-header">
                                         <h6 class="mb-0">Actions Required</h6>
                                     </div>
+                                    @if (App\Helpers\UserRoleHelper::hasPermission('12.5'))
                                     <div class="card-body">
                                         <div class="d-grid gap-2">
                                             <button type="button" class="btn btn-success" onclick="approveRequest()">
@@ -271,6 +272,7 @@
                                             </button>
                                         </div>
                                     </div>
+                                    @endif
                                 </div>
                             @endif
                         </div>

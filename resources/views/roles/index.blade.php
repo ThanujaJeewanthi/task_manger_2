@@ -10,10 +10,11 @@
                             <div class="d-component-title">
                                 <span>User Roles</span>
                             </div>
-                            {{-- <h5 class="mb-0">User Roles</h5> --}}
+                             @if (App\Helpers\UserRoleHelper::hasPermission('3.2'))
                             <a href="{{ route('admin.roles.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Role
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -55,15 +56,19 @@
                                             <td>{{ $role->users->count() }}</td>
                                             <td>{{ $role->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
+                                                 @if (App\Helpers\UserRoleHelper::hasPermission('3.5'))
                                                 <a href="{{ route('admin.permissions.manage', ['roleId' => $role->id]) }}"
                                                     class="btn btn-sm btn-success">
                                                     <i class="fas fa-key"></i> Permissions
                                                 </a>
-
+                                                 @endif
+                                                 @if (App\Helpers\UserRoleHelper::hasPermission('3.3'))
                                                 <a href="{{ route('admin.roles.edit', ['roleId' => $role->id]) }}"
                                                     class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
+                                                   @endif
+                                                 @if (App\Helpers\UserRoleHelper::hasPermission('3.4'))
 
                                                 <form action="{{ route('admin.roles.destroy', ['roleId' => $role->id]) }}"
                                                     method="POST" class="d-inline">
@@ -74,6 +79,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

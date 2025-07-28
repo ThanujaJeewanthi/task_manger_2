@@ -11,10 +11,11 @@
                             <div class="d-component-title">
                                 <span>Page Categories</span>
                             </div>
-
+    @if (App\Helpers\UserRoleHelper::hasPermission('2.2'))
                             <a href="{{ route('admin.page-categories.create') }}" class="btn btn-primary">
                                 <i class="fas fa-plus"></i> Add New Category
                             </a>
+                            @endif
                         </div>
                     </div>
 
@@ -54,10 +55,13 @@
                                             </td>
                                             <td>{{ $category->created_at->format('Y-m-d H:i') }}</td>
                                             <td>
+                                                    @if (App\Helpers\UserRoleHelper::hasPermission('2.3'))
                                                 <a href="{{ route('admin.page-categories.edit', $category->id) }}"
                                                     class="btn btn-sm btn-info">
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
+                                                @endif
+                                                    @if (App\Helpers\UserRoleHelper::hasPermission('2.4'))
 
                                                 <form action="{{ route('admin.page-categories.destroy', $category->id) }}"
                                                     method="POST" class="d-inline">
@@ -68,6 +72,7 @@
                                                         <i class="fas fa-trash"></i> Delete
                                                     </button>
                                                 </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach

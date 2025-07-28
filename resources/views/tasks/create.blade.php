@@ -10,9 +10,11 @@
                         <div class="d-component-title">
                             <span>Create Task for Job: {{ $job->id }}</span>
                         </div>
+                        @if(App\Helpers\UserRoleHelper::hasPermission('11.12'))
                         <a href="{{ route('jobs.show', $job) }}" class="btn btn-secondary btn-sm">
                             <i class="fas fa-arrow-left"></i> Back to Job
                         </a>
+                        @endif
                     </div>
                 </div>
 

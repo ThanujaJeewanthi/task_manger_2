@@ -109,12 +109,12 @@
                                                 <input type="checkbox" class="log-checkbox" value="{{ $log->id }}">
                                             </td> --}}
                                             <td class="d-flex gap-1 mt-0 p-0">
+                                                    @if (App\Helpers\UserRoleHelper::hasPermission('13.2'))
                                                 <a href="{{ route('logs.show', $log->id) }}" class="btn btn-sm btn-info" title="View">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="#" class="btn btn-sm btn-primary" title="Copy" onclick="copyToClipboard('{{ $log->description }}')">
-                                                    <i class="fas fa-copy"></i>
-                                                </a>
+                                                @endif
+                
                                             </td>
                                             <td>{{ $log->id }}</td>
                                             <td>{{ $log->action }}</td>

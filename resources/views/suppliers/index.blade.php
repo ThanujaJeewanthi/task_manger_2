@@ -10,9 +10,11 @@
                         <div class="d-component-title">
                             <span>Suppliers</span>
                         </div>
+                         @if (App\Helpers\UserRoleHelper::hasPermission('8.2'))
                         <a href="{{ route('suppliers.create') }}" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add New Supplier
                         </a>
+                        @endif
                     </div>
                 </div>
                 <div class="card-body">
@@ -49,12 +51,13 @@
                                         </td>
                                         <td>{{ $supplier->created_at->format('Y-m-d H:i') }}</td>
                                         <td>
-                                            <a href="{{ route('suppliers.show', $supplier) }}" class="btn btn-sm btn-primary">
-                                                <i class="fas fa-eye"></i> View
-                                            </a>
+
+                                             @if (App\Helpers\UserRoleHelper::hasPermission('8.3'))
                                             <a href="{{ route('suppliers.edit', $supplier) }}" class="btn btn-sm btn-info">
                                                 <i class="fas fa-edit"></i> Edit
                                             </a>
+                                             @endif
+                                             @if (App\Helpers\UserRoleHelper::hasPermission('8.4'))
                                             <form action="{{ route('suppliers.destroy', $supplier) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -62,6 +65,7 @@
                                                     <i class="fas fa-trash"></i> Delete
                                                 </button>
                                             </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
