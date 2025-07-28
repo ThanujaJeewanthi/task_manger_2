@@ -414,5 +414,29 @@ public function getStatusLabelAttribute()
 
     return $statusLabels[$this->status] ?? ucfirst(str_replace('_', ' ', $this->status));
 }
+// Add these methods to your existing Job model
+public function jobUsers()
+{
+    return $this->hasMany(JobUser::class);
+}
+
+public function assignedUsers(): BelongsToMany
+{
+    return $this->belongsToMany(User::class, 'job_users')
+        ->withPivot('task_id', 'custom_task', 'start_date', 'end_date', 'duration_in_days', 'status', 'notes')
+        ->withTimestamps();
+}
+
+// Add method to get all task assignees
+public function getAllTaskAssignees($taskId)
+{
+    $employees = $this->jobEmployees()->where('task_id', $taskId)->with('employee')->get();
+    $users = $this->jobUsers()->where('task_id', $taskId)->with('user')->get();
+
+    return [
+        'employees' => $employees,
+        'users' => $users
+    ];
+}
 
 }

@@ -67,4 +67,36 @@ class Task extends Model
     public function taskExtensionRequests() {
         return $this->hasMany(TaskExtensionRequest::class, 'task_id');
     }
+    public function jobUsers(): HasMany
+{
+    return $this->hasMany(JobUser::class);
+}
+
+// Add this method to get all assignees (both employees and users)
+public function allAssignees()
+{
+    $employees = $this->jobEmployees()->with('employee')->get()->map(function($je) {
+        return [
+            'type' => 'employee',
+            'id' => $je->employee->id,
+            'name' => $je->employee->name,
+            'status' => $je->status,
+            'start_date' => $je->start_date,
+            'end_date' => $je->end_date,
+        ];
+    });
+
+    $users = $this->jobUsers()->with('user')->get()->map(function($ju) {
+        return [
+            'type' => 'user',
+            'id' => $ju->user->id,
+            'name' => $ju->user->name,
+            'status' => $ju->status,
+            'start_date' => $ju->start_date,
+            'end_date' => $ju->end_date,
+        ];
+    });
+
+    return $employees->concat($users);
+}
 }

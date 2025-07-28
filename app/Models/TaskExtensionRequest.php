@@ -19,6 +19,7 @@ class TaskExtensionRequest extends Model
         'requested_end_date',
         'extension_days',
         'reason',
+        'user_id',
         'justification',
         'status',
         'reviewed_by',
@@ -34,6 +35,24 @@ class TaskExtensionRequest extends Model
         'reviewed_at' => 'datetime',
     ];
 
+    public function user(): BelongsTo
+{
+    return $this->belongsTo(User::class);
+}
+
+// Add method to get requester (employee or user)
+public function getRequester()
+{
+    return $this->employee ?: $this->user;
+}
+
+public function getRequesterName()
+{
+    if ($this->employee) {
+        return $this->employee->name;
+    }
+    return $this->user ? $this->user->name : 'Unknown';
+}
     /**
      * Relationships
      */

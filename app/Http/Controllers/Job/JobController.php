@@ -435,129 +435,345 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
         return redirect()->route('jobs.index')->with('success', 'Job deleted successfully.');
     }
 
-  public function createTask(Job $job)
-    {
-        if ($job->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
-        $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
-
-        return view('tasks.create', compact('job', 'employees'));
+  // In createTask method, replace the employees line with:
+public function createTask(Job $job)
+{
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
     }
 
- public function storeTask(Request $request, Job $job)
-    {
-        if ($job->company_id !== Auth::user()->company_id) { 
-            abort(403);
+    $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
+
+    // Add this line to get eligible users
+    $eligibleUsers = User::where('company_id', Auth::user()->company_id)
+        ->where('active', true)
+        ->whereHas('userRole', function($query) {
+            $query->whereNotIn('name', ['Admin', 'Super Admin', 'admin', 'super admin']);
+        })
+        ->whereDoesntHave('employee') // Exclude users who are also employees
+        ->get();
+
+    return view('tasks.create', compact('job', 'employees', 'eligibleUsers'));
+}
+
+public function storeTask(Request $request, Job $job)
+{
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
+    }
+
+    $request->validate([
+        'task' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date|after_or_equal:start_date',
+        'employee_ids' => 'nullable|array',
+        'employee_ids.*' => 'exists:employees,id',
+        'user_ids' => 'nullable|array',
+        'user_ids.*' => 'exists:users,id',
+        'notes' => 'nullable|string',
+    ]);
+
+    // Validate that at least one assignee is selected
+    if (empty($request->employee_ids) && empty($request->user_ids)) {
+        return back()->withErrors(['assignees' => 'Please assign at least one employee or user to this task.'])->withInput();
+    }
+
+    // Validate that selected users are eligible (not admin/super admin and from same company)
+    if (!empty($request->user_ids)) {
+        $eligibleUserIds = User::where('company_id', Auth::user()->company_id)
+            ->where('active', true)
+            ->whereHas('userRole', function($query) {
+                $query->whereNotIn('name', ['Admin', 'Super Admin', 'admin', 'super admin']);
+            })
+            ->pluck('id')
+            ->toArray();
+
+        $invalidUserIds = array_diff($request->user_ids, $eligibleUserIds);
+        if (!empty($invalidUserIds)) {
+            return back()->withErrors(['user_ids' => 'Some selected users are not eligible for task assignment.'])->withInput();
         }
+    }
 
-        $request->validate([
-            'task' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+    // Validate that selected employees belong to the same company
+    if (!empty($request->employee_ids)) {
+        $validEmployeeIds = Employee::where('company_id', Auth::user()->company_id)
+            ->where('active', true)
+            ->pluck('id')
+            ->toArray();
 
+        $invalidEmployeeIds = array_diff($request->employee_ids, $validEmployeeIds);
+        if (!empty($invalidEmployeeIds)) {
+            return back()->withErrors(['employee_ids' => 'Some selected employees are not valid.'])->withInput();
+        }
+    }
 
-            'employee_ids' => 'required|array',
-            'employee_ids.*' => 'exists:employees,id',
-            'notes' => 'nullable|string',
-        ]);
+    try {
+        DB::beginTransaction();
 
+        // Create the task
         $task = Task::create([
-
             'task' => $request->task,
             'description' => $request->description,
-            'job_id'=> $job->id,
-
+            'job_id' => $job->id,
             'status' => 'pending',
-            'active' => $request->has('is_active'),
+            'active' => $request->has('is_active') ? true : true, // Default to active
             'created_by' => Auth::id(),
         ]);
 
-        foreach ($request->employee_ids as $employeeId) {
-            $job->jobEmployees()->create([
-                'employee_id' => $employeeId,
-                'task_id' => $task->id,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'duration_in_days' => $request->start_date && $request->end_date ?
-                 Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
-                'status' => 'pending',
-                'notes' => $request->notes,
-                'created_by' => Auth::id(),
+        // Create employee assignments
+        if (!empty($request->employee_ids)) {
+            foreach ($request->employee_ids as $employeeId) {
+                $job->jobEmployees()->create([
+                    'employee_id' => $employeeId,
+                    'task_id' => $task->id,
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                    'duration_in_days' => $request->start_date && $request->end_date ?
+                        Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
+                    'status' => 'pending',
+                    'notes' => $request->notes,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ]);
+            }
+        }
+
+        // Create user assignments
+        if (!empty($request->user_ids)) {
+            foreach ($request->user_ids as $userId) {
+                $job->jobUsers()->create([
+                    'user_id' => $userId,
+                    'task_id' => $task->id,
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                    'duration_in_days' => $request->start_date && $request->end_date ?
+                        Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
+                    'status' => 'pending',
+                    'notes' => $request->notes,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ]);
+            }
+        }
+
+        // Update job status if this is the first task
+        if ($job->status === 'pending' && $job->tasks()->count() === 1) {
+            $job->update([
+                'status' => 'in_progress',
+                'tasks_added_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
+        } else {
+            $job->update([
+                'tasks_added_by' => Auth::id(),
                 'updated_by' => Auth::id(),
             ]);
         }
 
-        // log task creation
-        $assignedEmployees = Employee::whereIn('id', $request->employee_ids)->get();
-JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees);
+        // Log task creation activity
+        $assignedEmployees = !empty($request->employee_ids) ? Employee::whereIn('id', $request->employee_ids)->get() : collect();
+        $assignedUsers = !empty($request->user_ids) ? User::whereIn('id', $request->user_ids)->get() : collect();
 
-        return redirect()->route('jobs.show', $job)->with('success', 'Task created and employees assigned successfully.');
-    }
+        JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees, $assignedUsers);
 
-    public function editTask(Job $job, Task $task)
-    {
-        if ($job->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
+        DB::commit();
 
-        $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
+        return redirect()->route('jobs.show', $job)->with('success', 'Task created and assignees added successfully.');
 
-        return view('tasks.edit', compact('job', 'task', 'employees'));
-    }
-
-    public function updateTask(Request $request, Job $job, Task $task)
-    {
-        if ($job->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
-
-        $request->validate([
-            'task' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
-
-            'employee_ids' => 'required|array',
-            'employee_ids.*' => 'exists:employees,id',
-            'notes' => 'nullable|string',
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error creating task: ' . $e->getMessage(), [
+            'job_id' => $job->id,
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
         ]);
 
+        return back()->with('error', 'Failed to create task. Please try again.')->withInput();
+    }
+}
+
+    // In editTask method, add:
+public function editTask(Job $job, Task $task)
+{
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
+    }
+
+    $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
+
+    // Add this
+    $eligibleUsers = User::where('company_id', Auth::user()->company_id)
+        ->where('active', true)
+        ->whereHas('userRole', function($query) {
+            $query->whereNotIn('name', ['Admin', 'Super Admin', 'admin', 'super admin']);
+        })
+        ->whereDoesntHave('employee')
+        ->get();
+
+    // Get currently assigned users
+    $assignedUserIds = $job->jobUsers()->where('task_id', $task->id)->pluck('user_id')->toArray();
+
+    return view('tasks.edit', compact('job', 'task', 'employees', 'eligibleUsers', 'assignedUserIds'));
+}
+  public function updateTask(Request $request, Job $job, Task $task)
+{
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
+    }
+
+    // Ensure the task belongs to this job
+    if ($task->job_id !== $job->id) {
+        abort(404);
+    }
+
+    $request->validate([
+        'task' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'start_date' => 'nullable|date',
+        'end_date' => 'nullable|date|after_or_equal:start_date',
+        'employee_ids' => 'nullable|array',
+        'employee_ids.*' => 'exists:employees,id',
+        'user_ids' => 'nullable|array',
+        'user_ids.*' => 'exists:users,id',
+        'notes' => 'nullable|string',
+    ]);
+
+    // Validate that at least one assignee is selected
+    if (empty($request->employee_ids) && empty($request->user_ids)) {
+        return back()->withErrors(['assignees' => 'Please assign at least one employee or user to this task.'])->withInput();
+    }
+
+    // Validate that selected users are eligible (not admin/super admin and from same company)
+    if (!empty($request->user_ids)) {
+        $eligibleUserIds = User::where('company_id', Auth::user()->company_id)
+            ->where('active', true)
+            ->whereHas('userRole', function($query) {
+                $query->whereNotIn('name', ['Admin', 'Super Admin', 'admin', 'super admin']);
+            })
+            ->pluck('id')
+            ->toArray();
+
+        $invalidUserIds = array_diff($request->user_ids, $eligibleUserIds);
+        if (!empty($invalidUserIds)) {
+            return back()->withErrors(['user_ids' => 'Some selected users are not eligible for task assignment.'])->withInput();
+        }
+    }
+
+    // Validate that selected employees belong to the same company
+    if (!empty($request->employee_ids)) {
+        $validEmployeeIds = Employee::where('company_id', Auth::user()->company_id)
+            ->where('active', true)
+            ->pluck('id')
+            ->toArray();
+
+        $invalidEmployeeIds = array_diff($request->employee_ids, $validEmployeeIds);
+        if (!empty($invalidEmployeeIds)) {
+            return back()->withErrors(['employee_ids' => 'Some selected employees are not valid.'])->withInput();
+        }
+    }
+
+    try {
+        DB::beginTransaction();
+
+        // Store old assignees for logging
+        $oldEmployees = Employee::join('job_employees', 'employees.id', '=', 'job_employees.employee_id')
+            ->where('job_employees.task_id', $task->id)
+            ->select('employees.*')
+            ->get();
+
+        $oldUsers = User::join('job_users', 'users.id', '=', 'job_users.user_id')
+            ->where('job_users.task_id', $task->id)
+            ->select('users.*')
+            ->get();
+
+        // Update the task
         $task->update([
             'task' => $request->task,
-            'job_id'=>$job->id,
             'description' => $request->description,
-            'status' => 'pending',
-            'active' => $request->has('is_active'),
+            'active' => $request->has('is_active') ? true : $task->active, // Keep existing status if not specified
             'updated_by' => Auth::id(),
         ]);
 
         // Delete existing job_employee records for this task
         $job->jobEmployees()->where('task_id', $task->id)->delete();
 
-        // Create new job_employee records
-        foreach ($request->employee_ids as $employeeId) {
-            $job->jobEmployees()->create([
-                'employee_id' => $employeeId,
-                'task_id' => $task->id,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'duration_in_days' => $request->start_date && $request->end_date ?
-                    Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
-                'status' => 'pending',
-                'notes' => $request->notes,
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
+        // Delete existing job_user records for this task
+        $job->jobUsers()->where('task_id', $task->id)->delete();
+
+        // Create new employee assignments
+        if (!empty($request->employee_ids)) {
+            foreach ($request->employee_ids as $employeeId) {
+                $job->jobEmployees()->create([
+                    'employee_id' => $employeeId,
+                    'task_id' => $task->id,
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                    'duration_in_days' => $request->start_date && $request->end_date ?
+                        Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
+                    'status' => 'pending',
+                    'notes' => $request->notes,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ]);
+            }
         }
-        // log task update
-        $assignedEmployees = Employee::whereIn('id', $request->employee_ids)->get();
-JobActivityLogger::logTaskUpdated($job, $task, $assignedEmployees);
+
+        // Create new user assignments
+        if (!empty($request->user_ids)) {
+            foreach ($request->user_ids as $userId) {
+                $job->jobUsers()->create([
+                    'user_id' => $userId,
+                    'task_id' => $task->id,
+                    'start_date' => $request->start_date,
+                    'end_date' => $request->end_date,
+                    'duration_in_days' => $request->start_date && $request->end_date ?
+                        Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
+                    'status' => 'pending',
+                    'notes' => $request->notes,
+                    'created_by' => Auth::id(),
+                    'updated_by' => Auth::id(),
+                ]);
+            }
+        }
+
+        // Update job's updated_by field
+        $job->update([
+            'updated_by' => Auth::id(),
+        ]);
+
+        // Log task update activity
+        $newEmployees = !empty($request->employee_ids) ? Employee::whereIn('id', $request->employee_ids)->get() : collect();
+        $newUsers = !empty($request->user_ids) ? User::whereIn('id', $request->user_ids)->get() : collect();
+
+        JobActivityLogger::logTaskUpdated($job, $task, $newEmployees, $newUsers);
+
+        // If assignees changed significantly, log the change
+        $oldEmployeeIds = $oldEmployees->pluck('id')->sort()->values();
+        $newEmployeeIds = $newEmployees->pluck('id')->sort()->values();
+        $oldUserIds = $oldUsers->pluck('id')->sort()->values();
+        $newUserIds = $newUsers->pluck('id')->sort()->values();
+
+        if (!$oldEmployeeIds->equals($newEmployeeIds) || !$oldUserIds->equals($newUserIds)) {
+            JobActivityLogger::logTaskAssignmentChanged($job, $task, $oldEmployees, $oldUsers, $newEmployees, $newUsers);
+        }
+
+        DB::commit();
 
         return redirect()->route('jobs.show', $job)->with('success', 'Task updated successfully.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error updating task: ' . $e->getMessage(), [
+            'job_id' => $job->id,
+            'task_id' => $task->id,
+            'user_id' => Auth::id(),
+            'request_data' => $request->all()
+        ]);
+
+        return back()->with('error', 'Failed to update task. Please try again.')->withInput();
     }
+}
 
     public function destroyTask(Job $job, Task $task)
     {

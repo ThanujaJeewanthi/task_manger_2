@@ -159,6 +159,32 @@
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <!-- Add this section after the existing employee selection section -->
+<div class="form-group mt-4">
+    <label for="user_ids" class="form-label">Assign Users <span class="text-muted">(Optional)</span></label>
+    <div class="user-list">
+        @if($eligibleUsers->count() > 0)
+            @foreach($eligibleUsers as $user)
+                <div class="user-item">
+                    <div class="user-card">
+                        <div class="user-info">
+                            <div class="user-name">{{ $user->name }}</div>
+                            <div class="user-role">{{ $user->userRole->name ?? 'No Role' }}</div>
+                            <div class="user-email">{{ $user->email }}</div>
+                        </div>
+                        <div class="user-action">
+                            <input type="checkbox" name="user_ids[]" value="{{ $user->id }}"
+                                   id="user_{{ $user->id }}" class="form-check-input">
+                            <label for="user_{{ $user->id }}" class="form-check-label"></label>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        @else
+            <div class="text-muted">No eligible users available for assignment.</div>
+        @endif
+    </div>
+</div>
 
                             <!-- Notes -->
                             <div class="form-group mb-4">
@@ -291,6 +317,63 @@
     color: #6c757d;
     padding: 2rem;
     font-style: italic;
+}
+
+/* Add these styles after existing employee styles */
+.user-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    padding: 0.3rem;
+    background: #e8f4fd; /* Different background color to distinguish from employees */
+}
+
+.user-item {
+    margin-bottom: 0.2rem;
+}
+
+.user-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem;
+    background: white;
+    border: 1px solid #b3d9ff;
+    border-radius: 0.15rem;
+    transition: all 0.2s ease;
+}
+
+.user-card:hover {
+    border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0,123,255,0.15);
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-name {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 0.15rem;
+}
+
+.user-role {
+    font-size: 0.8rem;
+    color: #007bff;
+    font-weight: 500;
+    margin-bottom: 0.1rem;
+}
+
+.user-email {
+    font-size: 0.75rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.user-action {
+    margin-left: 1rem;
 }
 </style>
 

@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Task;
 use Carbon\Carbon;
 use App\Models\Job;
 use App\Models\Task;
+use App\Models\User;
 use App\Models\Employee;
 use App\Models\JobEmployee;
+use App\Models\JobUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\JobActivityLogger;
@@ -34,6 +36,7 @@ class TaskExtensionController extends Controller
             'job',
             'task',
             'employee.user',
+            'user', // Add user relationship
             'requestedBy'
         ])->forCompany($companyId);
 
@@ -55,25 +58,40 @@ class TaskExtensionController extends Controller
     }
 
     /**
-     * Show form for requesting task extension (Employees)
+     * Show form for requesting task extension (Employees and Users)
      */
     public function create(Task $task)
     {
-        $employee = Employee::where('user_id', Auth::id())->first();
-
-        if (!$employee) {
-            abort(403, 'Employee record not found.');
-        }
+        $user = Auth::user();
+        $employee = Employee::where('user_id', $user->id)->first();
 
         // Get the job of this task
         $job = Job::findOrFail($task->job_id);
 
-        // Check if employee is assigned to this task
-        $jobEmployee = JobEmployee::where('task_id', $task->id)
-            ->where('employee_id', $employee->id)
-            ->first();
+        // Check if user is assigned to this task (either as employee or user)
+        $jobEmployee = null;
+        $jobUser = null;
+        $assignmentType = null;
+
+        if ($employee) {
+            $jobEmployee = JobEmployee::where('task_id', $task->id)
+                ->where('employee_id', $employee->id)
+                ->first();
+            if ($jobEmployee) {
+                $assignmentType = 'employee';
+            }
+        }
 
         if (!$jobEmployee) {
+            $jobUser = JobUser::where('task_id', $task->id)
+                ->where('user_id', $user->id)
+                ->first();
+            if ($jobUser) {
+                $assignmentType = 'user';
+            }
+        }
+
+        if (!$jobEmployee && !$jobUser) {
             abort(403, 'You are not assigned to this task.');
         }
 
@@ -84,7 +102,13 @@ class TaskExtensionController extends Controller
 
         // Check if there's already a pending request for this task
         $existingRequest = TaskExtensionRequest::where('task_id', $task->id)
-            ->where('employee_id', $employee->id)
+            ->where(function($query) use ($employee, $user) {
+                if ($employee) {
+                    $query->where('employee_id', $employee->id);
+                } else {
+                    $query->where('user_id', $user->id);
+                }
+            })
             ->where('status', 'pending')
             ->first();
 
@@ -92,11 +116,11 @@ class TaskExtensionController extends Controller
             return redirect()->back()->with('error', 'You already have a pending extension request for this task.');
         }
 
-        return view('tasks.extension.create', compact('task', 'jobEmployee', 'employee', 'job'));
+        return view('tasks.extension.create', compact('task', 'jobEmployee', 'jobUser', 'employee', 'user', 'job', 'assignmentType'));
     }
 
     /**
-     * Store task extension request (THIS IS THE METHOD THAT HANDLES THE FORM SUBMISSION)
+     * Store task extension request (Updated to handle both employees and users)
      */
     public function requestTaskExtension(Request $request, Task $task)
     {
@@ -111,24 +135,45 @@ class TaskExtensionController extends Controller
             DB::beginTransaction();
 
             $job = Job::findOrFail($task->job_id);
-            $employee = Employee::where('user_id', Auth::id())->first();
+            $user = Auth::user();
+            $employee = Employee::where('user_id', $user->id)->first();
 
-            if (!$employee) {
-                throw new \Exception('Employee record not found.');
+            // Determine assignment type and get current assignment
+            $jobEmployee = null;
+            $jobUser = null;
+            $currentEndDate = null;
+
+            if ($employee) {
+                $jobEmployee = JobEmployee::where('task_id', $task->id)
+                    ->where('employee_id', $employee->id)
+                    ->first();
+                if ($jobEmployee) {
+                    $currentEndDate = $jobEmployee->end_date;
+                }
             }
 
-            // Get current end date
-            $jobEmployee = JobEmployee::where('task_id', $task->id)
-                ->where('employee_id', $employee->id)
-                ->first();
-
             if (!$jobEmployee) {
+                $jobUser = JobUser::where('task_id', $task->id)
+                    ->where('user_id', $user->id)
+                    ->first();
+                if ($jobUser) {
+                    $currentEndDate = $jobUser->end_date;
+                }
+            }
+
+            if (!$jobEmployee && !$jobUser) {
                 throw new \Exception('Task assignment not found.');
             }
 
             // Check for duplicate request again (to prevent race conditions)
             $existingRequest = TaskExtensionRequest::where('task_id', $task->id)
-                ->where('employee_id', $employee->id)
+                ->where(function($query) use ($employee, $user) {
+                    if ($employee) {
+                        $query->where('employee_id', $employee->id);
+                    } else {
+                        $query->where('user_id', $user->id);
+                    }
+                })
                 ->where('status', 'pending')
                 ->first();
 
@@ -138,7 +183,6 @@ class TaskExtensionController extends Controller
                     ->with('error', 'You already have a pending extension request for this task.');
             }
 
-            $currentEndDate = $jobEmployee->end_date;
             $requestedEndDate = $request->requested_end_date;
 
             // Calculate extension days correctly
@@ -148,44 +192,56 @@ class TaskExtensionController extends Controller
             $extensionRequest = TaskExtensionRequest::create([
                 'job_id' => $job->id,
                 'task_id' => $task->id,
-                'employee_id' => $employee->id,
-                'requested_by' => Auth::id(),
+                'employee_id' => $employee ? $employee->id : null,
+                'user_id' => !$employee ? $user->id : null, // Add user_id
+                'requested_by' => $user->id,
                 'current_end_date' => $currentEndDate,
                 'requested_end_date' => $requestedEndDate,
                 'extension_days' => $extensionDays,
                 'reason' => $request->reason,
                 'justification' => $request->justification,
                 'status' => 'pending',
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
             ]);
 
-            // Log extension request - wrap in try-catch to prevent blocking
+            // Log extension request
             try {
-                JobActivityLogger::logTaskExtensionRequested(
-                    $job,
-                    $task,
-                    $employee,
-                    $currentEndDate,
-                    $requestedEndDate,
-                    $request->reason
-                );
+                if ($employee) {
+                    JobActivityLogger::logTaskExtensionRequested(
+                        $job,
+                        $task,
+                        $employee,
+                        $currentEndDate,
+                        $requestedEndDate,
+                        $request->reason
+                    );
+                } else {
+                    JobActivityLogger::logUserTaskExtensionRequested(
+                        $job,
+                        $task,
+                        $user,
+                        $currentEndDate,
+                        $requestedEndDate,
+                        $request->reason
+                    );
+                }
             } catch (\Exception $logError) {
                 Log::warning('Failed to log task extension request: ' . $logError->getMessage());
-                // Don't fail the entire request if logging fails
             }
 
             DB::commit();
 
-            // FIXED: Redirect to employee dashboard or back to task view instead of same page
-            return redirect()->route('employee.dashboard')
+            // Redirect based on user role
+            $redirectRoute = $employee ? 'employee.dashboard' : 'dashboard';
+            return redirect()->route($redirectRoute)
                 ->with('success', 'Extension request submitted successfully! Your request is pending approval.');
 
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Task extension request failed: ' . $e->getMessage(), [
                 'task_id' => $task->id,
-                'user_id' => Auth::id(),
+                'user_id' => $user->id,
                 'exception' => $e->getTraceAsString()
             ]);
 
@@ -223,6 +279,7 @@ class TaskExtensionController extends Controller
             'job',
             'task',
             'employee.user',
+            'user', // Add user relationship
             'requestedBy',
             'reviewedBy'
         ]);
@@ -247,7 +304,7 @@ class TaskExtensionController extends Controller
     }
 
     /**
-     * Process extension request (approve/reject) - FOR ENGINEERS/SUPERVISORS
+     * Process extension request (approve/reject) - Updated for both employees and users
      */
     private function processRequest(Request $request, TaskExtensionRequest $extensionRequest, $status)
     {
@@ -261,6 +318,7 @@ class TaskExtensionController extends Controller
             $job = $extensionRequest->job;
             $task = $extensionRequest->task;
             $employee = $extensionRequest->employee;
+            $user = $extensionRequest->user;
 
             // Check if request can be processed
             if ($extensionRequest->status !== 'pending') {
@@ -277,15 +335,28 @@ class TaskExtensionController extends Controller
             ]);
 
             if ($status === 'approved') {
-                // Update task deadline in JobEmployee
-                JobEmployee::where('task_id', $task->id)
-                    ->where('employee_id', $employee->id)
-                    ->update([
-                        'end_date' => $extensionRequest->requested_end_date,
-                        'duration_in_days' => Carbon::parse($extensionRequest->requested_end_date)
-                            ->diffInDays(Carbon::parse($extensionRequest->current_end_date)) + 1,
-                        'updated_by' => Auth::id(),
-                    ]);
+                // Update task deadline based on assignment type
+                if ($employee) {
+                    // Update JobEmployee
+                    JobEmployee::where('task_id', $task->id)
+                        ->where('employee_id', $employee->id)
+                        ->update([
+                            'end_date' => $extensionRequest->requested_end_date,
+                            'duration_in_days' => Carbon::parse($extensionRequest->requested_end_date)
+                                ->diffInDays(Carbon::parse($extensionRequest->current_end_date)) + 1,
+                            'updated_by' => Auth::id(),
+                        ]);
+                } else if ($user) {
+                    // Update JobUser
+                    JobUser::where('task_id', $task->id)
+                        ->where('user_id', $user->id)
+                        ->update([
+                            'end_date' => $extensionRequest->requested_end_date,
+                            'duration_in_days' => Carbon::parse($extensionRequest->requested_end_date)
+                                ->diffInDays(Carbon::parse($extensionRequest->current_end_date)) + 1,
+                            'updated_by' => Auth::id(),
+                        ]);
+                }
 
                 // Update job due date if necessary
                 if (!$job->due_date || $extensionRequest->requested_end_date > $job->due_date) {
@@ -296,15 +367,25 @@ class TaskExtensionController extends Controller
                 }
             }
 
-            // Log extension processing - wrap in try-catch
+            // Log extension processing
             try {
-                JobActivityLogger::logTaskExtensionProcessed(
-                    $job,
-                    $task,
-                    $employee,
-                    $status,
-                    $request->review_notes
-                );
+                if ($employee) {
+                    JobActivityLogger::logTaskExtensionProcessed(
+                        $job,
+                        $task,
+                        $employee,
+                        $status,
+                        $request->review_notes
+                    );
+                } else if ($user) {
+                    JobActivityLogger::logUserTaskExtensionProcessed(
+                        $job,
+                        $task,
+                        $user,
+                        $status,
+                        $request->review_notes
+                    );
+                }
             } catch (\Exception $logError) {
                 Log::warning('Failed to log task extension processing: ' . $logError->getMessage());
             }
@@ -346,21 +427,25 @@ class TaskExtensionController extends Controller
     }
 
     /**
-     * Show employee's own extension requests
+     * Show user's own extension requests (Updated for both employees and users)
      */
     public function myRequests(Request $request)
     {
-        $employee = Employee::where('user_id', Auth::id())->first();
-
-        if (!$employee) {
-            abort(403, 'Employee record not found.');
-        }
+        $user = Auth::user();
+        $employee = Employee::where('user_id', $user->id)->first();
 
         $query = TaskExtensionRequest::with([
             'job',
             'task',
             'reviewedBy'
-        ])->where('employee_id', $employee->id);
+        ]);
+
+        // Filter by employee or user
+        if ($employee) {
+            $query->where('employee_id', $employee->id);
+        } else {
+            $query->where('user_id', $user->id);
+        }
 
         // Filter by status
         if ($request->filled('status')) {
@@ -401,10 +486,36 @@ class TaskExtensionController extends Controller
      */
     private function calculateDuration($startDate, $endDate)
     {
-        if (!$startDate || $endDate) {
+        if (!$startDate || !$endDate) {
             return null;
         }
 
         return Carbon::parse($startDate)->diffInDays(Carbon::parse($endDate)) + 1;
+    }
+
+    /**
+     * Get requester name (helper method for views)
+     */
+    public function getRequesterName(TaskExtensionRequest $extensionRequest)
+    {
+        if ($extensionRequest->employee) {
+            return $extensionRequest->employee->name;
+        } else if ($extensionRequest->user) {
+            return $extensionRequest->user->name;
+        }
+        return 'Unknown';
+    }
+
+    /**
+     * Get requester type (helper method for views)
+     */
+    public function getRequesterType(TaskExtensionRequest $extensionRequest)
+    {
+        if ($extensionRequest->employee) {
+            return 'Employee';
+        } else if ($extensionRequest->user) {
+            return 'User';
+        }
+        return 'Unknown';
     }
 }

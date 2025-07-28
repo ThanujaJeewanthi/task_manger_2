@@ -278,7 +278,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
   public static function logJobItemsAdded(Job $job, $existingItems = [], $newItems = [], $notes = null)
 {
     $itemDescriptions = [];
-    
+
     // Process existing items
     if (!empty($existingItems)) {
         foreach ($existingItems as $itemData) {
@@ -289,7 +289,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
             }
         }
     }
-    
+
     // Process new items
     if (!empty($newItems)) {
         foreach ($newItems as $newItem) {
@@ -298,9 +298,9 @@ public static function logTaskStarted(Job $job, $task, $employee)
             }
         }
     }
-    
+
     $itemsList = implode(', ', $itemDescriptions);
-    
+
     return self::log([
         'job_id' => $job->id,
         'activity_type' => 'items_added',
@@ -615,7 +615,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
     /**
      * Get activity statistics for a job.
      */
-  
+
 /**
      * Log job copy.
      */
@@ -662,7 +662,7 @@ public static function logTaskStarted(Job $job, $task, $employee)
    public static function getJobActivityStats($jobId)
 {
     $query = JobActivityLog::where('job_id', $jobId)->where('job_activity_logs.active', true);
-    
+
     return [
         'total_activities' => $query->count(),
         'major_activities' => (clone $query)->where('is_major_activity', true)->count(),
@@ -695,15 +695,15 @@ public static function getCompanyActivityStats($companyId, $startDate = null, $e
     $query = JobActivityLog::whereHas('job', function($q) use ($companyId) {
         $q->where('company_id', $companyId);
     })->where('job_activity_logs.active', true); // Specify table name
-    
+
     if ($startDate) {
         $query->whereDate('created_at', '>=', $startDate);
     }
-    
+
     if ($endDate) {
         $query->whereDate('created_at', '<=', $endDate);
     }
-    
+
     return [
         'total_activities' => $query->count(),
         'jobs_with_activity' => (clone $query)->distinct('job_id')->count('job_id'),
@@ -827,7 +827,7 @@ public static function logApprovalActivity(Job $job, $activityType, $approvalDat
 public static function logBulkOperation($jobs, $operation, $description, $metadata = [])
 {
     $jobIds = is_array($jobs) ? $jobs : $jobs->pluck('id')->toArray();
-    
+
     foreach ($jobIds as $jobId) {
         self::log([
             'job_id' => $jobId,
@@ -850,9 +850,92 @@ public static function logBulkOperation($jobs, $operation, $description, $metada
 public static function cleanupOldLogs($daysToKeep = 90)
 {
     $cutoffDate = now()->subDays($daysToKeep);
-    
+
     return JobActivityLog::where('created_at', '<', $cutoffDate)
         ->where('is_major_activity', false)
         ->update(['active' => false]);
+}
+/**
+ * Log user task extension request.
+ */
+public static function logUserTaskExtensionRequested(Job $job, $task, $user, $currentEndDate, $requestedEndDate, $reason)
+{
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'user_task_extension_requested',
+        'activity_category' => 'task',
+        'priority_level' => 'medium',
+        'is_major_activity' => false,
+        'description' => "User {$user->name} requested extension for task '{$task->task}' from {$currentEndDate} to {$requestedEndDate}. Reason: {$reason}",
+        'affected_user_id' => $user->id,
+        'old_values' => [
+            'current_end_date' => $currentEndDate,
+        ],
+        'new_values' => [
+            'requested_end_date' => $requestedEndDate,
+            'reason' => $reason,
+        ],
+        'related_model_type' => 'Task',
+        'related_model_id' => $task->id,
+        'related_entity_name' => $task->task,
+    ]);
+}
+
+/**
+ * Log user task extension processing.
+ */
+public static function logUserTaskExtensionProcessed(Job $job, $task, $user, $status, $reviewNotes = null)
+{
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'user_task_extension_processed',
+        'activity_category' => 'task',
+        'priority_level' => 'medium',
+        'is_major_activity' => true,
+        'description' => "Task extension request by user {$user->name} for task '{$task->task}' was {$status}" .
+            ($reviewNotes ? ". Review notes: {$reviewNotes}" : ''),
+        'affected_user_id' => $user->id,
+        'new_values' => [
+            'status' => $status,
+            'review_notes' => $reviewNotes,
+            'reviewed_by' => auth()->user()->name ?? 'System',
+        ],
+        'related_model_type' => 'Task',
+        'related_model_id' => $task->id,
+        'related_entity_name' => $task->task,
+    ]);
+}
+public static function logTaskAssignmentChanged(Job $job, $task, $oldEmployees, $oldUsers, $newEmployees, $newUsers)
+{
+    $oldEmployeeNames = $oldEmployees->pluck('name')->join(', ');
+    $oldUserNames = $oldUsers->pluck('name')->join(', ');
+    $newEmployeeNames = $newEmployees->pluck('name')->join(', ');
+    $newUserNames = $newUsers->pluck('name')->join(', ');
+
+    return self::log([
+        'job_id' => $job->id,
+        'activity_type' => 'task_assignment_changed',
+        'activity_category' => 'task',
+        'priority_level' => 'medium',
+        'is_major_activity' => true,
+        'description' => "Changed assignees for task '{$task->task}'",
+        'old_values' => [
+            'old_employees' => $oldEmployeeNames,
+            'old_users' => $oldUserNames,
+        ],
+        'new_values' => [
+            'new_employees' => $newEmployeeNames,
+            'new_users' => $newUserNames,
+        ],
+        'related_model_type' => 'Task',
+        'related_model_id' => $task->id,
+        'related_entity_name' => $task->task,
+        'metadata' => [
+            'old_employee_count' => $oldEmployees->count(),
+            'old_user_count' => $oldUsers->count(),
+            'new_employee_count' => $newEmployees->count(),
+            'new_user_count' => $newUsers->count(),
+        ],
+    ]);
 }
 }

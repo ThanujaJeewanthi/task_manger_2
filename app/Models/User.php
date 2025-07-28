@@ -132,5 +132,22 @@ class User extends Authenticatable
         return $this->hasMany(Job::class, 'assigned_user_id');
     }
 
+public function jobUsers()
+{
+    return $this->hasMany(JobUser::class);
+}
 
+public function assignedTasks()
+{
+    return $this->belongsToMany(Task::class, 'job_users')
+        ->withPivot('job_id', 'start_date', 'end_date', 'status', 'notes')
+        ->withTimestamps();
+}
+
+// Helper method to check if user is eligible for task assignment
+public function isEligibleForTaskAssignment()
+{
+    $excludedRoles = ['Admin', 'Super Admin', 'admin', 'super admin'];
+    return $this->userRole && !in_array($this->userRole->name, $excludedRoles);
+}
 }
