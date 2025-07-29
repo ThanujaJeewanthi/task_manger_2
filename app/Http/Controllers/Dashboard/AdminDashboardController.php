@@ -119,14 +119,14 @@ class AdminDashboardController extends Controller
         // Employee performance (tasks completed this month)
         $employeePerformance = Employee::where('company_id', $companyId)
             ->withCount([
-                'jobEmployees as completed_tasks_this_month' => function ($query) {
+                'jobUsers as completed_tasks_this_month' => function ($query) {
                     $query->whereHas('task', function ($q) {
                         $q->where('status', 'completed')
                           ->whereMonth('updated_at', Carbon::now()->month)
                           ->whereYear('updated_at', Carbon::now()->year);
                     });
                 },
-                'jobEmployees as total_active_tasks' => function ($query) {
+                'jobUsers as total_active_tasks' => function ($query) {
                     $query->whereHas('task', function ($q) {
                         $q->whereIn('status', ['pending', 'in_progress'])
                           ->where('active', true);
@@ -166,7 +166,7 @@ class AdminDashboardController extends Controller
             })
             ->where('active', true)
             ->whereIn('status', ['pending', 'in_progress'])
-            ->with(['job.jobType', 'job.client', 'jobEmployees.employee'])
+            ->with(['job.jobType', 'job.client', 'jobUsers.employee'])
             ->orderBy('created_at', 'desc')
             ->take(10)
             ->get();

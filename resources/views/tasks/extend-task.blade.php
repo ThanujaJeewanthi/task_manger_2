@@ -33,7 +33,7 @@
                                 <select class="form-control @error('task_id') is-invalid @enderror" id="task_id" name="task_id" required>
                                     <option value="">Select Task</option>
                                     @foreach($tasks as $task)
-                                        <option value="{{ $task->id }}">{{ $task->task }} (End Date: {{ $task->jobEmployees->first()->end_date ? $task->jobEmployees->first()->end_date->format('Y-m-d') : 'N/A' }})</option>
+                                        <option value="{{ $task->id }}">{{ $task->task }} (End Date: {{ $task->jobUsers->first()->end_date ? $task->jobUsers->first()->end_date->format('Y-m-d') : 'N/A' }})</option>
                                     @endforeach
                                 </select>
                                 @error('task_id')

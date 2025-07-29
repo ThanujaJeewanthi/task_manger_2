@@ -9,13 +9,13 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\JobType;
-use App\Models\Employee;
+
 
 
 
 use App\Models\Equipment;
 use App\Models\JobOption;
-use App\Models\JobEmployee;
+use App\Models\JobUser;
 use Illuminate\Http\Request;
 use App\Models\JobActivityLog;
 use Illuminate\Validation\Rule;
@@ -34,7 +34,7 @@ class JobController extends Controller
     $companyId = Auth::user()->company_id;
 
     // Initialize query
-    $query = Job::with(['jobType', 'client', 'equipment', 'jobEmployees.employee'])
+    $query = Job::with(['jobType', 'client', 'equipment', 'jobUsers.user'])
         ->where('company_id', $companyId)
         ->where('active', true);
 
@@ -49,15 +49,15 @@ class JobController extends Controller
         case 'Supervisor':
             $query->where('created_by', Auth::id());
             break;
-        case 'Employee':
+        case 'User':
 
-            $employeeId = Auth::user()->employee->id ?? null;
+            $userId = Auth::user()->user->id ?? null;
 
 
-                $query->whereIn('id', function($q) use ($employeeId) {
+                $query->whereIn('id', function($q) use ($userId) {
                     $q->select('job_id')
-                      ->from('job_employees')
-                      ->where('employee_id', $employeeId)
+                      ->from('job_users')
+                      ->where('user_id', $userId)
                       ->where('active', true); // Only get active assignments
                 });
 
@@ -132,7 +132,7 @@ class JobController extends Controller
         $clients = Client::where('company_id', $companyId)->where('active', true)->get();
         $equipments = Equipment::where('company_id', $companyId)->where('active', true)->get();
 
-        $employees = Employee::where('company_id', $companyId)->where('active', true)->get();
+        $users = User::where('company_id', $companyId)->where('active', true)->get();
 
         // Get users where userRole is Technical officer and company is current company ,active =1
         $users = User::where('company_id', $companyId)
@@ -142,7 +142,7 @@ class JobController extends Controller
             ->where('active', true)
             ->get();
 
-        return view('jobs.create', compact('jobTypes', 'clients', 'equipments', 'employees', 'users'));
+        return view('jobs.create', compact('jobTypes', 'clients', 'equipments', 'users', 'users'));
     }
 
     // Add this new method to handle AJAX requests for job type options
@@ -315,17 +315,17 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
             'jobType.jobOptions',
             'client',
             'equipment',
-            'jobEmployees.employee',
-            'jobEmployees.task',
-            'tasks.jobEmployees.employee',
+            'jobUsers.user',
+            'jobUsers.task',
+            'tasks.jobUsers.user',
             'tasks.taskExtensionRequests' => function($query) {
                 $query->where('status', 'pending');
             }
         ]);
 
-        // Get employees and tasks (your existing code)
-        $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
-        $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
+        // Get users and tasks (your existing code)
+        $users = User::where('company_id', Auth::user()->company_id)->where('active', true)->get();
+        $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobUsers.user')->get();
         $jobItems = JobItems::where('job_id', $job->id)->where('active', true)->get();
 
         // Get timeline data
@@ -347,7 +347,7 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
     ->get();
 
         // Return your existing view with timeline data added
-        return view('jobs.show', compact('job', 'employees', 'tasks', 'jobItems', 'timelineData', 'jobStats','recentActivities', 'activityStats'));
+        return view('jobs.show', compact('job', 'users', 'tasks', 'jobItems', 'timelineData', 'jobStats','recentActivities', 'activityStats'));
         // Get recent activities (last 10)
 
 
@@ -441,61 +441,69 @@ if (isset($data['assigned_user_id']) && $data['assigned_user_id']) {
             abort(403);
         }
 
-        $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
 
-        return view('tasks.create', compact('job', 'employees'));
+        $users = User::where('company_id', Auth::user()->company_id)
+            ->where('active', true)
+            ->whereHas('userRole', function ($query) {
+            $query->whereNotIn('name', ['Admin', 'Super Admin']);
+            })
+            ->get();
+        return view('tasks.create', compact('job',  'users'));
     }
 
- public function storeTask(Request $request, Job $job)
-    {
-        if ($job->company_id !== Auth::user()->company_id) { 
-            abort(403);
-        }
+public function storeTask(Request $request, Job $job)
+{
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
+    }
 
-        $request->validate([
-            'task' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+    $request->validate([
+        'task' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'start_date' => 'nullable|date',
+        'start_time'=> 'nullable|date_format:H:i',
+        'end_date' => 'nullable|date|after_or_equal:start_date',
+        'end_time'=> 'nullable|date_format:H:i',
+        'user_ids' => 'required|array',
+        'user_ids.*' => 'exists:users,id',
+        'notes' => 'nullable|string',
+    ]);
 
+    $task = Task::create([
+        'task' => $request->task,
+        'description' => $request->description,
+        'job_id'=> $job->id,
+        'status' => 'pending',
+        'active' => $request->has('is_active'),
+        'created_by' => Auth::id(),
+    ]);
 
-            'employee_ids' => 'required|array',
-            'employee_ids.*' => 'exists:employees,id',
-            'notes' => 'nullable|string',
-        ]);
-
-        $task = Task::create([
-
-            'task' => $request->task,
-            'description' => $request->description,
-            'job_id'=> $job->id,
-
+    foreach ($request->user_ids as $userId) {
+        $job->jobUsers()->create([
+            'user_id' => $userId,     
+            'task_id' => $task->id,
+            'start_date' => $request->start_date,
+            'start_time' => $request->start_time,
+            'end_date' => $request->end_date,
+            'end_time' => $request->end_time,
+            // UPDATED: Calculate total duration as real days with decimal precision
+            'duration' => ($request->start_date && $request->start_time && $request->end_date && $request->end_time)
+                ? (Carbon::parse($request->start_date . ' ' . $request->start_time)
+                    ->floatDiffInRealDays(Carbon::parse($request->end_date . ' ' . $request->end_time)))
+                : null,
             'status' => 'pending',
-            'active' => $request->has('is_active'),
+            'notes' => $request->notes,
             'created_by' => Auth::id(),
+            'updated_by' => Auth::id(),
         ]);
-
-        foreach ($request->employee_ids as $employeeId) {
-            $job->jobEmployees()->create([
-                'employee_id' => $employeeId,
-                'task_id' => $task->id,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'duration_in_days' => $request->start_date && $request->end_date ?
-                 Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
-                'status' => 'pending',
-                'notes' => $request->notes,
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
-        }
-
-        // log task creation
-        $assignedEmployees = Employee::whereIn('id', $request->employee_ids)->get();
-JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees);
-
-        return redirect()->route('jobs.show', $job)->with('success', 'Task created and employees assigned successfully.');
     }
+
+    // log task creation
+    $assignedUsers = User::whereIn('id', $request->user_ids)->get();
+    JobActivityLogger::logTaskCreated($job, $task, $assignedUsers);
+
+    return redirect()->route('jobs.show', $job)->with('success', 'Task created and users assigned successfully.');
+}
 
     public function editTask(Job $job, Task $task)
     {
@@ -503,61 +511,72 @@ JobActivityLogger::logTaskCreated($job, $task, $assignedEmployees);
             abort(403);
         }
 
-        $employees = Employee::where('company_id', Auth::user()->company_id)->where('active', true)->get();
-
-        return view('tasks.edit', compact('job', 'task', 'employees'));
+        $users = User::where('company_id', Auth::user()->company_id)
+            ->where('active', true)
+            ->whereHas('userRole', function ($query) {
+            $query->whereNotIn('name', ['Admin', 'Super Admin']);
+            })
+            ->get();
+        return view('tasks.edit', compact('job', 'task', 'users'));
     }
 
-    public function updateTask(Request $request, Job $job, Task $task)
-    {
-        if ($job->company_id !== Auth::user()->company_id) {
-            abort(403);
-        }
+   public function updateTask(Request $request, Job $job, Task $task)
+{
+    if ($job->company_id !== Auth::user()->company_id) {
+        abort(403);
+    }
 
-        $request->validate([
-            'task' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+    $request->validate([
+        'task' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'start_date' => 'nullable|date',
+        'start_time'=> 'nullable|date_format:H:i',
+        'end_date' => 'nullable|date|after_or_equal:start_date',
+        'end_time'=> 'nullable|date_format:H:i',
+        'user_ids' => 'required|array',
+        'user_ids.*' => 'exists:users,id',
+        'notes' => 'nullable|string',
+    ]);
 
-            'employee_ids' => 'required|array',
-            'employee_ids.*' => 'exists:employees,id',
-            'notes' => 'nullable|string',
-        ]);
+    $task->update([
+        'task' => $request->task,
+        'job_id'=>$job->id,
+        'description' => $request->description,
+        'status' => 'pending',
+        'active' => $request->has('is_active'),
+        'updated_by' => Auth::id(),
+    ]);
 
-        $task->update([
-            'task' => $request->task,
-            'job_id'=>$job->id,
-            'description' => $request->description,
+    // Delete existing job_user records for this task
+    $job->jobUsers()->where('task_id', $task->id)->delete();
+
+    // Create new job_user records
+    foreach ($request->user_ids as $userId) {
+        $job->jobUsers()->create([
+            'user_id' => $userId,
+            'task_id' => $task->id,
+            'start_date' => $request->start_date,
+            'start_time' => $request->start_time,
+            'end_date' => $request->end_date,
+            'end_time' => $request->end_time,
+            // UPDATED: Calculate total duration as real days with decimal precision
+            'duration' => ($request->start_date && $request->start_time && $request->end_date && $request->end_time)
+                ? (Carbon::parse($request->start_date . ' ' . $request->start_time)
+                    ->floatDiffInRealDays(Carbon::parse($request->end_date . ' ' . $request->end_time)))
+                : null,
             'status' => 'pending',
-            'active' => $request->has('is_active'),
+            'notes' => $request->notes,
+            'created_by' => Auth::id(),
             'updated_by' => Auth::id(),
         ]);
-
-        // Delete existing job_employee records for this task
-        $job->jobEmployees()->where('task_id', $task->id)->delete();
-
-        // Create new job_employee records
-        foreach ($request->employee_ids as $employeeId) {
-            $job->jobEmployees()->create([
-                'employee_id' => $employeeId,
-                'task_id' => $task->id,
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'duration_in_days' => $request->start_date && $request->end_date ?
-                    Carbon::parse($request->start_date)->diffInDays(Carbon::parse($request->end_date)) + 1 : null,
-                'status' => 'pending',
-                'notes' => $request->notes,
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id(),
-            ]);
-        }
-        // log task update
-        $assignedEmployees = Employee::whereIn('id', $request->employee_ids)->get();
-JobActivityLogger::logTaskUpdated($job, $task, $assignedEmployees);
-
-        return redirect()->route('jobs.show', $job)->with('success', 'Task updated successfully.');
     }
+    
+    // log task update
+    $assignedUsers = User::whereIn('id', $request->user_ids)->get();
+    JobActivityLogger::logTaskUpdated($job, $task, $assignedUsers);
+
+    return redirect()->route('jobs.show', $job)->with('success', 'Task updated successfully.');
+}
 
     public function destroyTask(Job $job, Task $task)
     {
@@ -566,7 +585,7 @@ JobActivityLogger::logTaskUpdated($job, $task, $assignedEmployees);
         }
 
         $task->update(['active' => false, 'updated_by' => Auth::id()]);
-        $job->jobEmployees()->where('task_id', $task->id)->update(['active' => false, 'updated_by' => Auth::id()]);
+        $job->jobUsers()->where('task_id', $task->id)->update(['active' => false, 'updated_by' => Auth::id()]);
 // log task deletion
         JobActivityLogger::logTaskDeleted($job, $task);
         return redirect()->route('jobs.show', $job)->with('success', 'Task deleted successfully.');
@@ -1156,17 +1175,17 @@ public function processApproval(Request $request, Job $job)
                 $newTask->created_by = Auth::id();
                 $newTask->save();
 
-                // Copy job employees for the task
-                $jobEmployees = $job->jobEmployees()->where('task_id', $task->id)->get();
-                foreach ($jobEmployees as $jobEmployee) {
-                    $newJob->jobEmployees()->create([
-                        'employee_id' => $jobEmployee->employee_id,
+                // Copy job users for the task
+                $jobUsers = $job->jobUsers()->where('task_id', $task->id)->get();
+                foreach ($jobUsers as $jobUser) {
+                    $newJob->jobUsers()->create([
+                        'user_id' => $jobUser->user_id,
                         'task_id' => $newTask->id,
-                        'start_date' => $jobEmployee->start_date,
-                        'end_date' => $jobEmployee->end_date,
-                        'duration_in_days' => $jobEmployee->duration_in_days,
+                        'start_date' => $jobUser->start_date,
+                        'end_date' => $jobUser->end_date,
+                        'duration_in_days' => $jobUser->duration_in_days,
                         'status' => 'pending', // Reset status for copied job
-                        'notes' => $jobEmployee->notes,
+                        'notes' => $jobUser->notes,
                         'created_by' => Auth::id(),
                         'updated_by' => Auth::id(),
                     ]);
@@ -1204,86 +1223,90 @@ public function processApproval(Request $request, Job $job)
 }
     public function extendTask(Job $job)
     {
-      $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobEmployees.employee')->get();
+      $tasks = Task::where('job_id', $job->id)->where('active', true)->with('jobUsers.user')->get();
         return view('tasks.extend-task', compact('job', 'tasks'));
     }
+public function storeExtendTask(Request $request, Job $job)
+{
+    $request->validate([
+        'task_id' => 'required|exists:tasks,id',
+        'new_end_date' => 'required|date|after_or_equal:start_date',
+        'new_end_time' => 'nullable|date_format:H:i', // ADDED time validation
+    ]);
 
-    public function storeExtendTask(Request $request, Job $job)
-    {
-             $request->validate([
-            'task_id' => 'required|exists:tasks,id',
-            'new_end_date' => 'required|date|after_or_equal:start_date',
-        ]);
+    // Find the task and its job users
+    $task = Task::where('job_id', $job->id)->findOrFail($request->task_id);
+    $jobUsers = $job->jobUsers()->where('task_id', $task->id)->get();
 
-        // Find the task and its job employees
-        $task = Task::where('job_id', $job->id)->findOrFail($request->task_id);
-        $jobEmployees = $job->jobEmployees()->where('task_id', $task->id)->get();
+    // UPDATED: Calculate new duration with time components
+    $newEndDate = Carbon::parse($request->new_end_date);
+    $newEndTime = $request->new_end_time ? Carbon::parse($request->new_end_time) : Carbon::parse('23:59:59');
+    $newEndDateTime = Carbon::parse($newEndDate->format('Y-m-d') . ' ' . $newEndTime->format('H:i:s'));
+    
+    // Create new job with updated due date
+    $jobData = [
+        'job_type_id' => $job->job_type_id,
+        'client_id' => $job->client_id,
+        'equipment_id' => $job->equipment_id,
+        'description' => $job->description,
+        'references' => $job->references,
+        'priority' => $job->priority,
+        'start_date' => $job->start_date,
+        'due_date' => $newEndDateTime->format('Y-m-d'),
+        'active' => true,
+        'status' => $job->status,
+        'company_id' => Auth::user()->company_id,
+        'created_by' => Auth::id(),
+        'photos' => $job->photos,
+        'job_option_values' => $job->job_option_values,
+    ];
 
-        // Calculate new duration
-        $newEndDate = \Carbon\Carbon::parse($request->new_end_date);
-        $startDate = $jobEmployees->first()->start_date ? \Carbon\Carbon::parse($jobEmployees->first()->start_date) : null;
-        $durationInDays = $startDate ? $startDate->diffInDays($newEndDate) + 1 : null;
+    $newJob = Job::create($jobData);
 
-        // Get job type for validation
-        $jobType = JobType::with('jobOptions')->find($job->job_type_id);
+    // Copy all tasks, updating the selected task's duration
+    $tasks = Task::where('job_id', $job->id)->where('active', true)->get();
+    foreach ($tasks as $existingTask) {
+        $newTask = $existingTask->replicate();
+        $newTask->job_id = $newJob->id;
+        $newTask->created_by = Auth::id();
+        $newTask->save();
 
-        // Create new job with updated due date
-        $jobData = [
-
-            'job_type_id' => $job->job_type_id,
-            'client_id' => $job->client_id,
-            'equipment_id' => $job->equipment_id,
-            'description' => $job->description,
-            'references' => $job->references,
-            'priority' => $job->priority,
-            'start_date' => $job->start_date,
-            'due_date' => $newEndDate->format('Y-m-d'),
-            'active' => true,
-            'status' => $job->status,
-            'company_id' => Auth::user()->company_id,
-            'created_by' => Auth::id(),
-            'photos' => $job->photos,
-            'job_option_values' => $job->job_option_values,
-        ];
-
-        $newJob = Job::create($jobData);
-
-        // Copy all tasks, updating the selected task's duration
-        $tasks = Task::where('job_id', $job->id)->where('active', true)->get();
-        foreach ($tasks as $existingTask) {
-            $newTask = $existingTask->replicate();
-            $newTask->job_id = $newJob->id;
-            $newTask->created_by = Auth::id();
-
-            if ($existingTask->id == $request->task_id) {
-                $newTask->end_date = $newEndDate->format('Y-m-d');
+        // Copy job users, updating duration for the selected task
+        $existingJobUsers = $job->jobUsers()->where('task_id', $existingTask->id)->get();
+        foreach ($existingJobUsers as $jobUser) {
+            $endDate = ($existingTask->id == $request->task_id) ? $newEndDateTime->format('Y-m-d') : $jobUser->end_date;
+            $endTime = ($existingTask->id == $request->task_id) ? $newEndDateTime->format('H:i:s') : $jobUser->end_time;
+            
+            // UPDATED: Calculate new duration with time precision
+            $duration = null;
+            if ($jobUser->start_date && $jobUser->start_time && $endDate && $endTime) {
+                $startDateTime = Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s'));
+                $endDateTime = Carbon::parse($endDate . ' ' . $endTime);
+                $duration = $startDateTime->floatDiffInRealDays($endDateTime);
             }
-
-            $newTask->save();
-
-            // Copy job employees, updating duration for the selected task
-            $existingJobEmployees = $job->jobEmployees()->where('task_id', $existingTask->id)->get();
-            foreach ($existingJobEmployees as $jobEmployee) {
-                $newJob->jobEmployees()->create([
-                    'employee_id' => $jobEmployee->employee_id,
-                    'task_id' => $newTask->id,
-                    'start_date' => $jobEmployee->start_date,
-                    'end_date' => ($existingTask->id == $request->task_id) ? $newEndDate->format('Y-m-d') : $jobEmployee->end_date,
-                    'duration_in_days' => ($existingTask->id == $request->task_id) ? $durationInDays : $jobEmployee->duration_in_days,
-                    'status' => $jobEmployee->status,
-                    'notes' => $jobEmployee->notes,
-                    'created_by' => Auth::id(),
-                    'updated_by' => Auth::id(),
-                ]);
-            }
+            
+            $newJob->jobUsers()->create([
+                'user_id' => $jobUser->user_id,
+                'task_id' => $newTask->id,
+                'start_date' => $jobUser->start_date,
+                'start_time' => $jobUser->start_time,
+                'end_date' => $endDate,
+                'end_time' => $endTime,
+                'duration' => $duration,
+                'status' => $jobUser->status,
+                'notes' => $jobUser->notes,
+                'created_by' => Auth::id(),
+                'updated_by' => Auth::id(),
+            ]);
         }
-        // Log task extension
-        $employee = Employee::where('user_id', Auth::id())->first();
-JobActivityLogger::logTaskExtended($job, $task, $currentEndDate, $request->new_end_date, $employee);
-
-        return redirect()->route('jobs.index')->with('success', 'New job created with extended task duration.');
     }
+    
+    // Log task extension
+    $user = User::where('user_id', Auth::id())->first();
+    JobActivityLogger::logTaskExtended($job, $task, $jobUsers->first()->end_date, $request->new_end_date, $user);
 
+    return redirect()->route('jobs.index')->with('success', 'New job created with extended task duration.');
+}
 
 
 // Add these methods to app/Http/Controllers/Job/JobController.php
@@ -1381,7 +1404,7 @@ public function showReview(Job $job)
             ->with('error', "Cannot review job: {$incompleteTasks} task(s) are not completed yet.");
     }
 
-    $job->load(['tasks.jobEmployees.employee', 'jobType', 'client', 'creator']);
+    $job->load(['tasks.jobUsers.user', 'jobType', 'client', 'creator']);
 
     return view('jobs.review', compact('job'));
 }
@@ -1509,111 +1532,171 @@ public static function getStatusLabel($status)
 
 // timeline
 private function getTimelineData(Job $job)
-    {
-        // Get tasks with proper relationships
-        $tasks = $job->tasks()
-            ->where('active', true)
-            ->with([
-                'jobEmployees' => function($query) {
-                    $query->with('employee');
-                },
-                'taskExtensionRequests' => function($query) {
-                    $query->where('status', 'pending');
-                }
-            ])
-            ->get();
-
-        $timelineData = [
-            'job_start' => $job->start_date ? Carbon::parse($job->start_date) : null,
-            'job_end' => $job->due_date ? Carbon::parse($job->due_date) : null,
-            'tasks' => collect() // Use collection for easier manipulation
-        ];
-
-        foreach ($tasks as $task) {
-            $taskEmployees = $task->jobEmployees;
-
-            // Skip tasks with no employee assignments
-            if ($taskEmployees->isEmpty()) {
-                continue;
+{
+    $tasks = $job->tasks()
+        ->where('active', true)
+        ->with([
+            'jobUsers' => function($query) {
+                $query->with('user');
+            },
+            'taskExtensionRequests' => function($query) {
+                $query->where('status', 'pending');
             }
+        ])
+        ->get();
 
-            $taskStart = $taskEmployees->min('start_date');
-            $taskEnd = $taskEmployees->max('end_date');
+    $timelineData = [
+        'job_start' => $job->start_date ? Carbon::parse($job->start_date) : null,
+        'job_end' => $job->due_date ? Carbon::parse($job->due_date) : null,
+        'tasks' => collect()
+    ];
 
-            // Calculate basic progress
-            $progress = $this->calculateTaskProgress($task, $taskEmployees);
+    foreach ($tasks as $task) {
+        $taskUsers = $task->jobUsers;
 
-            // Check for extension requests
-            $hasExtensionRequest = $task->taskExtensionRequests->isNotEmpty();
-
-            $timelineData['tasks']->push([
-                'id' => $task->id,
-                'name' => $task->task,
-                'description' => $task->description,
-                'status' => $task->status,
-                'start_date' => $taskStart ? Carbon::parse($taskStart) : null,
-                'end_date' => $taskEnd ? Carbon::parse($taskEnd) : null,
-                'progress' => $progress,
-                'employees' => $taskEmployees->map(function($jobEmployee) {
-                    return [
-                        'id' => $jobEmployee->employee->id,
-                        'name' => $jobEmployee->employee->name,
-                        'initials' => $this->getInitials($jobEmployee->employee->name)
-                    ];
-                }),
-                'has_extension_request' => $hasExtensionRequest
-            ]);
+        if ($taskUsers->isEmpty()) {
+            continue;
         }
 
-        return $timelineData;
+        // UPDATED: Find earliest and latest times with precision
+        $earliestStart = null;
+        $latestEnd = null;
+
+        foreach ($taskUsers as $jobUser) {
+            if ($jobUser->start_date && $jobUser->start_time) {
+                $startDateTime = Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s'));
+                if (!$earliestStart || $startDateTime->lt($earliestStart)) {
+                    $earliestStart = $startDateTime;
+                }
+            }
+
+            if ($jobUser->end_date && $jobUser->end_time) {
+                $endDateTime = Carbon::parse($jobUser->end_date->format('Y-m-d') . ' ' . $jobUser->end_time->format('H:i:s'));
+                if (!$latestEnd || $endDateTime->gt($latestEnd)) {
+                    $latestEnd = $endDateTime;
+                }
+            }
+        }
+
+        $progress = $this->calculateTaskProgress($task, $taskUsers);
+        $hasExtensionRequest = $task->taskExtensionRequests->isNotEmpty();
+
+        // UPDATED: Calculate total planned duration
+        $plannedDuration = null;
+        if ($earliestStart && $latestEnd) {
+            $plannedDuration = $earliestStart->floatDiffInRealDays($latestEnd);
+        }
+
+        $timelineData['tasks']->push([
+            'id' => $task->id,
+            'name' => $task->task,
+            'description' => $task->description,
+            'status' => $task->status,
+            'start_date_time' => $earliestStart,
+            'end_date_time' => $latestEnd,
+            'planned_duration' => $plannedDuration,
+            'formatted_duration' => $plannedDuration ? self::formatDuration($plannedDuration) : 'Not set',
+            'progress' => $progress,
+            'users' => $taskUsers->map(function($jobUser) {
+                return [
+                    'id' => $jobUser->user->id,
+                    'name' => $jobUser->user->name,
+                    'initials' => $this->getInitials($jobUser->user->name),
+                    'individual_duration' => $jobUser->duration ? self::formatDuration($jobUser->duration) : 'Not set',
+                    'status' => $jobUser->status
+                ];
+            }),
+            'has_extension_request' => $hasExtensionRequest
+        ]);
     }
 
-   private function calculateTaskProgress(Task $task, $taskEmployees)
+    return $timelineData;
+}
+
+public static function formatDuration($durationInRealDays)
+{
+    if (!$durationInRealDays || $durationInRealDays <= 0) {
+        return '0 minutes';
+    }
+
+    $days = floor($durationInRealDays);
+    $hours = ($durationInRealDays - $days) * 24;
+    $wholeHours = floor($hours);
+    $minutes = ($hours - $wholeHours) * 60;
+
+    $formatted = '';
+    if ($days > 0) {
+        $formatted .= $days . ' day' . ($days !== 1 ? 's' : '');
+    }
+    if ($wholeHours > 0) {
+        $formatted .= ($formatted ? ', ' : '') . $wholeHours . ' hour' . ($wholeHours !== 1 ? 's' : '');
+    }
+    if ($minutes > 0) {
+        $formatted .= ($formatted ? ', ' : '') . round($minutes) . ' minute' . (round($minutes) !== 1 ? 's' : '');
+    }
+
+    return $formatted ?: '0 minutes';
+}
+private function calculateTaskProgress(Task $task, $taskUsers)
 {
     if ($task->status === 'completed') return 100;
     if ($task->status === 'cancelled') return 0;
     if ($task->status === 'pending') return 0;
 
-    // For in-progress tasks, calculate based on employee completion percentage
-    $totalEmployees = $taskEmployees->count();
+    // For in-progress tasks, calculate based on user completion percentage
+    $totalUsers = $taskUsers->count();
 
-    if ($totalEmployees === 0) return 0;
+    if ($totalUsers === 0) return 0;
 
-    $completedEmployees = $taskEmployees->where('status', 'completed')->count();
-    $inProgressEmployees = $taskEmployees->where('status', 'in_progress')->count();
+    $completedUsers = $taskUsers->where('status', 'completed')->count();
+    $inProgressUsers = $taskUsers->where('status', 'in_progress')->count();
 
     // Calculate completion percentage
-    $completionPercentage = ($completedEmployees / $totalEmployees) * 100;
+    $completionPercentage = ($completedUsers / $totalUsers) * 100;
 
-    // If some employees are in progress but none completed, show partial progress
-    if ($completionPercentage === 0 && $inProgressEmployees > 0) {
-        // Calculate time-based progress for in-progress employees
-        $startDate = $taskEmployees->min('start_date');
-        $endDate = $taskEmployees->max('end_date');
+    // If some users are in progress but none completed, show partial progress
+    if ($completionPercentage === 0 && $inProgressUsers > 0) {
+        // Calculate time-based progress for in-progress users
+        $startDateTime = null;
+        $endDateTime = null;
 
-        if ($startDate && $endDate) {
-            $start = \Carbon\Carbon::parse($startDate);
-            $end = \Carbon\Carbon::parse($endDate);
-            $now = \Carbon\Carbon::now();
+        // Find earliest start and latest end across all users
+        foreach ($taskUsers as $jobUser) {
+            if ($jobUser->start_date && $jobUser->start_time) {
+                $userStart = Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s'));
+                if (!$startDateTime || $userStart->lt($startDateTime)) {
+                    $startDateTime = $userStart;
+                }
+            }
+            
+            if ($jobUser->end_date && $jobUser->end_time) {
+                $userEnd = Carbon::parse($jobUser->end_date->format('Y-m-d') . ' ' . $jobUser->end_time->format('H:i:s'));
+                if (!$endDateTime || $userEnd->gt($endDateTime)) {
+                    $endDateTime = $userEnd;
+                }
+            }
+        }
 
-            if ($now <= $start) return 5; // Just started
-            if ($now >= $end) return 85; // Overdue but not completed
+        if ($startDateTime && $endDateTime) {
+            $now = Carbon::now();
 
-            $totalDays = $start->diffInDays($end);
-            if ($totalDays === 0) return 50; // Same day task
+            if ($now <= $startDateTime) return 5; // Just started
+            if ($now >= $endDateTime) return 85; // Overdue but not completed
 
-            $elapsedDays = $start->diffInDays($now);
-            $timeProgress = min(80, ($elapsedDays / $totalDays) * 80); // Max 80% for time-based
+            $totalHours = $startDateTime->diffInRealHours($endDateTime);
+            if ($totalHours <= 0) return 50; // Same time task
+
+            $elapsedHours = $startDateTime->diffInRealHours($now);
+            $timeProgress = min(80, ($elapsedHours / $totalHours) * 80); // Max 80% for time-based
 
             return round($timeProgress);
         }
 
-        return 25; // Default for in-progress with no dates
+        return 25; // Default for in-progress with no times
     }
 
     return round($completionPercentage);
 }
-
    private function getJobStats(Job $job)
 {
     $tasks = $job->tasks()->where('active', true)->get();
@@ -1627,7 +1710,7 @@ private function getTimelineData(Job $job)
             'pending_tasks' => 0,
             'cancelled_tasks' => 0,
             'overall_progress' => 0,
-            'employee_assignments' => 0,
+            'user_assignments' => 0,
             'completed_assignments' => 0
         ];
     }
@@ -1640,9 +1723,9 @@ private function getTimelineData(Job $job)
     // Calculate overall progress based on completed tasks vs total tasks
     $overallProgress = round(($completedTasks / $totalTasks) * 100);
 
-    // Get employee assignment statistics
-    $totalAssignments = \App\Models\JobEmployee::whereIn('task_id', $tasks->pluck('id'))->count();
-    $completedAssignments = \App\Models\JobEmployee::whereIn('task_id', $tasks->pluck('id'))
+    // Get user assignment statistics
+    $totalAssignments = \App\Models\JobUser::whereIn('task_id', $tasks->pluck('id'))->count();
+    $completedAssignments = \App\Models\JobUser::whereIn('task_id', $tasks->pluck('id'))
         ->where('status', 'completed')->count();
 
     return [
@@ -1652,7 +1735,7 @@ private function getTimelineData(Job $job)
         'pending_tasks' => $pendingTasks,
         'cancelled_tasks' => $cancelledTasks,
         'overall_progress' => $overallProgress,
-        'employee_assignments' => $totalAssignments,
+        'user_assignments' => $totalAssignments,
         'completed_assignments' => $completedAssignments,
         'assignment_completion_rate' => $totalAssignments > 0 ? round(($completedAssignments / $totalAssignments) * 100) : 0
     ];
@@ -1676,48 +1759,65 @@ private function getTimelineData(Job $job)
         ]);
     }
 
-    // API endpoint for task details
-    public function getTaskDetails(Job $job, Task $task)
-    {
-          Log::info('getTaskDetails called', ['job_id' => $job->id, 'task_id' => $task->id]);
-        if ($job->company_id !== Auth::user()->company_id || $task->job_id !== $job->id) {
-            abort(403);
-        }
-
-        $task->load([
-            'jobEmployees' => function($query) {
-                $query->with('employee');
-            },
-            'taskExtensionRequests' => function($query) {
-                $query->where('status', 'pending');
-            }
-        ]);
-
-        $taskEmployees = $task->jobEmployees;
-        $progress = $this->calculateTaskProgress($task, $taskEmployees);
-
-        return response()->json([
-            'task' => [
-                'id' => $task->id,
-                'name' => $task->task,
-                'description' => $task->description ?: 'No description provided',
-                'status' => $task->status,
-                'progress' => $progress
-            ],
-            'employees' => $taskEmployees->map(function($jobEmployee) {
-                return [
-                    'name' => $jobEmployee->employee->name,
-                    'start_date' => $jobEmployee->start_date ? Carbon::parse($jobEmployee->start_date)->format('M d, Y') : null,
-                    'end_date' => $jobEmployee->end_date ? Carbon::parse($jobEmployee->end_date)->format('M d, Y') : null
-                ];
-            }),
-            'extension_requests' => $task->taskExtensionRequests->map(function($request) {
-                return [
-                    'requested_end_date' => Carbon::parse($request->requested_end_date)->format('M d, Y'),
-                    'reason' => $request->reason,
-                    'status' => $request->status
-                ];
-            })
-        ]);
+    // UPDATED: getTaskDetails method in JobController
+public function getTaskDetails(Job $job, Task $task)
+{
+    Log::info('getTaskDetails called', ['job_id' => $job->id, 'task_id' => $task->id]);
+    
+    if ($job->company_id !== Auth::user()->company_id || $task->job_id !== $job->id) {
+        abort(403);
     }
+
+    $task->load([
+        'jobUsers' => function($query) {
+            $query->with('user');
+        },
+        'taskExtensionRequests' => function($query) {
+            $query->where('status', 'pending');
+        }
+    ]);
+
+    $taskUsers = $task->jobUsers;
+    $progress = $this->calculateTaskProgress($task, $taskUsers);
+
+    return response()->json([
+        'task' => [
+            'id' => $task->id,
+            'name' => $task->task,
+            'description' => $task->description ?: 'No description provided',
+            'status' => $task->status,
+            'progress' => $progress
+        ],
+        'users' => $taskUsers->map(function($jobUser) {
+            return [
+                'name' => $jobUser->user->name,
+                'status' => $jobUser->status,
+                // UPDATED: Return both date and time components
+                'start_date' => $jobUser->start_date ? $jobUser->start_date->format('Y-m-d') : null,
+                'start_time' => $jobUser->start_time ? $jobUser->start_time->format('H:i') : null,
+                'end_date' => $jobUser->end_date ? $jobUser->end_date->format('Y-m-d') : null,
+                'end_time' => $jobUser->end_time ? $jobUser->end_time->format('H:i') : null,
+                // UPDATED: Include formatted duration
+                'formatted_duration' => $jobUser->formatted_duration ?? 'Not set',
+                'duration_real_days' => $jobUser->duration ?? 0,
+                // ADDED: Include datetime objects for calculations
+                'start_datetime' => ($jobUser->start_date && $jobUser->start_time) 
+                    ? $jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s')
+                    : null,
+                'end_datetime' => ($jobUser->end_date && $jobUser->end_time) 
+                    ? $jobUser->end_date->format('Y-m-d') . ' ' . $jobUser->end_time->format('H:i:s')
+                    : null,
+            ];
+        }),
+        'extension_requests' => $task->taskExtensionRequests->map(function($request) {
+            return [
+                'requested_end_date' => $request->requested_end_date->format('M d, Y'),
+                'requested_end_time' => $request->requested_end_time ? $request->requested_end_time->format('H:i') : null,
+                'reason' => $request->reason,
+                'status' => $request->status,
+                'formatted_extension' => $request->formatted_extension ?? $request->formatted_extension_days
+            ];
+        })
+    ]);
+}
 }

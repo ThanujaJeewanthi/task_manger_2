@@ -15,13 +15,21 @@ return new class extends Migration
             $table->id();
             $table->foreignId('job_id')->constrained('jobs')->cascadeOnDelete();
             $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
-            $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('requested_by')->constrained('users')->cascadeOnDelete();
-
+     
+           
+            
+           
+           
+       
             // Current and requested dates
             $table->date('current_end_date');
+             $table->time('current_end_time')->nullable();
             $table->date('requested_end_date');
+             $table->time('requested_end_time')->nullable();
             $table->integer('extension_days');
+             $table->decimal('extension_hours', 5, 2)->nullable();
 
             // Request details
             $table->text('reason')->nullable();
@@ -39,7 +47,7 @@ return new class extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
 
             // Indexes
-            $table->index(['job_id', 'task_id', 'employee_id']);
+            $table->index(['job_id', 'task_id', 'user_id']);
             $table->index('status');
             $table->index('requested_by');
             $table->index('reviewed_by');

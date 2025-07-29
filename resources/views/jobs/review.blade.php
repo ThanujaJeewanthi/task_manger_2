@@ -89,10 +89,10 @@
                                     </div>
 
                                     <!-- Assigned Employees -->
-                                    @if($task->jobEmployees->count() > 0)
+                                    @if($task->jobUsers->count() > 0)
                                     <div>
                                         <strong>Assigned to:</strong>
-                                        @foreach($task->jobEmployees as $assignment)
+                                        @foreach($task->jobUsers as $assignment)
                                             <span class="badge bg-info me-1">
                                                 {{ $assignment->employee->name ?? 'N/A' }}
                                                 @if($assignment->status)

@@ -617,7 +617,7 @@
                                                     <td>{{ Str::limit($task->task, 30) }}</td>
                                                     <td>{{ $task->job->id }}</td>
                                                     <td>
-                                                        @foreach($task->jobEmployees as $assignment)
+                                                        @foreach($task->jobUsers as $assignment)
                                                         <small class="badge bg-info">{{ $assignment->employee->name ?? 'N/A' }}</small>
                                                         @endforeach
                                                     </td>

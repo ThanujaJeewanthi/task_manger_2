@@ -54,11 +54,11 @@ class Task extends Model
     }
 
     /**
-     * Get the job employee assignments for this task.
+     * Get the job user assignments for this task.
      */
-    public function jobEmployees(): HasMany
+    public function jobUsers(): HasMany
     {
-        return $this->hasMany(JobEmployee::class);
+        return $this->hasMany(JobUser::class);
     }
     public function job()
     {

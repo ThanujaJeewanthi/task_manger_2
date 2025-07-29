@@ -262,7 +262,7 @@
                                     <tbody>
                                         @forelse($myActiveTasks as $task)
                                         @php
-                                            $jobEmployee = $task->jobEmployees->where('employee_id', $employee->id)->first();
+                                            $jobUser = $task->jobUsers->where('employee_id', $employee->id)->first();
                                         @endphp
                                         <tr id="task-row-{{ $task->id }}">
                                             <td>
@@ -278,17 +278,17 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($jobEmployee && $jobEmployee->start_date)
-                                                    {{ \Carbon\Carbon::parse($jobEmployee->start_date)->format('M d, Y') }}
+                                                @if($jobUser && $jobUser->start_date)
+                                                    {{ \Carbon\Carbon::parse($jobUser->start_date)->format('M d, Y') }}
                                                 @else
                                                     <span class="text-muted">Not started</span>
                                                 @endif
                                             </td>
                                             <td>
-                                                @if($jobEmployee && $jobEmployee->end_date)
+                                                @if($jobUser && $jobUser->end_date)
                                                     @php
-                                                        $endDate = \Carbon\Carbon::parse($jobEmployee->end_date);
-                                                        $isOverdue = $endDate->isPast() && $jobEmployee->status !== 'completed';
+                                                        $endDate = \Carbon\Carbon::parse($jobUser->end_date);
+                                                        $isOverdue = $endDate->isPast() && $jobUser->status !== 'completed';
                                                     @endphp
                                                     <span class="{{ $isOverdue ? 'text-danger' : '' }}">
                                                         {{ $endDate->format('M d, Y') }}
@@ -302,7 +302,7 @@
                                             </td>
                                             <td>
                                                 @php
-                                                    $employeeStatus = $jobEmployee ? $jobEmployee->status : 'not_assigned';
+                                                    $employeeStatus = $jobUser ? $jobUser->status : 'not_assigned';
 
                                                     // Determine badge color based on employee status
                                                     $badgeClass = match($employeeStatus) {
@@ -329,7 +329,7 @@
                                                 </span>
 
                                                 {{-- Show overall task status if different from employee status --}}
-                                                {{-- @if($jobEmployee && $task->status !== $employeeStatus)
+                                                {{-- @if($jobUser && $task->status !== $employeeStatus)
                                                     <br>
                                                     <small class="text-muted">
                                                         Overall:
@@ -340,10 +340,10 @@
                                                 @endif --}}
 
                                                 {{-- Progress indicator for tasks with multiple employees --}}
-                                                @if($task->jobEmployees->count() > 1)
+                                                @if($task->jobUsers->count() > 1)
                                                     @php
-                                                        $totalEmployees = $task->jobEmployees->count();
-                                                        $completedEmployees = $task->jobEmployees->where('status', 'completed')->count();
+                                                        $totalEmployees = $task->jobUsers->count();
+                                                        $completedEmployees = $task->jobUsers->where('status', 'completed')->count();
                                                         $progressPercentage = $totalEmployees > 0 ? round(($completedEmployees / $totalEmployees) * 100) : 0;
                                                     @endphp
                                                     <br>
@@ -356,15 +356,15 @@
                                                 @endif
                                             </td>
                                            <td>
-    @if($jobEmployee)
+    @if($jobUser)
         @php
             $currentUserEmployee = Auth::user()->employee ?? null;
             $isAssignedToTask = false;
-            $userJobEmployee = null;
+            $userJobUser = null;
 
             if ($currentUserEmployee) {
-                $userJobEmployee = $jobEmployee;
-                $isAssignedToTask = $userJobEmployee !== null;
+                $userJobUser = $jobUser;
+                $isAssignedToTask = $userJobUser !== null;
             }
         @endphp
 
@@ -419,7 +419,7 @@
                         }
                         </script>
                     </form>
-                @elseif($task->status === 'in_progress' && $userJobEmployee->status!='completed' && $task->status!='completed')
+                @elseif($task->status === 'in_progress' && $userJobUser->status!='completed' && $task->status!='completed')
                     <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
                         @csrf
                         <button type="button" class="btn btn-success btn-sm"
@@ -486,7 +486,7 @@
                     <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
                         <i class="fas fa-clock"></i>
                     </a>
-                @elseif($task->status === 'completed' || $userJobEmployee->status==='completed')
+                @elseif($task->status === 'completed' || $userJobUser->status==='completed')
                     <span class="badge bg-success">
                          Completed
                     </span>

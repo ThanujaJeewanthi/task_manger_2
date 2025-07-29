@@ -1,6 +1,6 @@
 <!-- Create: resources/views/components/employee-task-buttons.blade.php -->
 
-@if($jobEmployee && $jobEmployee->employee_id === auth()->user()->employee?->id)
+@if($jobUser && $jobUser->employee_id === auth()->user()->employee?->id)
     <div class="task-actions">
         @if($task->status === 'pending')
             <!-- Start Task Button -->
@@ -130,16 +130,16 @@ function showAlert(type, message) {
 }
 </style>
 {{-- resources/views/components/dashboard/employee-task-buttons.blade.php --}}
-{{-- Usage: @include('components.dashboard.employee-task-buttons', ['task' => $task, 'jobEmployee' => $jobEmployee]) --}}
+{{-- Usage: @include('components.dashboard.employee-task-buttons', ['task' => $task, 'jobUser' => $jobUser]) --}}
 
-@if($jobEmployee && $jobEmployee->employee_id === auth()->user()->employee?->id)
+@if($jobUser && $jobUser->employee_id === auth()->user()->employee?->id)
     <div class="task-actions">
-        @if($jobEmployee->status === 'pending')
+        @if($jobUser->status === 'pending')
             {{-- Start Task Button --}}
             <button class="btn btn-primary btn-sm" onclick="startTask({{ $task->id }}, '{{ addslashes($task->task) }}')">
                 <i class="fas fa-play"></i> Start Task
             </button>
-        @elseif($jobEmployee->status === 'in_progress')
+        @elseif($jobUser->status === 'in_progress')
             {{-- Complete Task Button --}}
             <button class="btn btn-success btn-sm" onclick="completeTask({{ $task->id }}, '{{ addslashes($task->task) }}')">
                 <i class="fas fa-check"></i> Complete Task
@@ -149,7 +149,7 @@ function showAlert(type, message) {
             <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm">
                 <i class="fas fa-clock"></i> Request Extension
             </a>
-        @elseif($jobEmployee->status === 'completed')
+        @elseif($jobUser->status === 'completed')
             {{-- Task Completed Badge --}}
             <span class="badge bg-success">
                 <i class="fas fa-check-circle"></i> Completed by You
@@ -157,7 +157,7 @@ function showAlert(type, message) {
         @endif
 
         {{-- Show overall task status if different from employee status --}}
-        @if($task->status !== $jobEmployee->status)
+        @if($task->status !== $jobUser->status)
             <br><small class="text-muted">
                 Overall Task Status:
                 <span class="badge bg-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'warning') }}">

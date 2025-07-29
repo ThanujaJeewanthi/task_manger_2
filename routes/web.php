@@ -18,7 +18,7 @@ use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\Job\JobOptionController;
 
-use App\Http\Controllers\EmployeeTaskController;
+use App\Http\Controllers\UserTaskController;
 
 use App\Http\Controllers\Task\TaskExtensionController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
@@ -446,11 +446,11 @@ Route::middleware(['auth'])->group(function () {
 
 // Employee Task Management Routes
 Route::middleware(['auth'])->group(function () {
-    Route::post('/tasks/{task}/start', [EmployeeTaskController::class, 'startTask'])
+    Route::post('/tasks/{task}/start', [UserTaskController::class, 'startTask'])
         ->name('tasks.start')->middleware('role.permission:11.31');
 
 
-    Route::post('/tasks/{task}/complete', [EmployeeTaskController::class, 'completeTask'])
+    Route::post('/tasks/{task}/complete', [UserTaskController::class, 'completeTask'])
         ->name('tasks.complete')->middleware('role.permission:11.32');
 
 });

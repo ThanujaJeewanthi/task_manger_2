@@ -405,7 +405,7 @@
                         @endif
 
                         {{-- if tasks exist for this job --}}
-@if($job->jobEmployees->count() > 0)
+@if($job->jobUsers->count() > 0)
 
                         <!-- Tasks Card -->
 <div class="d-component-container mb-4">
@@ -437,16 +437,16 @@
                 @php
                     $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
                     $isEmployee = auth()->user()->userRole->name === 'Employee';
-                    $jobEmployeesGrouped = $isEmployee && $currentEmployee
-                        ? $job->jobEmployees->where('employee_id', $currentEmployee->id)->groupBy('task_id')
-                        : $job->jobEmployees->groupBy('task_id');
+                    $jobUsersGrouped = $isEmployee && $currentEmployee
+                        ? $job->jobUsers->where('employee_id', $currentEmployee->id)->groupBy('task_id')
+                        : $job->jobUsers->groupBy('task_id');
                 @endphp
-                @forelse ($jobEmployeesGrouped as $taskId => $jobEmployees)
+                @forelse ($jobUsersGrouped as $taskId => $jobUsers)
                     @php
-                        $task = $job->jobEmployees->where('task_id', $taskId)->first()->task;
+                        $task = $job->jobUsers->where('task_id', $taskId)->first()->task;
                         // Check if current user is assigned to this task
                         $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
-                        $isAssignedToTask = $currentEmployee && $jobEmployees->contains('employee_id', $currentEmployee->id);
+                        $isAssignedToTask = $currentEmployee && $jobUsers->contains('employee_id', $currentEmployee->id);
 
                         // Check for pending extension requests
                         $pendingExtension = null;
@@ -461,7 +461,7 @@
                         <td>{{ $task->task }}</td>
                         <td>{{ $task->description ?? 'N/A' }}</td>
                         <td>
-                            @foreach ($jobEmployees as $je)
+                            @foreach ($jobUsers as $je)
                                 {{ $je->employee->name ?? 'N/A' }}@if (!$loop->last)
                                     ,
                                 @endif
@@ -472,19 +472,19 @@
                                 {{ ucfirst(str_replace('_', ' ', $task->status)) }}
                             </span>
                         </td>
-                        <td>{{ $jobEmployees->first()->start_date ? $jobEmployees->first()->start_date->format('Y-m-d') : 'N/A' }}
+                        <td>{{ $jobUsers->first()->start_date ? $jobUsers->first()->start_date->format('Y-m-d') : 'N/A' }}
                         </td>
-                        <td>{{ $jobEmployees->max('end_date') ? \Carbon\Carbon::parse($jobEmployees->max('end_date'))->format('Y-m-d') : 'N/A' }}
+                        <td>{{ $jobUsers->max('end_date') ? \Carbon\Carbon::parse($jobUsers->max('end_date'))->format('Y-m-d') : 'N/A' }}
                         </td>
                         <td>
                             @php
                                 $currentUserEmployee = Auth::user()->employee ?? null;
                                 $isAssignedToTask = false;
-                                $userJobEmployee = null;
+                                $userJobUser = null;
 
                                 if ($currentUserEmployee) {
-                                    $userJobEmployee = $jobEmployees->where('employee_id', $currentUserEmployee->id)->first();
-                                    $isAssignedToTask = $userJobEmployee !== null;
+                                    $userJobUser = $jobUsers->where('employee_id', $currentUserEmployee->id)->first();
+                                    $isAssignedToTask = $userJobUser !== null;
                                 }
                             @endphp
 
@@ -539,7 +539,7 @@
                                             }
                                             </script>
                                         </form>
-                                    @elseif($task->status === 'in_progress' && $userJobEmployee->status!='completed' && $task->status!='completed')
+                                    @elseif($task->status === 'in_progress' && $userJobUser->status!='completed' && $task->status!='completed')
                                         <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
                                             @csrf
                                             <button type="button" class="btn btn-success btn-sm"
@@ -606,7 +606,7 @@
                                         <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
                                             <i class="fas fa-clock"></i>
                                         </a>
-                                    @elseif($task->status === 'completed' || $userJobEmployee->status==='completed')
+                                    @elseif($task->status === 'completed' || $userJobUser->status==='completed')
                                         <span class="badge bg-success">
                                             <i class="fas fa-check-circle"></i> Completed
                                         </span>

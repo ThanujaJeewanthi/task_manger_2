@@ -165,9 +165,9 @@ class SuperAdminDashboardController extends Controller
             'job_completion_rate' => Job::count() > 0 ?
                 round((Job::where('status', 'completed')->count() / Job::count()) * 100, 1) : 0,
             'employee_utilization' => Employee::where('active', true)->count() > 0 ?
-                round((Employee::whereHas('jobEmployees', function($q) {
+                round((User::whereHas('jobUsers', function($q) {
                     $q->whereIn('status', ['pending', 'in_progress']);
-                })->count() / Employee::where('active', true)->count()) * 100, 1) : 0,
+                })->count() / User::where('active', true)->count()) * 100, 1) : 0,
         ];
 
         return view('dashboard.superadmin', compact(

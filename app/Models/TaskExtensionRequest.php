@@ -13,11 +13,14 @@ class TaskExtensionRequest extends Model
     protected $fillable = [
         'job_id',
         'task_id',
-        'employee_id',
+        'user_id',
         'requested_by',
         'current_end_date',
+        'current_end_time', // ADDED
         'requested_end_date',
+        'requested_end_time', // ADDED
         'extension_days',
+        'extension_hours', // ADDED
         'reason',
         'justification',
         'status',
@@ -31,7 +34,10 @@ class TaskExtensionRequest extends Model
     protected $casts = [
         'current_end_date' => 'date',
         'requested_end_date' => 'date',
+        'current_end_time' => 'datetime:H:i', // ADDED
+        'requested_end_time' => 'datetime:H:i', // ADDED
         'reviewed_at' => 'datetime',
+        'extension_hours' => 'decimal:2', // ADDED
     ];
 
     /**
@@ -47,9 +53,9 @@ class TaskExtensionRequest extends Model
         return $this->belongsTo(Task::class);
     }
 
-    public function employee()
+    public function user()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(User::class);
     }
 
     public function requestedBy()
@@ -97,9 +103,9 @@ class TaskExtensionRequest extends Model
         });
     }
 
-    public function scopeForEmployee($query, $employeeId)
+    public function scopeForUser($query, $userId)
     {
-        return $query->where('employee_id', $employeeId);
+        return $query->where('user_id', $userId);
     }
 
     public function scopeForSupervisor($query, $userId)
@@ -128,6 +134,30 @@ class TaskExtensionRequest extends Model
         return $this->extension_days . ' ' . ($this->extension_days == 1 ? 'day' : 'days');
     }
 
+    // UPDATED: More comprehensive extension formatting with time
+    public function getFormattedExtensionAttribute()
+    {
+        $formatted = '';
+        
+        if ($this->extension_days > 0) {
+            $formatted .= $this->extension_days . ' day' . ($this->extension_days !== 1 ? 's' : '');
+        }
+        
+        if ($this->extension_hours > 0) {
+            $hours = floor($this->extension_hours);
+            $minutes = ($this->extension_hours - $hours) * 60;
+            
+            if ($hours > 0) {
+                $formatted .= ($formatted ? ', ' : '') . $hours . ' hour' . ($hours !== 1 ? 's' : '');
+            }
+            if ($minutes > 0) {
+                $formatted .= ($formatted ? ', ' : '') . round($minutes) . ' minute' . (round($minutes) !== 1 ? 's' : '');
+            }
+        }
+        
+        return $formatted ?: '0 minutes';
+    }
+
     public function getCanBeProcessedAttribute()
     {
         return $this->status === 'pending';
@@ -138,18 +168,39 @@ class TaskExtensionRequest extends Model
         return $this->status === 'pending' && $this->created_at->addDays(3)->isPast();
     }
 
+    // UPDATED: Get current end datetime
+    public function getCurrentEndDateTimeAttribute()
+    {
+        if (!$this->current_end_date || !$this->current_end_time) {
+            return null;
+        }
+        
+        return Carbon::parse($this->current_end_date->format('Y-m-d') . ' ' . $this->current_end_time->format('H:i:s'));
+    }
+
+    // UPDATED: Get requested end datetime
+    public function getRequestedEndDateTimeAttribute()
+    {
+        if (!$this->requested_end_date || !$this->requested_end_time) {
+            return null;
+        }
+        
+        return Carbon::parse($this->requested_end_date->format('Y-m-d') . ' ' . $this->requested_end_time->format('H:i:s'));
+    }
+
     /**
-     * Calculate extension days automatically
+     * Calculate extension days and hours automatically
      */
     protected static function boot()
     {
         parent::boot();
 
         static::saving(function ($model) {
-            if ($model->current_end_date && $model->requested_end_date) {
-                $currentDate = Carbon::parse($model->current_end_date);
-                $requestedDate = Carbon::parse($model->requested_end_date);
-                $model->extension_days = $currentDate->diffInDays($requestedDate, false);
+            if ($model->current_end_date_time && $model->requested_end_date_time) {
+                $extensionInRealDays = $model->current_end_date_time->floatDiffInRealDays($model->requested_end_date_time);
+                
+                $model->extension_days = floor($extensionInRealDays);
+                $model->extension_hours = ($extensionInRealDays - $model->extension_days) * 24;
             }
         });
     }

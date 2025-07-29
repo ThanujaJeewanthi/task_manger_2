@@ -93,8 +93,8 @@ class Employee extends Model
     {
         return $this->active && $this->user->active;
     }
-    public function jobEmployees()
+    public function jobUsers()
     {
-        return $this->hasMany(JobEmployee::class);
+        return $this->hasMany(JobUser::class);
     }
 }

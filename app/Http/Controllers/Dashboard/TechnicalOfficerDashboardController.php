@@ -283,25 +283,31 @@ class TechnicalOfficerDashboardController extends Controller
         ]);
     }
 
-    private function getAverageJobCompletionTime()
-    {
-        $completedJobs = Job::where('company_id', Auth::user()->company_id)
-            ->where('assigned_user_id', Auth::id())
-            ->where('status', 'completed')
-            ->whereNotNull('start_date')
-            ->whereNotNull('completed_date')
-            ->get();
+   private function getAverageJobCompletionTime()
+{
+    $completedJobs = Job::where('company_id', Auth::user()->company_id)
+        ->where('assigned_user_id', Auth::id())
+        ->where('status', 'completed')
+        ->whereNotNull('start_date')
+        ->whereNotNull('completed_date')
+        ->get();
 
-        if ($completedJobs->isEmpty()) {
-            return 0;
-        }
-
-        $totalDays = $completedJobs->sum(function ($job) {
-            return Carbon::parse($job->start_date)->diffInDays(Carbon::parse($job->completed_date)) + 1;
-        });
-
-        return round($totalDays / $completedJobs->count(), 1);
+    if ($completedJobs->isEmpty()) {
+        return 0;
     }
+
+    // UPDATED: Calculate completion time more precisely using hours
+    $totalHours = $completedJobs->sum(function ($job) {
+        $startDateTime = \Carbon\Carbon::parse($job->start_date . ' 00:00:00');
+        $completedDateTime = \Carbon\Carbon::parse($job->completed_date . ' 23:59:59');
+        return $startDateTime->diffInRealHours($completedDateTime);
+    });
+
+    $averageHours = $totalHours / $completedJobs->count();
+    
+    // Convert back to days for display
+    return round($averageHours / 24, 1);
+}
 
     private function getOnTimeCompletionRate()
     {

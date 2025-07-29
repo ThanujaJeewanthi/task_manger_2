@@ -150,9 +150,9 @@ class Job extends Model
             ->withPivot('task_id', 'custom_task', 'start_date', 'end_date', 'duration_in_days', 'status', 'notes')
             ->withTimestamps();
     }
-   public function jobEmployees()
+   public function jobUsers()
     {
-        return $this->hasMany(JobEmployee::class);
+        return $this->hasMany(JobUser::class);
     }
 
     public function assignments()

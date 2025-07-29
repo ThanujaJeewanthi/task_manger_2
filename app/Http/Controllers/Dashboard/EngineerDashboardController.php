@@ -128,9 +128,9 @@ class EngineerDashboardController extends Controller
         ->get();
 
     // Employee performance summary
-    $employeePerformance = Employee::where('company_id', $companyId)
+    $userPerformance = User::where('company_id', $companyId)
         ->with([
-            'jobEmployees' => function ($query) {
+            'jobUsers' => function ($query) {
                 $query->where('status', 'completed')
                     ->whereBetween('updated_at', [Carbon::now()->subMonth(), Carbon::now()]);
             }
@@ -149,13 +149,13 @@ class EngineerDashboardController extends Controller
         ->take(10)
         ->get();
 
-    // Active tasks summary with employee assignments
+    // Active tasks summary with user assignments
     $activeTasks = Task::whereHas('job', function ($query) use ($companyId) {
             $query->where('company_id', $companyId);
         })
         ->where('active', true)
         ->whereIn('status', ['pending', 'in_progress'])
-        ->with(['job.jobType', 'job.client', 'jobEmployees.employee'])
+        ->with(['job.jobType', 'job.client', 'jobUsers.user'])
         ->orderBy('created_at', 'desc')
         ->take(10)
         ->get();
@@ -266,7 +266,7 @@ class EngineerDashboardController extends Controller
         'jobsByStatus',
         'jobsByPriority',
         'recentJobs',
-        'employeePerformance',
+        'userPerformance',
         'monthlyJobTrends',
         'upcomingDeadlines',
         'activeTasks',

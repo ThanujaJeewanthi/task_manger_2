@@ -63,6 +63,16 @@
                                         @enderror
                                     </div>
                                 </div>
+                                {{-- start time --}}
+                                <div class="col-md-6">
+                                    <div class="form-group mb-4">
+                                        <label for="start_time">Start Time</label>
+                                        <input type="time" class="form-control @error('start_time') is-invalid @enderror" id="start_time" name="start_time" value="{{ old('start_time') }}">
+                                        @error('start_time')
+                                            <span class="invalid-feedback">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
 
                                 <!-- End Date -->
                                 <div class="col-md-6">
@@ -75,45 +85,56 @@
                                     </div>
                                 </div>
                             </div>
+                            <!-- End Time -->
+                            <div class="col-md-6">
+                                <div class="form-group mb-4">
+                                    <label for="end_time">End Time</label>
+                                    <input type="time" class="form-control @error('end_time') is-invalid @enderror" id="end_time" name="end_time" value="{{ old('end_time') }}">
+                                    @error('end_time')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
 
-                            <!-- Enhanced Employee Selection -->
+                            <!-- Enhanced User Selection -->
                             <div class="form-group mb-4">
-                                <label>Assign Employees <span class="text-danger">*</span></label>
+                                <label>Assign Users <span class="text-danger">*</span></label>
 
                                 <!-- Search Input -->
-                                <div class="employee-search-container mb-3">
+                                <div class="user-search-container mb-3">
                                     <div class="input-group">
                                         <span class="input-group-text">
                                             <i class="fas fa-search"></i>
                                         </span>
                                         <input type="text"
                                                class="form-control"
-                                               id="employee-search"
-                                               placeholder="Search employees by name or department...">
+                                               id="user-search"
+                                               placeholder="Search users by name or userRole">
                                     </div>
                                 </div>
 
-                                <!-- Selected Employees Display -->
-                                <div class="selected-employees-container mb-3" id="selected-employees" style="display: none;">
-                                    <label class="form-label text-muted small">Selected Employees:</label>
-                                    <div class="selected-employees-list" id="selected-employees-list"></div>
+                                <!-- Selected Users Display -->
+                                <div class="selected-users-container mb-3" id="selected-users" style="display: none;">
+                                    <label class="form-label text-muted small">Selected Users:</label>
+                                    <div class="selected-users-list" id="selected-users-list"></div>
                                 </div>
 
-                                <!-- Available Employees List -->
-                                <div class="available-employees-container">
-                                    <div class="employee-list" id="employee-list">
-                                        @foreach($employees->take(5) as $employee)
-                                            <div class="employee-item"
-                                                 data-id="{{ $employee->id }}"
-                                                 data-name="{{ strtolower($employee->name ?? 'n/a') }}"
-                                                 data-department="{{ strtolower($employee->department ?? 'no department') }}">
-                                                <div class="employee-card">
-                                                    <div class="employee-info">
-                                                        <div class="employee-name">{{ $employee->name ?? 'N/A' }}</div>
-                                                        <div class="employee-department">{{ $employee->department ?? 'No Department' }}</div>
+                                <!-- Available Users List -->
+                                <div class="available-users-container">
+                                    <div class="user-list" id="user-list">
+                                        @foreach($users->take(5) as $user)
+                                            <div class="user-item"
+                                                 data-id="{{ $user->id }}"
+
+                                                 data-name="{{ strtolower($user->name ?? 'n/a') }}"
+                                                 data-userRole="{{ strtolower($user->userRole->name ?? 'no role') }}">
+                                                <div class="user-card">
+                                                    <div class="user-info">
+                                                        <div class="user-name">{{ $user->name ?? 'N/A' }}</div>
+                                                        <div class="user-userRole">{{ $user->userRole->name ?? 'No Role' }}</div>
                                                     </div>
-                                                    <div class="employee-action">
-                                                        <button type="button" class="btn btn-sm btn-outline-primary add-employee">
+                                                    <div class="user-action">
+                                                        <button type="button" class="btn btn-sm btn-outline-primary add-user">
                                                             <i class="fas fa-plus"></i> Add
                                                         </button>
                                                     </div>
@@ -121,19 +142,19 @@
                                             </div>
                                         @endforeach
 
-                                        <div id="remaining-employees" style="display: none;">
-                                            @foreach($employees->skip(5) as $employee)
-                                                <div class="employee-item"
-                                                     data-id="{{ $employee->id }}"
-                                                     data-name="{{ strtolower($employee->name ?? 'n/a') }}"
-                                                     data-department="{{ strtolower($employee->department ?? 'no department') }}">
-                                                    <div class="employee-card">
-                                                        <div class="employee-info">
-                                                            <div class="employee-name">{{ $employee->name ?? 'N/A' }}</div>
-                                                            <div class="employee-department">{{ $employee->department ?? 'No Department' }}</div>
+                                        <div id="remaining-users" style="display: none;">
+                                            @foreach($users->skip(5) as $user)
+                                                <div class="user-item"
+                                                     data-id="{{ $user->id }}"
+                                                     data-name="{{ strtolower($user->name ?? 'n/a') }}"
+                                                     data-userRole="{{ strtolower($user->userRole->name ?? 'no role') }}">
+                                                    <div class="user-card">
+                                                        <div class="user-info">
+                                                            <div class="user-name">{{ $user->name ?? 'N/A' }}</div>
+                                                            <div class="user-userRole">{{ $user->userRole->name ?? 'No Role' }}</div>
                                                         </div>
-                                                        <div class="employee-action">
-                                                            <button type="button" class="btn btn-sm btn-outline-primary add-employee">
+                                                        <div class="user-action">
+                                                            <button type="button" class="btn btn-sm btn-outline-primary add-user">
                                                                 <i class="fas fa-plus"></i> Add
                                                             </button>
                                                         </div>
@@ -142,20 +163,20 @@
                                             @endforeach
                                         </div>
 
-                                        @if($employees->count() > 5)
+                                        @if($users->count() > 5)
                                             <div class="text-center mt-3">
                                                 <button type="button" class="btn btn-link" id="show-more-btn">
-                                                    Show More Employees
+                                                    Show More Users
                                                 </button>
                                             </div>
                                         @endif
                                     </div>
                                 </div>
 
-                                <!-- Hidden inputs for selected employees -->
-                                <div id="hidden-employee-inputs"></div>
+                                <!-- Hidden inputs for selected users -->
+                                <div id="hidden-user-inputs"></div>
 
-                                @error('employee_ids')
+                                @error('user_ids')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>
@@ -195,7 +216,7 @@
 </div>
 
 <style>
-.employee-list {
+.user-list {
     max-height: 300px;
     overflow-y: auto;
     border: 1px solid #dee2e6;
@@ -204,11 +225,11 @@
     background: #f8f9fa;
 }
 
-.employee-item {
+.user-item {
     margin-bottom: 0.2rem;
 }
 
-.employee-card {
+.user-card {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -219,39 +240,39 @@
     transition: all 0.2s ease;
 }
 
-.employee-card:hover {
+.user-card:hover {
     border-color: #0d6efd;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.employee-info {
+.user-info {
     flex: 1;
 }
 
-.employee-name {
+.user-name {
     font-weight: 500;
     color: #333;
     margin-bottom: 0.25rem;
 }
 
-.employee-department {
+.user-department {
     font-size: 0.875rem;
     color: #6c757d;
     font-style: italic;
 }
 
-.employee-action {
+.user-action {
     margin-left: 1rem;
 }
 
-.selected-employees-list {
+.selected-users-list {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
     margin-top: 0.5rem;
 }
 
-.selected-employee-tag {
+.selected-user-tag {
     display: inline-flex;
     align-items: center;
     padding: 0.5rem 0.75rem;
@@ -262,7 +283,7 @@
     gap: 0.5rem;
 }
 
-.selected-employee-tag .remove-employee {
+.selected-user-tag .remove-user {
     background: none;
     border: none;
     color: white;
@@ -278,15 +299,15 @@
     transition: background-color 0.2s;
 }
 
-.selected-employee-tag .remove-employee:hover {
+.selected-user-tag .remove-user:hover {
     background: rgba(255,255,255,0.2);
 }
 
-.employee-item.hidden {
+.user-item.hidden {
     display: none;
 }
 
-.no-employees-message {
+.no-users-message {
     text-align: center;
     color: #6c757d;
     padding: 2rem;
@@ -297,119 +318,119 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 $(document).ready(function() {
-    let selectedEmployees = [];
+    let selectedUsers = [];
 
     // Initialize with old values if form was submitted with errors
-    @if(old('employee_ids'))
-        const oldEmployeeIds = @json(old('employee_ids'));
-        oldEmployeeIds.forEach(function(employeeId) {
-            const employeeItem = $(`.employee-item[data-id="${employeeId}"]`);
-            if (employeeItem.length) {
-                addEmployeeToSelected(employeeId, employeeItem.find('.employee-name').text(), employeeItem.find('.employee-department').text());
+    @if(old('user_ids'))
+        const oldUserIds = @json(old('user_ids'));
+        oldUserIds.forEach(function(userId) {
+            const userItem = $(`.user-item[data-id="${userId}"]`);
+            if (userItem.length) {
+                addUserToSelected(userId, userItem.find('.user-name').text(), userItem.find('.user-userRole').text());
             }
         });
     @endif
 
     // Search functionality
-    $('#employee-search').on('input', function() {
+    $('#user-search').on('input', function() {
         const searchTerm = $(this).val().toLowerCase();
 
-        $('.employee-item').each(function() {
-            const employeeName = $(this).data('name');
-            const employeeDepartment = $(this).data('department');
+        $('.user-item').each(function() {
+            const userName = $(this).data('name');
+            const userUserRole = $(this).data('userRole');
 
-            if (employeeName.includes(searchTerm) || employeeDepartment.includes(searchTerm)) {
+            if (userName.includes(searchTerm) || userUserRole.includes(searchTerm)) {
                 $(this).removeClass('hidden');
             } else {
                 $(this).addClass('hidden');
             }
         });
 
-        // Show "no results" message if no employees visible
-        const visibleEmployees = $('.employee-item:not(.hidden)').length;
-        $('.no-employees-message').remove();
+        // Show "no results" message if no users visible
+        const visibleUsers = $('.user-item:not(.hidden)').length;
+        $('.no-users-message').remove();
 
-        if (visibleEmployees === 0 && searchTerm.length > 0) {
-            $('#employee-list').append('<div class="no-employees-message">No employees found matching your search.</div>');
+        if (visibleUsers === 0 && searchTerm.length > 0) {
+            $('#user-list').append('<div class="no-users-message">No users found matching your search.</div>');
         }
     });
 
-    // Add employee
-    $(document).on('click', '.add-employee', function() {
-        const employeeItem = $(this).closest('.employee-item');
-        const employeeId = employeeItem.data('id');
-        const employeeName = employeeItem.find('.employee-name').text();
-        const employeeDepartment = employeeItem.find('.employee-department').text();
+    // Add user
+    $(document).on('click', '.add-user', function() {
+        const userItem = $(this).closest('.user-item');
+        const userId = userItem.data('id');
+        const userName = userItem.find('.user-name').text();
+        const userUserRole = userItem.find('.user-role').text();
 
-        addEmployeeToSelected(employeeId, employeeName, employeeDepartment);
+        addUserToSelected(userId, userName, userUserRole);
     });
 
-    // Remove employee
-    $(document).on('click', '.remove-employee', function() {
-        const employeeId = $(this).data('id');
-        removeEmployeeFromSelected(employeeId);
+    // Remove user
+    $(document).on('click', '.remove-user', function() {
+        const userId = $(this).data('id');
+        removeUserFromSelected(userId);
     });
 
-    function addEmployeeToSelected(employeeId, employeeName, employeeDepartment) {
+    function addUserToSelected(userId, userName, userUserRole) {
         // Check if already selected
-        if (selectedEmployees.includes(employeeId.toString())) {
+        if (selectedUsers.includes(userId.toString())) {
             return;
         }
 
-        selectedEmployees.push(employeeId.toString());
+        selectedUsers.push(userId.toString());
 
-        // Create selected employee tag
-        const employeeTag = `
-            <div class="selected-employee-tag" data-id="${employeeId}">
-                <span>${employeeName}</span>
-                <button type="button" class="remove-employee" data-id="${employeeId}">
+        // Create selected user tag
+        const userTag = `
+            <div class="selected-user-tag" data-id="${userId}">
+                <span>${userName}</span>
+                <button type="button" class="remove-user" data-id="${userId}">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
         `;
 
-        $('#selected-employees-list').append(employeeTag);
-        $('#selected-employees').show();
+        $('#selected-users-list').append(userTag);
+        $('#selected-users').show();
 
         // Hide from available list
-        $(`.employee-item[data-id="${employeeId}"]`).addClass('hidden');
+        $(`.user-item[data-id="${userId}"]`).addClass('hidden');
 
         // Add hidden input
-        $('#hidden-employee-inputs').append(`<input type="hidden" name="employee_ids[]" value="${employeeId}">`);
+        $('#hidden-user-inputs').append(`<input type="hidden" name="user_ids[]" value="${userId}">`);
 
-        updateEmployeeSearch();
+        updateUserSearch();
     }
 
-    function removeEmployeeFromSelected(employeeId) {
-        selectedEmployees = selectedEmployees.filter(id => id !== employeeId.toString());
+    function removeUserFromSelected(userId) {
+        selectedUsers = selectedUsers.filter(id => id !== userId.toString());
 
         // Remove tag
-        $(`.selected-employee-tag[data-id="${employeeId}"]`).remove();
+        $(`.selected-user-tag[data-id="${userId}"]`).remove();
 
         // Show in available list
-        $(`.employee-item[data-id="${employeeId}"]`).removeClass('hidden');
+        $(`.user-item[data-id="${userId}"]`).removeClass('hidden');
 
         // Remove hidden input
-        $(`input[name="employee_ids[]"][value="${employeeId}"]`).remove();
+        $(`input[name="user_ids[]"][value="${userId}"]`).remove();
 
-        // Hide selected section if no employees selected
-        if (selectedEmployees.length === 0) {
-            $('#selected-employees').hide();
+        // Hide selected section if no users selected
+        if (selectedUsers.length === 0) {
+            $('#selected-users').hide();
         }
 
-        updateEmployeeSearch();
+        updateUserSearch();
     }
 
-    function updateEmployeeSearch() {
+    function updateUserSearch() {
         // Trigger search to refresh the list
-        $('#employee-search').trigger('input');
+        $('#user-search').trigger('input');
     }
 
     // Form validation
     $('#task-create-form').on('submit', function(e) {
-        if (selectedEmployees.length === 0) {
+        if (selectedUsers.length === 0) {
             e.preventDefault();
-            alert('Please select at least one employee for this task.');
+            alert('Please select at least one user for this task.');
             return false;
         }
     });

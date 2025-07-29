@@ -33,7 +33,7 @@ class CreateJobActivityLogsTable extends Migration
             $table->json('metadata')->nullable(); // Additional context data
 
             // Related entity information
-            $table->string('related_model_type')->nullable(); // Task, JobItem, JobEmployee, etc.
+            $table->string('related_model_type')->nullable(); // Task, JobItem, JobUser, etc.
             $table->unsignedBigInteger('related_model_id')->nullable();
             $table->string('related_entity_name')->nullable(); // Name/title of related entity
 

@@ -64,6 +64,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Employee::class);
     }
+    public function jobUsers()
+    {
+        return $this->hasMany(JobUser::class, 'user_id');
+    }
 
     /**
      * Get the user who created this user.
