@@ -301,32 +301,44 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @php
-                                                    $employeeStatus = $jobUser ? $jobUser->status : 'not_assigned';
-
-                                                    // Determine badge color based on employee status
-                                                    $badgeClass = match($employeeStatus) {
-                                                        'pending' => 'bg-warning',
-                                                        'in_progress' => 'bg-primary',
-                                                        'completed' => 'bg-success',
-                                                        'cancelled' => 'bg-danger',
-                                                        default => 'bg-secondary'
-                                                    };
-
-                                                    // Status text for employee
-                                                    $statusText = match($employeeStatus) {
-                                                        'pending' => 'Pending',
-                                                        'in_progress' => 'In Progress',
-                                                        'completed' => 'Completed',
-                                                        'cancelled' => 'Cancelled',
-                                                        default => 'Not Assigned'
-                                                    };
-                                                @endphp
-
-                                                {{-- Employee Status Badge --}}
-                                                <span class="badge {{ $badgeClass }}" id="task-status-{{ $task->id }}">
-                                                    {{ $statusText }}
-                                                </span>
+                                         {{-- Individual User Status Badge --}}
+@if($isAssignedToTask && $userJobUser)
+    @php
+        $badgeClass = match($userJobUser->status) {
+            'pending' => 'bg-warning',
+            'in_progress' => 'bg-primary', 
+            'completed' => 'bg-success',
+            'cancelled' => 'bg-danger',
+            default => 'bg-secondary'
+        };
+        
+        $statusText = match($userJobUser->status) {
+            'pending' => 'Pending',
+            'in_progress' => 'In Progress', 
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+            default => 'Unknown'
+        };
+    @endphp
+    
+    <span class="badge {{ $badgeClass }}" id="task-status-{{ $task->id }}">
+        {{ $statusText }} (You)
+    </span>
+    
+    {{-- Show overall task status if different --}}
+    @if($task->status !== $userJobUser->status)
+        <br><small class="text-muted">
+            Overall: <span class="badge bg-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'warning') }}">
+                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+            </span>
+        </small>
+    @endif
+@else
+    {{-- Show overall task status for non-assigned users --}}
+    <span class="badge bg-secondary" id="task-status-{{ $task->id }}">
+        Not Assigned
+    </span>
+@endif
 
                                                 {{-- Show overall task status if different from employee status --}}
                                                 {{-- @if($jobUser && $task->status !== $employeeStatus)
@@ -368,144 +380,51 @@
             }
         @endphp
 
-        @if(Auth::user()->userRole->name === 'Employee' && $isAssignedToTask)
-            <!-- Employee Task Actions -->
-            <div class="btn-group" role="group">
-                @if($task->status === 'pending')
-                    <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
-                        @csrf
-                        <button type="button" class="btn btn-primary btn-sm"
-                            onclick="showStartTaskSwal(this)">
-                           Start
-                        </button>
-                        <script>
-                        function showStartTaskSwal(btn) {
-                            const swalDefaults = {
-                                customClass: {
-                                    popup: 'swal2-consistent-ui',
-                                    confirmButton: 'btn btn-success btn-action-xs',
-                                    cancelButton: 'btn btn-secondary btn-action-xs',
-                                    denyButton: 'btn btn-danger btn-action-xs',
-                                    input: 'form-control',
-                                    title: '',
-                                    htmlContainer: '',
-                                },
-                                buttonsStyling: false,
-                                background: '#fff',
-                                width: 420,
-                                showClass: { popup: 'swal2-show' },
-                                hideClass: { popup: 'swal2-hide' },
-                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                            };
-                            Swal.fire({
-                                ...swalDefaults,
-                                icon: 'question',
-                                title: '<span style="font-size:1.05rem;font-weight:600;">Start this task?</span>',
-                                html: `<div style="font-size:0.92rem;">Are you sure you want to start this task?</div>`,
-                                showCancelButton: true,
-                                confirmButtonText: 'Start',
-                                cancelButtonText: 'Cancel',
-                                focusConfirm: false,
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    // Find the parent form and submit
-                                    let form = btn.closest('form');
-                                    if(form) {
-                                        btn.disabled = true;
-                                        form.submit();
-                                    }
-                                }
-                            });
-                        }
-                        </script>
-                    </form>
-                @elseif($task->status === 'in_progress' && $userJobUser->status!='completed' && $task->status!='completed')
-                    <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
-                        @csrf
-                        <button type="button" class="btn btn-success btn-sm"
-            onclick="handleCompleteTaskSwal(event, this.form)">
-           Complete
-        </button>
-        <script>
-        if (typeof swalDefaults === 'undefined') {
-            window.swalDefaults = {
-                customClass: {
-                    popup: 'swal2-consistent-ui',
-                    confirmButton: 'btn btn-success btn-action-xs',
-                    cancelButton: 'btn btn-secondary btn-action-xs',
-                    denyButton: 'btn btn-danger btn-action-xs',
-                    input: 'form-control',
-                    title: '',
-                    htmlContainer: '',
-                },
-                buttonsStyling: false,
-                background: '#fff',
-                width: 420,
-                showClass: { popup: 'swal2-show' },
-                hideClass: { popup: 'swal2-hide' },
-                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-            };
-        }
-        function handleCompleteTaskSwal(event, form) {
-            event.preventDefault();
-            Swal.fire({
-                ...swalDefaults,
-                icon: 'question',
-                title: '<span style="font-size:1.05rem;font-weight:600;">Are you sure you want to complete this task?</span>',
-                html: `<div style="font-size:0.92rem;">
-                    This action will mark the task as completed.<br><br>
-                    <label for="swal-complete-notes" style="font-size:0.85rem;font-weight:500;">Completion Notes (optional):</label>
-                    <textarea id="swal-complete-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
-                </div>`,
-                showCancelButton: true,
-                confirmButtonText: 'Complete',
-                cancelButtonText: 'Cancel',
-                focusConfirm: false,
-                preConfirm: () => {
-                    // Optionally, you can return notes here if you want to submit them
-                    return document.getElementById('swal-complete-notes').value;
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // If you want to send notes, add a hidden input to the form
-                    let notesInput = form.querySelector('input[name="completion_notes"]');
-                    if (!notesInput) {
-                        notesInput = document.createElement('input');
-                        notesInput.type = 'hidden';
-                        notesInput.name = 'completion_notes';
-                        form.appendChild(notesInput);
-                    }
-                    notesInput.value = result.value || '';
-                    form.submit();
-                }
-            });
-            return false;
-        }
-        </script>
-                    </form>
-                    <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
-                        <i class="fas fa-clock"></i>
-                    </a>
-                @elseif($task->status === 'completed' || $userJobUser->status==='completed')
-                    <span class="badge bg-success">
-                         Completed
-                    </span>
-                @endif
-            </div>
-        @else
-            <!-- Non-employee or unassigned users see view/edit options -->
-            @if(in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor', 'Technical Officer', 'admin']))
-                <div class="btn-group" role="group">
-                    @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
-                        <a href="{{ route('jobs.tasks.edit', ['job' => $task->job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                    @endif
-                </div>
-            @else
-                <span class="text-muted">-</span>
+      @if($isAssignedToTask && $userJobUser)
+    <!-- Employee Task Actions Based on Individual Status -->
+    <div class="btn-group" role="group">
+        @if($userJobUser->status === 'pending')
+            {{-- User hasn't started the task yet --}}
+            <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
+                @csrf
+                <button type="button" class="btn btn-primary btn-sm"
+                    onclick="showStartTaskSwal(this)">
+                   <i class="fas fa-play"></i> Start
+                </button>
+                {{-- SweetAlert script remains the same --}}
+            </form>
+        @elseif($userJobUser->status === 'in_progress')
+            {{-- User has started but not completed the task --}}
+            @if(App\Helpers\UserRoleHelper::hasPermission('11.32'))
+                <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="button" class="btn btn-success btn-sm"
+                        onclick="completeTask({{ $task->id }}, '{{ $task->task }}')">
+                        <i class="fas fa-check"></i> Complete
+                    </button>
+                </form>
             @endif
+        @elseif($userJobUser->status === 'completed')
+            {{-- User has completed the task --}}
+            <span class="badge bg-success">
+                <i class="fas fa-check"></i> Completed by You
+            </span>
         @endif
+    </div>
+@else
+    {{-- Non-employee or unassigned users see view/edit options --}}
+    @if(in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor', 'Technical Officer', 'admin']))
+        <div class="btn-group" role="group">
+            @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
+                <a href="{{ route('jobs.tasks.edit', ['job' => $task->job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
+                    <i class="fas fa-edit"></i>
+                </a>
+            @endif
+        </div>
+    @else
+        <span class="text-muted">-</span>
+    @endif
+@endif
     @else
         <span class="text-muted">Not assigned</span>
     @endif
@@ -1128,5 +1047,101 @@ function showAlert(type, message) {
     }, 4000);
 }
 </script>
+  <script>
+                        function showStartTaskSwal(btn) {
+                            const swalDefaults = {
+                                customClass: {
+                                    popup: 'swal2-consistent-ui',
+                                    confirmButton: 'btn btn-success btn-action-xs',
+                                    cancelButton: 'btn btn-secondary btn-action-xs',
+                                    denyButton: 'btn btn-danger btn-action-xs',
+                                    input: 'form-control',
+                                    title: '',
+                                    htmlContainer: '',
+                                },
+                                buttonsStyling: false,
+                                background: '#fff',
+                                width: 420,
+                                showClass: { popup: 'swal2-show' },
+                                hideClass: { popup: 'swal2-hide' },
+                                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                            };
+                            Swal.fire({
+                                ...swalDefaults,
+                                icon: 'question',
+                                title: '<span style="font-size:1.05rem;font-weight:600;">Start this task?</span>',
+                                html: `<div style="font-size:0.92rem;">Are you sure you want to start this task?</div>`,
+                                showCancelButton: true,
+                                confirmButtonText: 'Start',
+                                cancelButtonText: 'Cancel',
+                                focusConfirm: false,
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Find the parent form and submit
+                                    let form = btn.closest('form');
+                                    if(form) {
+                                        btn.disabled = true;
+                                        form.submit();
+                                    }
+                                }
+                            });
+                        }
+                        </script>
+                          <script>
+        if (typeof swalDefaults === 'undefined') {
+            window.swalDefaults = {
+                customClass: {
+                    popup: 'swal2-consistent-ui',
+                    confirmButton: 'btn btn-success btn-action-xs',
+                    cancelButton: 'btn btn-secondary btn-action-xs',
+                    denyButton: 'btn btn-danger btn-action-xs',
+                    input: 'form-control',
+                    title: '',
+                    htmlContainer: '',
+                },
+                buttonsStyling: false,
+                background: '#fff',
+                width: 420,
+                showClass: { popup: 'swal2-show' },
+                hideClass: { popup: 'swal2-hide' },
+                fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            };
+        }
+        function handleCompleteTaskSwal(event, form) {
+            event.preventDefault();
+            Swal.fire({
+                ...swalDefaults,
+                icon: 'question',
+                title: '<span style="font-size:1.05rem;font-weight:600;">Are you sure you want to complete this task?</span>',
+                html: `<div style="font-size:0.92rem;">
+                    This action will mark the task as completed.<br><br>
+                    <label for="swal-complete-notes" style="font-size:0.85rem;font-weight:500;">Completion Notes (optional):</label>
+                    <textarea id="swal-complete-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
+                </div>`,
+                showCancelButton: true,
+                confirmButtonText: 'Complete',
+                cancelButtonText: 'Cancel',
+                focusConfirm: false,
+                preConfirm: () => {
+                    // Optionally, you can return notes here if you want to submit them
+                    return document.getElementById('swal-complete-notes').value;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // If you want to send notes, add a hidden input to the form
+                    let notesInput = form.querySelector('input[name="completion_notes"]');
+                    if (!notesInput) {
+                        notesInput = document.createElement('input');
+                        notesInput.type = 'hidden';
+                        notesInput.name = 'completion_notes';
+                        form.appendChild(notesInput);
+                    }
+                    notesInput.value = result.value || '';
+                    form.submit();
+                }
+            });
+            return false;
+        }
+        </script>
 
 @endsection
