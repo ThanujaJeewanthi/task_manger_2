@@ -207,8 +207,8 @@
 </div>
 
 <!-- SweetAlert2 -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 // SweetAlert2 consistent UI defaults
 const swalDefaults = {
@@ -230,12 +230,16 @@ const swalDefaults = {
 };
 
 $(document).ready(function() {
-    // Current task dates and times
+    // Get current values from Blade template
     const currentStartDate = '{{ $jobUser->start_date ? $jobUser->start_date->format("Y-m-d") : "" }}';
     const currentStartTime = '{{ $jobUser->start_time ? $jobUser->start_time->format("H:i") : "" }}';
     const currentEndDate = '{{ $jobUser->end_date ? $jobUser->end_date->format("Y-m-d") : "" }}';
     const currentEndTime = '{{ $jobUser->end_time ? $jobUser->end_time->format("H:i") : "" }}';
 
+    // Flag to prevent double submission
+    let isSubmitting = false;
+
+    // Duration calculation function
     function calculateDuration(startDate, startTime, endDate, endTime) {
         if (!startDate || !startTime || !endDate || !endTime) {
             return null;
@@ -258,31 +262,27 @@ $(document).ready(function() {
         return { days, hours, minutes, totalMinutes: diffInMinutes };
     }
 
-public static function formatDuration($durationInRealDays)
-{
-    if (!$durationInRealDays || $durationInRealDays <= 0) {
-        return '0 minutes';
+    // Format duration function
+    function formatDuration(duration) {
+        if (!duration || duration.totalMinutes <= 0) {
+            return '0 minutes';
+        }
+
+        let formatted = '';
+        if (duration.days > 0) {
+            formatted += duration.days + ' day' + (duration.days !== 1 ? 's' : '');
+        }
+        if (duration.hours > 0) {
+            formatted += (formatted ? ', ' : '') + duration.hours + ' hour' + (duration.hours !== 1 ? 's' : '');
+        }
+        if (duration.minutes > 0) {
+            formatted += (formatted ? ', ' : '') + duration.minutes + ' minute' + (duration.minutes !== 1 ? 's' : '');
+        }
+
+        return formatted || '0 minutes';
     }
 
-    $days = floor($durationInRealDays);
-    $hours = ($durationInRealDays - $days) * 24;
-    $wholeHours = floor($hours);
-    $minutes = ($hours - $wholeHours) * 60;
-
-    $formatted = '';
-    if ($days > 0) {
-        $formatted .= $days . ' day' . ($days !== 1 ? 's' : '');
-    }
-    if ($wholeHours > 0) {
-        $formatted .= ($formatted ? ', ' : '') . $wholeHours . ' hour' . ($wholeHours !== 1 ? 's' : '');
-    }
-    if ($minutes > 0) {
-        $formatted .= ($formatted ? ', ' : '') . round($minutes) . ' minute' . (round($minutes) !== 1 ? 's' : '');
-    }
-
-    return $formatted ?: '0 minutes';
-}
-
+    // Update extension information display
     function updateExtensionInfo() {
         const requestedEndDate = $('#requested_end_date').val();
         const requestedEndTime = $('#requested_end_time').val() || currentEndTime;
@@ -308,7 +308,9 @@ public static function formatDuration($durationInRealDays)
         const extensionMins = extensionMinutes % 60;
 
         let extensionText = '';
-        if (extensionDays > 0) extensionText += `${extensionDays} day${extensionDays === 1 ? '' : 's'}`;
+        if (extensionDays > 0) {
+            extensionText += `${extensionDays} day${extensionDays === 1 ? '' : 's'}`;
+        }
         if (extensionHours > 0) {
             if (extensionText) extensionText += ', ';
             extensionText += `${extensionHours} hour${extensionHours === 1 ? '' : 's'}`;
@@ -332,13 +334,21 @@ public static function formatDuration($durationInRealDays)
     // Initialize with current values
     updateExtensionInfo();
 
+    // FIXED: Form submission handler with proper prevention of double submission
     $('#extension-request-form').submit(function(e) {
         e.preventDefault();
+
+        // Prevent double submission
+        if (isSubmitting) {
+            console.log('Form already being submitted, preventing duplicate submission');
+            return false;
+        }
 
         const requestedDateVal = $('#requested_end_date').val();
         const requestedTimeVal = $('#requested_end_time').val();
         const reason = $('#reason').val().trim();
 
+        // Validation: Check if date is provided
         if (!requestedDateVal) {
             Swal.fire({
                 ...swalDefaults,
@@ -350,7 +360,7 @@ public static function formatDuration($durationInRealDays)
             return false;
         }
 
-        // Validate that new end date/time is after current end date/time
+        // Validation: Check if new end date/time is after current end date/time
         const currentEnd = new Date(`${currentEndDate}T${currentEndTime}:00`);
         const requestedEnd = new Date(`${requestedDateVal}T${requestedTimeVal || currentEndTime}:00`);
 
@@ -365,6 +375,7 @@ public static function formatDuration($durationInRealDays)
             return false;
         }
 
+        // Validation: Check reason length
         if (reason.length < 10) {
             Swal.fire({
                 ...swalDefaults,
@@ -378,8 +389,8 @@ public static function formatDuration($durationInRealDays)
 
         // Calculate extension for confirmation
         const extensionMilliseconds = requestedEnd - currentEnd;
-        const extensionDays = Math.floor(extensionMilliseconds / (1000 * 60 * 24));
-        const extensionHours = Math.floor((extensionMilliseconds % (1000 * 60 * 24)) / (1000 * 60 * 60));
+        const extensionDays = Math.floor(extensionMilliseconds / (1000 * 60 * 60 * 24));
+        const extensionHours = Math.floor((extensionMilliseconds % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
         let confirmText = `Are you sure you want to request an extension of <b>${extensionDays} day${extensionDays === 1 ? '' : 's'}`;
         if (extensionHours > 0) {
@@ -387,6 +398,7 @@ public static function formatDuration($durationInRealDays)
         }
         confirmText += `</b>?<br>This will require approval from your supervisor.`;
 
+        // Show confirmation dialog
         Swal.fire({
             ...swalDefaults,
             icon: 'question',
@@ -397,7 +409,23 @@ public static function formatDuration($durationInRealDays)
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
-                $('#extension-request-form')[0].submit();
+                console.log('User confirmed submission');
+                
+                // Set flag to prevent re-triggering
+                isSubmitting = true;
+                
+                // Get the form element
+                const form = document.getElementById('extension-request-form');
+                
+                // Method 1: Direct form submission without triggering jQuery handler again
+                // Temporarily remove the jQuery submit handler
+                const $form = $('#extension-request-form');
+                $form.off('submit');
+                
+                // Submit the form directly
+                form.submit();
+                
+                
             }
         });
     });

@@ -18,9 +18,9 @@ use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\PageCategoryController;
 use App\Http\Controllers\Job\JobOptionController;
 
-use App\Http\Controllers\UserTaskController;
 
 use App\Http\Controllers\Task\TaskExtensionController;
+use App\Http\Controllers\UserTaskController;
 use App\Http\Controllers\Dashboard\AdminDashboardController;
 use App\Http\Controllers\Dashboard\CommonDashboardController;
 use App\Http\Controllers\Dashboard\EmployeeDashboardController;
@@ -419,7 +419,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     // View pending extension requests for approval
     Route::get('/extension-requests', [TaskExtensionController::class, 'index'])
-        ->name('tasks.extension.index')
+        ->name('tasks.extension.index')   
         ->middleware('role.permission:12.3'); // Technical Officer, Supervisor, and Engineer permissions
 
     // Show specific extension request

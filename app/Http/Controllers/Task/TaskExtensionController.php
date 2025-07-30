@@ -281,7 +281,7 @@ class TaskExtensionController extends Controller
                     'end_date' => $extensionRequest->requested_end_date,
                     'end_time' => $extensionRequest->requested_end_time, // ADDED
                     // UPDATED: Recalculate duration with new end time
-                    'duration' => function($query) use ($extensionRequest) {
+                    'duration' => function() use ($extensionRequest) {
                         $jobUser = JobUser::where('task_id', $extensionRequest->task_id)
                             ->where('user_id', $extensionRequest->user_id)
                             ->first();

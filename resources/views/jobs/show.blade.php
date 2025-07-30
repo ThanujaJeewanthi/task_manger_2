@@ -533,7 +533,8 @@
                                             </script>
                                         </form>
                                     @elseif($task->status === 'in_progress' && $userJobUser->status!='completed' && $task->status!='completed')
-                                        <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                                        @if(App\Helpers\UserRoleHelper::hasPermission('11.32') && $userJobUser->status !== 'completed' && $task->status !== 'completed' && $task->taskExtensionRequests->where('status', 'pending')->count() === 0)
+                                    <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
                                             @csrf
                                             <button type="button" class="btn btn-success btn-sm"
                                 onclick="handleCompleteTaskSwal(event, this.form)">
@@ -596,9 +597,13 @@
                             }
                             </script>
                                         </form>
+                                        @endif
+                                        @if(App\Helpers\UserRoleHelper::hasPermission('12.1') && $task->status !== 'completed' && $task->taskExtensionRequests->where('status', 'pending')->count() === 0)
+
                                         <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
                                             <i class="fas fa-clock"></i>
                                         </a>
+                                        @endif
                                     @elseif($task->status === 'completed' || $userJobUser->status==='completed')
                                         <span class="badge bg-success">
                                             <i class="fas fa-check-circle"></i> Completed

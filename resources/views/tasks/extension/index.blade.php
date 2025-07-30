@@ -232,7 +232,7 @@
                                             @if($request->status === 'pending')
                                                 <div class="d-flex gap-2">
                                                     <!-- Approval Form -->
-                                                    <form method="POST" action="{{ route('extension-requests.approve', $request) }}"
+                                                    <form method="POST" action="{{ route('tasks.extension.approve', $request) }}"
                                                           onsubmit="return handleApproval(event, this)">
                                                         @csrf
                                                         <input type="hidden" name="review_notes" id="approve_notes_{{ $request->id }}">
@@ -242,7 +242,7 @@
                                                     </form>
 
                                                     <!-- Rejection Form -->
-                                                    <form method="POST" action="{{ route('extension-requests.reject', $request) }}"
+                                                    <form method="POST" action="{{ route('tasks.extension.reject', $request) }}"
                                                           onsubmit="return handleRejection(event, this)">
                                                         @csrf
                                                         <input type="hidden" name="review_notes" id="reject_notes_{{ $request->id }}">
