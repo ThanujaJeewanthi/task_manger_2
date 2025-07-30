@@ -25,12 +25,12 @@ class EmployeeDashboardController extends Controller
 
         // Employee-specific statistics
         $stats = [
-            'my_active_jobs' => $this->getMyActiveJobs($employee->id)->count(),
-            'my_completed_jobs' => $this->getMyCompletedJobs($employee->id)->count(),
-            'my_pending_tasks' => $this->getMyPendingTasks($employee->id)->count(),
-            'my_in_progress_tasks' => $this->getMyInProgressTasks($employee->id)->count(),
-            'my_completed_tasks' => $this->getMyCompletedTasks($employee->id)->count(),
-            'my_overdue_tasks' => $this->getMyOverdueTasks($employee->id)->count(),
+            'my_active_jobs' => $this->getMyActiveJobs($employee->user->id)->count(),
+            'my_completed_jobs' => $this->getMyCompletedJobs($employee->user->id)->count(),
+            'my_pending_tasks' => $this->getMyPendingTasks($employee->user->id)->count(),
+            'my_in_progress_tasks' => $this->getMyInProgressTasks($employee->user->id)->count(),
+            'my_completed_tasks' => $this->getMyCompletedTasks($employee->user->id)->count(),
+            'my_overdue_tasks' => $this->getMyOverdueTasks($employee->user->id)->count(),
         ];
 
         // Performance metrics
@@ -62,9 +62,9 @@ class EmployeeDashboardController extends Controller
             });
 
         // My current tasks with details
-        $myActiveTasks = $this->getMyActiveTasks($employee->id)
+        $myActiveTasks = $this->getMyActiveTasks($employee->user->id)
             ->with(['job.jobType', 'job.client', 'jobUsers' => function($query) use ($employee) {
-                $query->where('employee_id', $employee->id);
+                $query->where('user_id', $employee->user->id);
             }])
             ->whereHas('job') // Ensure job exists
             ->orderBy('created_at', 'desc')
@@ -81,7 +81,7 @@ class EmployeeDashboardController extends Controller
 
         // Tasks by status for this employee
         $tasksByStatus = Task::whereHas('jobUsers', function ($query) use ($employee) {
-                $query->where('employee_id', $employee->id);
+                $query->where('user_id', $employee->id);
             })
             ->select('status', DB::raw('count(*) as count'))
             ->where('active', true)
@@ -92,11 +92,11 @@ class EmployeeDashboardController extends Controller
         // Upcoming deadlines for my jobs/tasks
         $upcomingDeadlines = $this->getMyActiveTasks($employee->id)
             ->with(['job.jobType', 'job.client', 'jobUsers' => function($query) use ($employee) {
-                $query->where('employee_id', $employee->id);
+                $query->where('user_id', $employee->user->id);
             }])
             ->whereHas('job') // Ensure job exists
             ->whereHas('jobUsers', function($query) use ($employee) {
-                $query->where('employee_id', $employee->id)
+                $query->where('user_id', $employee->user->id)
                       ->where('end_date', '>=', Carbon::now())
                       ->where('end_date', '<=', Carbon::now()->addDays(7));
             })
@@ -104,21 +104,21 @@ class EmployeeDashboardController extends Controller
             ->get();
 
         // My workload over time (last 6 months)
-        $workloadTrends = JobUser::where('employee_id', $employee->id)
-            ->join('tasks', 'job_employees.task_id', '=', 'tasks.id')
+        $workloadTrends = JobUser::where('user_id', $employee->user->id)
+            ->join('tasks', 'job_users.task_id', '=', 'tasks.id')
             ->select(
-                DB::raw('DATE_FORMAT(job_employees.created_at, "%Y-%m") as month'),
+                DB::raw('DATE_FORMAT(job_users.created_at, "%Y-%m") as month'),
                 DB::raw('count(*) as assigned_tasks'),
                 DB::raw('sum(case when tasks.status = "completed" then 1 else 0 end) as completed_tasks')
             )
-            ->where('job_employees.created_at', '>=', Carbon::now()->subMonths(6))
+            ->where('job_users.created_at', '>=', Carbon::now()->subMonths(6))
             ->groupBy('month')
             ->orderBy('month')
             ->get();
 
         // Task completion trends by day for this month
         $dailyCompletionTrends = Task::whereHas('jobUsers', function ($query) use ($employee) {
-                $query->where('employee_id', $employee->id);
+                $query->where('user_id', $employee->user->id);
             })
             ->whereHas('job') // Ensure job exists
             ->where('status', 'completed')
@@ -200,7 +200,7 @@ class EmployeeDashboardController extends Controller
         return response()->json(['success' => false, 'message' => 'Employee record not found'], 403);
     }
 
-    $jobUser = JobUser::where('employee_id', $employee->id)
+    $jobUser = JobUser::where('user_id', $employee->user->id)
         ->where('task_id', $task->id)
         ->first();
 
@@ -290,7 +290,7 @@ class EmployeeDashboardController extends Controller
         $employee = Employee::where('user_id', $user->id)->first();
 
         // Check if this employee is assigned to this job
-        $isAssigned = JobUser::where('employee_id', $employee->id)
+        $isAssigned = JobUser::where('user_id', $employee->user->id)
             ->whereHas('job', function ($query) use ($job) {
                 $query->where('id', $job->id);
             })
@@ -369,7 +369,7 @@ class EmployeeDashboardController extends Controller
     private function getMyActiveJobs($employeeId)
     {
         return Job::whereHas('jobUsers', function ($query) use ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $query->where('user_id', $employeeId);
         })->where('active', true)
           ->whereNotIn('status', ['completed', 'cancelled']);
     }
@@ -377,14 +377,14 @@ class EmployeeDashboardController extends Controller
     private function getMyCompletedJobs($employeeId)
     {
         return Job::whereHas('jobUsers', function ($query) use ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $query->where('user_id', $employeeId);
         })->where('status', 'completed');
     }
 
     private function getMyActiveTasks($employeeId)
     {
         return Task::whereHas('jobUsers', function ($query) use ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $query->where('user_id', $employeeId);
         })->whereHas('job', function ($query) {
             $query->where('active', true);
         })->where('active', true)
@@ -394,7 +394,7 @@ class EmployeeDashboardController extends Controller
     private function getMyPendingTasks($employeeId)
     {
         return Task::whereHas('jobUsers', function ($query) use ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $query->where('user_id', $employeeId);
         })->whereHas('job', function ($query) {
             $query->where('active', true);
         })->where('status', 'pending')->where('active', true);
@@ -403,7 +403,7 @@ class EmployeeDashboardController extends Controller
     private function getMyInProgressTasks($employeeId)
     {
         return Task::whereHas('jobUsers', function ($query) use ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $query->where('user_id', $employeeId);
         })->whereHas('job', function ($query) {
             $query->where('active', true);
         })->where('status', 'in_progress')->where('active', true);
@@ -412,7 +412,7 @@ class EmployeeDashboardController extends Controller
     private function getMyCompletedTasks($employeeId)
     {
         return Task::whereHas('jobUsers', function ($query) use ($employeeId) {
-            $query->where('employee_id', $employeeId);
+            $query->where('user_id', $employeeId);
         })->whereHas('job', function ($query) {
             $query->where('active', true);
         })->where('status', 'completed');
@@ -421,7 +421,7 @@ class EmployeeDashboardController extends Controller
     private function getMyOverdueTasks($employeeId)
     {
         return Task::whereHas('jobUsers', function ($query) use ($employeeId) {
-            $query->where('employee_id', $employeeId)
+            $query->where('user_id', $employeeId)
                   ->where('end_date', '<', Carbon::now());
         })->whereHas('job', function ($query) {
             $query->where('active', true);
@@ -433,7 +433,7 @@ class EmployeeDashboardController extends Controller
     {
         return Task::where('job_id', $jobId)
             ->whereHas('jobUsers', function ($query) use ($employeeId) {
-                $query->where('employee_id', $employeeId);
+                $query->where('user_id', $employeeId);
             })->whereHas('job', function ($query) {
                 $query->where('active', true);
             })->where('active', true);
@@ -441,7 +441,7 @@ class EmployeeDashboardController extends Controller
 
     private function getAverageTaskCompletionTime($employeeId)
     {
-        $completedTasks = JobUser::where('employee_id', $employeeId)
+        $completedTasks = JobUser::where('user_id', $employeeId)
             ->whereHas('task', function ($query) {
                 $query->where('status', 'completed');
             })
@@ -462,7 +462,7 @@ class EmployeeDashboardController extends Controller
 
    private function getOnTimeCompletionRate($employeeId)
 {
-    $completedTasks = \App\Models\JobUser::where('employee_id', $employeeId)
+    $completedTasks = \App\Models\JobUser::where('user_id', $employeeId)
         ->where('status', 'completed')
         ->whereNotNull('end_date')
         ->get();
@@ -484,7 +484,7 @@ class EmployeeDashboardController extends Controller
         $user = Auth::user();
         $employee = Employee::where('user_id', $user->id)->first();
 
-        $jobUser = JobUser::where('employee_id', $employee->id)
+        $jobUser = JobUser::where('user_id', $employee->id)
             ->where('task_id', $task->id)
             ->with(['task.job.jobType', 'task.job.client'])
             ->first();
@@ -526,7 +526,7 @@ private function calculateTaskProgress($task, $userId)
         // UPDATED: Use time components if available
         $startTime = $jobUser->start_time ? $jobUser->start_time->format('H:i:s') : '00:00:00';
         $endTime = $jobUser->end_time ? $jobUser->end_time->format('H:i:s') : '23:59:59';
-        
+
         $startDateTime = \Carbon\Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $startTime);
         $endDateTime = \Carbon\Carbon::parse($jobUser->end_date->format('Y-m-d') . ' ' . $endTime);
         $today = \Carbon\Carbon::now();

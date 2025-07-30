@@ -404,247 +404,222 @@
                             </div>
                         @endif
 
-                        {{-- if tasks exist for this job --}}
+{{-- if tasks exist for this job --}}
 @if($job->jobUsers->count() > 0)
+    <!-- Tasks Card -->
+    <div class="d-component-container mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>Tasks</h5>
 
-                        <!-- Tasks Card -->
-<div class="d-component-container mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5>Tasks</h5>
-
-        @if(App\Helpers\UserRoleHelper::hasPermission('12.2'))
-            <div>
-                <a href="{{ route('tasks.extension.my-requests') }}" class="btn btn-info btn-sm">
-                    <i class="fas fa-history"></i> My Extension Requests
-                </a>
-            </div>
-        @endif
-    </div>
-    <div class="table-responsive table-compact">
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>Task Name</th>
-                    <th>Description</th>
-                    <th>Assigned Employees</th>
-                    <th>Status</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $currentUser = \App\Models\User::where('user_id', auth()->id())->first();
-
-                    $jobUsersGrouped = $isEmployee && $currentEmployee
-                        ? $job->jobUsers->where('employee_id', $currentEmployee->id)->groupBy('task_id')
-                        : $job->jobUsers->groupBy('task_id');
-                @endphp
-                @forelse ($jobUsersGrouped as $taskId => $jobUsers)
+            @if(App\Helpers\UserRoleHelper::hasPermission('12.2'))
+                <div>
+                    <a href="{{ route('tasks.extension.my-requests') }}" class="btn btn-info btn-sm">
+                        <i class="fas fa-history"></i> My Extension Requests
+                    </a>
+                </div>
+            @endif
+        </div>
+        <div class="table-responsive table-compact">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Task Name</th>
+                        <th>Description</th>
+                        <th>Assigned Users</th>
+                        <th>Status</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
                     @php
-                        $task = $job->jobUsers->where('task_id', $taskId)->first()->task;
-                        // Check if current user is assigned to this task
-                        $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
-                        $isAssignedToTask = $currentEmployee && $jobUsers->contains('employee_id', $currentEmployee->id);
+                        // Get current user and check their task assignments
+                        $currentUserId = auth()->id();
 
-                        // Check for pending extension requests
-                        $pendingExtension = null;
-                        if($currentEmployee) {
-                            $pendingExtension = \App\Models\TaskExtensionRequest::where('task_id', $task->id)
-                                ->where('employee_id', $currentEmployee->id)
-                                ->where('status', 'pending')
-                                ->first();
+                        // Filter tasks based on user permissions
+                        $jobUsersGrouped = $job->jobUsers->groupBy('task_id');
+
+                        // If user only has permission to see their own tasks
+                        if (!App\Helpers\UserRoleHelper::hasPermission('11.14')) {
+                            $jobUsersGrouped = $job->jobUsers->where('user_id', $currentUserId)->groupBy('task_id');
                         }
                     @endphp
-                    <tr>
-                        <td>{{ $task->task }}</td>
-                        <td>{{ $task->description ?? 'N/A' }}</td>
-                        <td>
-                            @foreach ($jobUsers as $je)
-                                {{ $je->name ?? 'N/A' }}@if (!$loop->last)
-                                    ,
-                                @endif
-                            @endforeach
-                        </td>
-                        <td>
-                            <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
-                                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
-                            </span>
-                        </td>
-                        <td>{{ $jobUsers->first()->start_date ? $jobUsers->first()->start_date->format('Y-m-d') : 'N/A' }}
-                        </td>
-                        <td>{{ $jobUsers->max('end_date') ? \Carbon\Carbon::parse($jobUsers->max('end_date'))->format('Y-m-d') : 'N/A' }}
-                        </td>
-                        <td>
-                            @php
-                                $currentUserEmployee = Auth::user()->employee ?? null;
-                                $isAssignedToTask = false;
-                                $userJobUser = null;
+                    @forelse ($jobUsersGrouped as $taskId => $jobUsers)
+                        @php
+                            $task = $job->jobUsers->where('task_id', $taskId)->first()->task;
+                            // Check if current user is assigned to this task
+                            $isAssignedToTask = $jobUsers->contains('user_id', $currentUserId);
+                            $currentUserJobUser = $jobUsers->where('user_id', $currentUserId)->first();
 
-                                if ($currentUserEmployee) {
-                                    $userJobUser = $jobUsers->where('employee_id', $currentUserEmployee->id)->first();
-                                    $isAssignedToTask = $userJobUser !== null;
-                                }
-                            @endphp
-
-                            @if(Auth::user()->userRole->name === 'Employee' && $isAssignedToTask)
-                                <!-- Employee Task Actions -->
-                                <div class="btn-group" role="group">
-                                    @if($task->status === 'pending')
-                                        <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            <button type="button" class="btn btn-primary btn-sm"
-                                                onclick="showStartTaskSwal(this)">
-                                                <i class="fas fa-play"></i> Start
-                                            </button>
-                                            <script>
-                                            function showStartTaskSwal(btn) {
-                                                const swalDefaults = {
-                                                    customClass: {
-                                                        popup: 'swal2-consistent-ui',
-                                                        confirmButton: 'btn btn-success btn-action-xs',
-                                                        cancelButton: 'btn btn-secondary btn-action-xs',
-                                                        denyButton: 'btn btn-danger btn-action-xs',
-                                                        input: 'form-control',
-                                                        title: '',
-                                                        htmlContainer: '',
-                                                    },
-                                                    buttonsStyling: false,
-                                                    background: '#fff',
-                                                    width: 420,
-                                                    showClass: { popup: 'swal2-show' },
-                                                    hideClass: { popup: 'swal2-hide' },
-                                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                                                };
-                                                Swal.fire({
-                                                    ...swalDefaults,
-                                                    icon: 'question',
-                                                    title: '<span style="font-size:1.05rem;font-weight:600;">Start this task?</span>',
-                                                    html: `<div style="font-size:0.92rem;">Are you sure you want to start this task?</div>`,
-                                                    showCancelButton: true,
-                                                    confirmButtonText: 'Start',
-                                                    cancelButtonText: 'Cancel',
-                                                    focusConfirm: false,
-                                                }).then((result) => {
-                                                    if (result.isConfirmed) {
-                                                        // Find the parent form and submit
-                                                        let form = btn.closest('form');
-                                                        if(form) {
-                                                            btn.disabled = true;
-                                                            form.submit();
-                                                        }
-                                                    }
-                                                });
-                                            }
-                                            </script>
-                                        </form>
-                                    @elseif($task->status === 'in_progress' && $userJobUser->status!='completed' && $task->status!='completed')
-                                        <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
-                                            @csrf
-                                            <button type="button" class="btn btn-success btn-sm"
-                                onclick="handleCompleteTaskSwal(event, this.form)">
-                                <i class="fas fa-check"></i> Complete
-                            </button>
-                            <script>
-                            if (typeof swalDefaults === 'undefined') {
-                                window.swalDefaults = {
-                                    customClass: {
-                                        popup: 'swal2-consistent-ui',
-                                        confirmButton: 'btn btn-success btn-action-xs',
-                                        cancelButton: 'btn btn-secondary btn-action-xs',
-                                        denyButton: 'btn btn-danger btn-action-xs',
-                                        input: 'form-control',
-                                        title: '',
-                                        htmlContainer: '',
-                                    },
-                                    buttonsStyling: false,
-                                    background: '#fff',
-                                    width: 420,
-                                    showClass: { popup: 'swal2-show' },
-                                    hideClass: { popup: 'swal2-hide' },
-                                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-                                };
+                            // Check for pending extension requests
+                            $pendingExtension = null;
+                            if($isAssignedToTask) {
+                                $pendingExtension = \App\Models\TaskExtensionRequest::where('task_id', $task->id)
+                                    ->where('user_id', $currentUserId)
+                                    ->where('status', 'pending')
+                                    ->first();
                             }
-                            function handleCompleteTaskSwal(event, form) {
-                                event.preventDefault();
-                                Swal.fire({
-                                    ...swalDefaults,
-                                    icon: 'question',
-                                    title: '<span style="font-size:1.05rem;font-weight:600;">Are you sure you want to complete this task?</span>',
-                                    html: `<div style="font-size:0.92rem;">
-                                        This action will mark the task as completed.<br><br>
-                                        <label for="swal-complete-notes" style="font-size:0.85rem;font-weight:500;">Completion Notes (optional):</label>
-                                        <textarea id="swal-complete-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
-                                    </div>`,
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Complete',
-                                    cancelButtonText: 'Cancel',
-                                    focusConfirm: false,
-                                    preConfirm: () => {
-                                        // Optionally, you can return notes here if you want to submit them
-                                        return document.getElementById('swal-complete-notes').value;
-                                    }
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        // If you want to send notes, add a hidden input to the form
-                                        let notesInput = form.querySelector('input[name="completion_notes"]');
-                                        if (!notesInput) {
-                                            notesInput = document.createElement('input');
-                                            notesInput.type = 'hidden';
-                                            notesInput.name = 'completion_notes';
-                                            form.appendChild(notesInput);
-                                        }
-                                        notesInput.value = result.value || '';
-                                        form.submit();
-                                    }
-                                });
-                                return false;
-                            }
-                            </script>
-                                        </form>
-                                        <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
-                                            <i class="fas fa-clock"></i>
-                                        </a>
-                                    @elseif($task->status === 'completed' || $userJobUser->status==='completed')
-                                        <span class="badge bg-success">
-                                            <i class="fas fa-check-circle"></i> Completed
-                                        </span>
-                                    @endif
-                                </div>
-                            @else
-                                <!-- Non-employee or unassigned users see view/edit options -->
-                                @if(App\Helpers\UserRoleHelper::hasPermission('11.16') )
+                        @endphp
+                        <tr>
+                            <td>{{ $task->task }}</td>
+                            <td>{{ $task->description ?? 'N/A' }}</td>
+                            <td>
+                                @foreach ($jobUsers as $jobUser)
+                                    {{ $jobUser->user->name ?? 'N/A' }}@if (!$loop->last), @endif
+                                @endforeach
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ $statusColors[$task->status] ?? 'secondary' }}">
+                                    {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                </span>
+                            </td>
+                            <td>{{ $jobUsers->first()->start_date ? $jobUsers->first()->start_date->format('Y-m-d') : 'N/A' }}</td>
+                            <td>{{ $jobUsers->max('end_date') ? \Carbon\Carbon::parse($jobUsers->max('end_date'))->format('Y-m-d') : 'N/A' }}</td>
+                            <td>
+                                @if($isAssignedToTask && $currentUserJobUser)
+                                    <!-- User is assigned to this task - show task actions -->
                                     <div class="btn-group" role="group">
-
-                                        @if($task->status !== 'completed')
-                                            <a href="{{ route('jobs.tasks.edit', ['job' => $job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
+                                        @if($currentUserJobUser->status === 'pending')
+                                            @if(App\Helpers\UserRoleHelper::hasPermission('11.31'))
+                                                <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="button" class="btn btn-primary btn-sm"
+                                                        onclick="showStartTaskSwal(this)">
+                                                        <i class="fas fa-play"></i> Start
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        @elseif($currentUserJobUser->status === 'in_progress' && $task->status !== 'completed')
+                                            @if(App\Helpers\UserRoleHelper::hasPermission('11.32'))
+                                                <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="button" class="btn btn-success btn-sm"
+                                                        onclick="handleCompleteTaskSwal(event, this.form)">
+                                                        <i class="fas fa-check"></i> Complete
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            @if(App\Helpers\UserRoleHelper::hasPermission('12.1'))
+                                                <a href="{{ route('tasks.extension.create', $task) }}" class="btn btn-warning btn-sm" title="Request Extension">
+                                                    <i class="fas fa-clock"></i>
+                                                </a>
+                                            @endif
+                                        @elseif($task->status === 'completed' || $currentUserJobUser->status === 'completed')
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle"></i> Completed
+                                            </span>
                                         @endif
                                     </div>
                                 @else
-                                    <span class="text-muted">-</span>
+                                    <!-- User not assigned or management users see edit options -->
+                                    @if(App\Helpers\UserRoleHelper::hasPermission('11.16'))
+                                        <div class="btn-group" role="group">
+                                            @if($task->status !== 'completed')
+                                                <a href="{{ route('jobs.tasks.edit', ['job' => $job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 @endif
-                            @endif
-                            {{-- if the extension request is requested --}}
-                            @if($task->taskExtensionRequests->where('status', 'pending')->count() > 0)
-                                {{-- Show extension request badge --}}
-                                <span class="badge bg-warning">
-                                    <i class="fas fa-clock"></i> Extension Request pending
-                                </span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    <tr>
-                        <td colspan="7" class="text-center">No tasks found.</td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
+
+                                {{-- Show extension request status --}}
+                                @if($task->taskExtensionRequests->where('status', 'pending')->count() > 0)
+                                    <span class="badge bg-warning">
+                                        <i class="fas fa-clock"></i> Extension Request pending
+                                    </span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center">No tasks found.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
+
+    {{-- JavaScript for SweetAlert confirmations --}}
+    <script>
+    // Define SweetAlert defaults
+    const swalDefaults = {
+        customClass: {
+            popup: 'swal2-consistent-ui',
+            confirmButton: 'btn btn-success btn-action-xs',
+            cancelButton: 'btn btn-secondary btn-action-xs',
+            denyButton: 'btn btn-danger btn-action-xs',
+            input: 'form-control',
+            title: '',
+            htmlContainer: '',
+        },
+        buttonsStyling: false,
+        background: '#fff',
+        width: 420,
+        showClass: { popup: 'swal2-show' },
+        hideClass: { popup: 'swal2-hide' },
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    };
+
+    function showStartTaskSwal(btn) {
+        Swal.fire({
+            ...swalDefaults,
+            icon: 'question',
+            title: '<span style="font-size:1.05rem;font-weight:600;">Start this task?</span>',
+            html: `<div style="font-size:0.92rem;">Are you sure you want to start this task?</div>`,
+            showCancelButton: true,
+            confirmButtonText: 'Start',
+            cancelButtonText: 'Cancel',
+            focusConfirm: false,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let form = btn.closest('form');
+                if(form) {
+                    btn.disabled = true;
+                    form.submit();
+                }
+            }
+        });
+    }
+
+    function handleCompleteTaskSwal(event, form) {
+        event.preventDefault();
+        Swal.fire({
+            ...swalDefaults,
+            icon: 'question',
+            title: '<span style="font-size:1.05rem;font-weight:600;">Are you sure you want to complete this task?</span>',
+            html: `<div style="font-size:0.92rem;">
+                This action will mark the task as completed.<br><br>
+                <label for="swal-complete-notes" style="font-size:0.85rem;font-weight:500;">Completion Notes (optional):</label>
+                <textarea id="swal-complete-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Add notes..."></textarea>
+            </div>`,
+            showCancelButton: true,
+            confirmButtonText: 'Complete',
+            cancelButtonText: 'Cancel',
+            focusConfirm: false,
+            preConfirm: () => {
+                return document.getElementById('swal-complete-notes').value;
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                let notesInput = form.querySelector('input[name="completion_notes"]');
+                if (!notesInput) {
+                    notesInput = document.createElement('input');
+                    notesInput.type = 'hidden';
+                    notesInput.name = 'completion_notes';
+                    form.appendChild(notesInput);
+                }
+                notesInput.value = result.value || '';
+                form.submit();
+            }
+        });
+        return false;
+    }
+    </script>
 @endif
 </div>
 

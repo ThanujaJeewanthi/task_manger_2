@@ -20,12 +20,6 @@ class UserTaskController extends Controller
     public function startTask(Request $request, Task $task)
     {
         $user = Auth::user();
-        $user = User::where('user_id', $user->id)->first();
-
-
-        if (!$user) {
-            return response()->json(['success' => false, 'message' => 'User record not found'], 403);
-        }
 
         // Check if user is assigned to this task
         $jobUser = JobUser::where('user_id', $user->id)
@@ -33,11 +27,11 @@ class UserTaskController extends Controller
             ->first();
 
         if (!$jobUser) {
-            return response()->json(['success' => false, 'message' => 'You are not assigned to this task'], 403);
+            return back()->with('error', 'You are not assigned to this task.');
         }
 
         if ($jobUser->status !== 'pending') {
-            return response()->json(['success' => false, 'message' => 'Task cannot be started'], 400);
+            return back()->with('error', 'Task cannot be started from its current status.');
         }
 
         try {
@@ -46,7 +40,7 @@ class UserTaskController extends Controller
             // Update job user status for this specific user
             $jobUser->update([
                 'status' => 'in_progress',
-                'start_date' => now()->format('Y-m-d H:i:s'),
+                'updated_by' => Auth::id(),
             ]);
 
             // Update task status to in_progress if any user started it
@@ -71,10 +65,8 @@ class UserTaskController extends Controller
             return back()->with('success', 'Task started successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to start task. Please try again.'
-            ], 500);
+            \Log::error('Error starting task: ' . $e->getMessage());
+            return back()->with('error', 'Failed to start task. Please try again.');
         }
     }
 
@@ -82,135 +74,269 @@ class UserTaskController extends Controller
      * Complete a task for the current user
      */
     public function completeTask(Request $request, Task $task)
-{
-    $request->validate([
-        'completion_notes' => 'nullable|string|max:1000',
-    ]);
-
-    try {
-        DB::beginTransaction();
-
-        $job = $task->job;
-        $user = User::where('user_id', Auth::id())->first();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User record not found.'
-            ], 403);
-        }
-
-        // Get the job user record for this specific user and task
-        $jobUser = JobUser::where('task_id', $task->id)
-            ->where('user_id', $user->id)
-            ->first();
-
-        if (!$jobUser) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You are not assigned to this task.'
-            ], 403);
-        }
-
-        if ($jobUser->status === 'completed') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Task is already completed by you.'
-            ], 400);
-        }
-
-        // UPDATED: Calculate actual completion time with time precision
-        $completedAt = now();
-        $actualDuration = null;
-        
-        if ($jobUser->start_date && $jobUser->start_time) {
-            $startDateTime = \Carbon\Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s'));
-            $actualDuration = $startDateTime->floatDiffInRealDays($completedAt);
-        }
-
-        // Update task status in job_users for this specific user
-        $jobUser->update([
-            'status' => 'completed',
-            'notes' => $request->completion_notes,
-            'completed_at' => $completedAt, // ADDED: Track actual completion time
-            'actual_duration' => $actualDuration, // ADDED: Track actual duration
-            'updated_at' => now(),
+    {
+        $request->validate([
+            'completion_notes' => 'nullable|string|max:1000',
         ]);
 
-        // Check if ALL users assigned to this task have completed it
-        $totalUsersForTask = JobUser::where('task_id', $task->id)->count();
-        $completedUsersForTask = JobUser::where('task_id', $task->id)
-            ->where('status', 'completed')
-            ->count();
+        try {
+            DB::beginTransaction();
 
-        // Update task status only if ALL users completed it
-        if ($completedUsersForTask === $totalUsersForTask) {
-            $task->update([
+            $job = $task->job;
+            $user = Auth::user();
+
+            // Check if user is assigned to this task
+            $jobUser = JobUser::where('user_id', $user->id)
+                ->where('task_id', $task->id)
+                ->first();
+
+            if (!$jobUser) {
+                return back()->with('error', 'You are not assigned to this task.');
+            }
+
+            if ($jobUser->status !== 'in_progress') {
+                return back()->with('error', 'Task cannot be completed from its current status.');
+            }
+
+            // Update the user's task status
+            $jobUser->update([
                 'status' => 'completed',
-                'completed_at' => now(),
+                'notes' => $request->completion_notes,
                 'updated_by' => Auth::id(),
             ]);
 
+            // Check if all users assigned to this task have completed it
+            $allTaskUsers = JobUser::where('task_id', $task->id)->get();
+            $allCompleted = $allTaskUsers->every(function ($ju) {
+                return $ju->status === 'completed';
+            });
+
+            // If all users completed the task, update task status
+            if ($allCompleted) {
+                $task->update([
+                    'status' => 'completed',
+                    'updated_by' => Auth::id(),
+                ]);
+
+                // Auto-update job status based on tasks
+                $this->updateJobStatusBasedOnTasks($job);
+            }
+
+            DB::commit();
+
             // Log task completion
-            JobActivityLogger::logTaskCompleted($job, $task, $user, $request->completion_notes);
+            JobActivityLogger::logTaskCompleted($job, $task, $user);
+
+            return back()->with('success', 'Task completed successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error completing task: ' . $e->getMessage());
+            return back()->with('error', 'Failed to complete task. Please try again.');
         }
-
-        // Check if all tasks are completed to update job status
-        $this->updateJobStatusBasedOnTasks($job);
-
-        DB::commit();
-
-        return back()->with('success', 'Task completed successfully!');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to complete task. Please try again.'
-        ], 500);
     }
-}
+
     /**
      * Update job status based on task completion
      */
-    private function updateJobStatusBasedOnTasks(Job $job)
+    private function updateJobStatusBasedOnTasks($job)
     {
-        $tasks = $job->tasks()->where('active', true)->get();
+        $jobTasks = $job->tasks()->where('active', true)->get();
 
-        if ($tasks->isEmpty()) {
+        if ($jobTasks->isEmpty()) {
             return;
         }
 
-        $totalTasks = $tasks->count();
-        $completedTasks = $tasks->where('status', 'completed')->count();
-        $inProgressTasks = $tasks->where('status', 'in_progress')->count();
+        $allCompleted = $jobTasks->every(function ($task) {
+            return $task->status === 'completed';
+        });
 
-        $currentStatus = $job->status;
-        $newStatus = $currentStatus;
+        $anyInProgress = $jobTasks->contains(function ($task) {
+            return $task->status === 'in_progress';
+        });
 
-        // If all tasks are completed, mark job as completed
-        if ($completedTasks === $totalTasks && $currentStatus !== 'completed') {
-            $newStatus = 'completed';
+        if ($allCompleted && $job->status !== 'completed') {
             $job->update([
-                'status' => $newStatus,
-                'completed_date' => now()->format('Y-m-d H:i:s'),
-                'updated_by' => Auth::id(),
+                'status' => 'completed',
+                'updated_by' => Auth::id()
             ]);
-
-            // Log job completion
-            JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'All tasks completed');
-            JobActivityLogger::logJobCompleted($job, 'All tasks have been completed successfully');
+        } elseif ($anyInProgress && $job->status === 'pending') {
+            $job->update([
+                'status' => 'in_progress',
+                'updated_by' => Auth::id()
+            ]);
         }
-        // If at least one task is in progress and job is approved, mark job as in_progress
-        elseif ($inProgressTasks > 0 && $currentStatus === 'approved') {
-            $newStatus = 'in_progress';
-            $job->update([
-                'status' => $newStatus,
+    }
+
+    /**
+     * Get task details for API calls
+     */
+    public function getTaskDetails(Request $request, Task $task)
+    {
+        $user = Auth::user();
+
+        $jobUser = JobUser::where('user_id', $user->id)
+            ->where('task_id', $task->id)
+            ->with(['task.job.jobType', 'task.job.client'])
+            ->first();
+
+        if (!$jobUser) {
+            return response()->json(['error' => 'Task not found'], 404);
+        }
+
+        return response()->json([
+            'task' => $task,
+            'job' => $task->job,
+            'assignment' => $jobUser,
+            'progress' => $this->calculateTaskProgress($task, $user->id)
+        ]);
+    }
+
+    /**
+     * Calculate task progress for a specific user
+     */
+    private function calculateTaskProgress($task, $userId)
+    {
+        $jobUser = JobUser::where('user_id', $userId)
+            ->where('task_id', $task->id)
+            ->first();
+
+        if (!$jobUser) {
+            return 0;
+        }
+
+        // If this user completed the task, return 100
+        if ($jobUser->status === 'completed') {
+            return 100;
+        }
+
+        // If task is pending for this user, return 0
+        if ($jobUser->status === 'pending') {
+            return 0;
+        }
+
+        // If in progress, calculate time-based progress with time precision
+        if ($jobUser->status === 'in_progress' && $jobUser->start_date && $jobUser->end_date) {
+            // Use time components if available
+            $startTime = $jobUser->start_time ? $jobUser->start_time->format('H:i:s') : '00:00:00';
+            $endTime = $jobUser->end_time ? $jobUser->end_time->format('H:i:s') : '23:59:59';
+
+            $startDateTime = \Carbon\Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $startTime);
+            $endDateTime = \Carbon\Carbon::parse($jobUser->end_date->format('Y-m-d') . ' ' . $endTime);
+            $today = \Carbon\Carbon::now();
+
+            if ($today >= $endDateTime) {
+                return 90; // Overdue but not completed
+            }
+
+            if ($today <= $startDateTime) {
+                return 10; // Just started
+            }
+
+            // Use real hours difference for more precise calculation
+            $totalHours = $startDateTime->diffInRealHours($endDateTime);
+            if ($totalHours <= 0) return 50; // Same time task
+
+            $elapsedHours = $startDateTime->diffInRealHours($today);
+            return round(($elapsedHours / $totalHours) * 90); // Max 90% for time-based progress
+        }
+
+        return 25; // Default for in-progress without dates
+    }
+
+    /**
+     * Update task status (for API calls)
+     */
+    public function updateTaskStatus(Request $request, Task $task)
+    {
+        $user = Auth::user();
+
+        $jobUser = JobUser::where('user_id', $user->id)
+            ->where('task_id', $task->id)
+            ->first();
+
+        if (!$jobUser) {
+            return response()->json(['success' => false, 'message' => 'Task assignment not found'], 404);
+        }
+
+        $request->validate([
+            'status' => 'required|in:pending,in_progress,completed',
+            'notes' => 'nullable|string|max:1000',
+            'completion_notes' => 'nullable|string|max:1000'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Update job user status and notes for this specific user
+            $jobUserUpdateData = [
+                'status' => $request->status,
                 'updated_by' => Auth::id(),
+            ];
+
+            if ($request->has('notes')) {
+                $jobUserUpdateData['notes'] = $request->notes;
+            }
+
+            if ($request->has('completion_notes') && $request->status === 'completed') {
+                $jobUserUpdateData['notes'] = $request->completion_notes;
+            }
+
+            $jobUser->update($jobUserUpdateData);
+
+            // Update task status based on all assigned users
+            $this->updateTaskStatusBasedOnUsers($task);
+
+            // Update job status based on tasks
+            $this->updateJobStatusBasedOnTasks($task->job);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Task status updated successfully',
+                'task' => $task->fresh(),
+                'jobUser' => $jobUser->fresh()
             ]);
 
-            // Log status change
-            JobActivityLogger::logJobStatusChanged($job, $currentStatus, $newStatus, 'Tasks started');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error updating task status: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update task status'
+            ], 500);
+        }
+    }
+
+    /**
+     * Update task status based on all assigned users' statuses
+     */
+    private function updateTaskStatusBasedOnUsers($task)
+    {
+        $allJobUsers = JobUser::where('task_id', $task->id)->get();
+
+        if ($allJobUsers->isEmpty()) {
+            return;
+        }
+
+        $allCompleted = $allJobUsers->every(function ($ju) {
+            return $ju->status === 'completed';
+        });
+
+        $anyInProgress = $allJobUsers->contains(function ($ju) {
+            return $ju->status === 'in_progress';
+        });
+
+        if ($allCompleted && $task->status !== 'completed') {
+            $task->update([
+                'status' => 'completed',
+                'updated_by' => Auth::id()
+            ]);
+        } elseif ($anyInProgress && $task->status === 'pending') {
+            $task->update([
+                'status' => 'in_progress',
+                'updated_by' => Auth::id()
+            ]);
         }
     }
 }
