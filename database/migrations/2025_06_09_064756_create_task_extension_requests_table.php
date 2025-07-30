@@ -17,19 +17,20 @@ return new class extends Migration
             $table->foreignId('task_id')->constrained('tasks')->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('requested_by')->constrained('users')->cascadeOnDelete();
-     
-           
-            
-           
-           
-       
+
+
+
+
+
+
             // Current and requested dates
             $table->date('current_end_date');
              $table->time('current_end_time')->nullable();
             $table->date('requested_end_date');
              $table->time('requested_end_time')->nullable();
             $table->integer('extension_days');
-             $table->decimal('extension_hours', 5, 2)->nullable();
+            $table->decimal('extension_hours', 5, 2)->nullable();
+             $table->decimal(' ', 5, 2)->nullable();
 
             // Request details
             $table->text('reason')->nullable();

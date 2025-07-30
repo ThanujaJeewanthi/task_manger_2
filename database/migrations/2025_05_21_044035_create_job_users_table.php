@@ -23,6 +23,8 @@ return new class extends Migration
             $table->date('end_date')->nullable();
             $table->time('end_time')->nullable();
              $table->decimal('duration', 8, 2)->nullable();
+              $table->timestamp('completed_at')->nullable();
+              $table->decimal('actual_duration', 8, 2)->nullable();
             $table->enum('status', ['pending', 'in_progress', 'completed', 'cancelled'])->default('pending');
             $table->text('notes')->nullable();
             $table->timestamps();
@@ -37,6 +39,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('job_employees');
+        Schema::dropIfExists('job_users');
     }
 };

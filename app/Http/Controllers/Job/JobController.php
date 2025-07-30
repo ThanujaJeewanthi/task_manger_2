@@ -480,7 +480,7 @@ public function storeTask(Request $request, Job $job)
 
     foreach ($request->user_ids as $userId) {
         $job->jobUsers()->create([
-            'user_id' => $userId,     
+            'user_id' => $userId,
             'task_id' => $task->id,
             'start_date' => $request->start_date,
             'start_time' => $request->start_time,
@@ -570,7 +570,7 @@ public function storeTask(Request $request, Job $job)
             'updated_by' => Auth::id(),
         ]);
     }
-    
+
     // log task update
     $assignedUsers = User::whereIn('id', $request->user_ids)->get();
     JobActivityLogger::logTaskUpdated($job, $task, $assignedUsers);
@@ -1242,7 +1242,7 @@ public function storeExtendTask(Request $request, Job $job)
     $newEndDate = Carbon::parse($request->new_end_date);
     $newEndTime = $request->new_end_time ? Carbon::parse($request->new_end_time) : Carbon::parse('23:59:59');
     $newEndDateTime = Carbon::parse($newEndDate->format('Y-m-d') . ' ' . $newEndTime->format('H:i:s'));
-    
+
     // Create new job with updated due date
     $jobData = [
         'job_type_id' => $job->job_type_id,
@@ -1276,7 +1276,7 @@ public function storeExtendTask(Request $request, Job $job)
         foreach ($existingJobUsers as $jobUser) {
             $endDate = ($existingTask->id == $request->task_id) ? $newEndDateTime->format('Y-m-d') : $jobUser->end_date;
             $endTime = ($existingTask->id == $request->task_id) ? $newEndDateTime->format('H:i:s') : $jobUser->end_time;
-            
+
             // UPDATED: Calculate new duration with time precision
             $duration = null;
             if ($jobUser->start_date && $jobUser->start_time && $endDate && $endTime) {
@@ -1284,7 +1284,7 @@ public function storeExtendTask(Request $request, Job $job)
                 $endDateTime = Carbon::parse($endDate . ' ' . $endTime);
                 $duration = $startDateTime->floatDiffInRealDays($endDateTime);
             }
-            
+
             $newJob->jobUsers()->create([
                 'user_id' => $jobUser->user_id,
                 'task_id' => $newTask->id,
@@ -1300,7 +1300,7 @@ public function storeExtendTask(Request $request, Job $job)
             ]);
         }
     }
-    
+
     // Log task extension
     $user = User::where('user_id', Auth::id())->first();
     JobActivityLogger::logTaskExtended($job, $task, $jobUsers->first()->end_date, $request->new_end_date, $user);
@@ -1668,7 +1668,7 @@ private function calculateTaskProgress(Task $task, $taskUsers)
                     $startDateTime = $userStart;
                 }
             }
-            
+
             if ($jobUser->end_date && $jobUser->end_time) {
                 $userEnd = Carbon::parse($jobUser->end_date->format('Y-m-d') . ' ' . $jobUser->end_time->format('H:i:s'));
                 if (!$endDateTime || $userEnd->gt($endDateTime)) {
@@ -1759,11 +1759,11 @@ private function calculateTaskProgress(Task $task, $taskUsers)
         ]);
     }
 
-    // UPDATED: getTaskDetails method in JobController
+ // UPDATED: getTaskDetails method in JobController
 public function getTaskDetails(Job $job, Task $task)
 {
     Log::info('getTaskDetails called', ['job_id' => $job->id, 'task_id' => $task->id]);
-    
+
     if ($job->company_id !== Auth::user()->company_id || $task->job_id !== $job->id) {
         abort(403);
     }
@@ -1801,10 +1801,10 @@ public function getTaskDetails(Job $job, Task $task)
                 'formatted_duration' => $jobUser->formatted_duration ?? 'Not set',
                 'duration_real_days' => $jobUser->duration ?? 0,
                 // ADDED: Include datetime objects for calculations
-                'start_datetime' => ($jobUser->start_date && $jobUser->start_time) 
+                'start_datetime' => ($jobUser->start_date && $jobUser->start_time)
                     ? $jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s')
                     : null,
-                'end_datetime' => ($jobUser->end_date && $jobUser->end_time) 
+                'end_datetime' => ($jobUser->end_date && $jobUser->end_time)
                     ? $jobUser->end_date->format('Y-m-d') . ' ' . $jobUser->end_time->format('H:i:s')
                     : null,
             ];

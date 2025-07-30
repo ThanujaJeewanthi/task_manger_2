@@ -435,8 +435,8 @@
             </thead>
             <tbody>
                 @php
-                    $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
-                    $isEmployee = auth()->user()->userRole->name === 'Employee';
+                    $currentUser = \App\Models\User::where('user_id', auth()->id())->first();
+
                     $jobUsersGrouped = $isEmployee && $currentEmployee
                         ? $job->jobUsers->where('employee_id', $currentEmployee->id)->groupBy('task_id')
                         : $job->jobUsers->groupBy('task_id');
@@ -462,7 +462,7 @@
                         <td>{{ $task->description ?? 'N/A' }}</td>
                         <td>
                             @foreach ($jobUsers as $je)
-                                {{ $je->employee->name ?? 'N/A' }}@if (!$loop->last)
+                                {{ $je->name ?? 'N/A' }}@if (!$loop->last)
                                     ,
                                 @endif
                             @endforeach

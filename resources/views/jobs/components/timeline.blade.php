@@ -734,11 +734,11 @@ function displayTaskDetails(data) {
     if (data.users.length > 0) {
         const user = data.users[0];
         let timelineText = 'Not set';
-        
+
         if (user.start_date && user.end_date) {
             const startDate = new Date(user.start_date).toLocaleDateString();
             const endDate = new Date(user.end_date).toLocaleDateString();
-            
+
             // Add time if available
             if (user.start_time && user.end_time) {
                 timelineText = `${startDate} ${user.start_time} - ${endDate} ${user.end_time}`;
@@ -746,28 +746,28 @@ function displayTaskDetails(data) {
                 timelineText = `${startDate} - ${endDate}`;
             }
         }
-        
+
         document.getElementById('taskTimeline').textContent = timelineText;
-        
+
         // ADDED: Duration and time remaining
         if (user.formatted_duration) {
             document.getElementById('taskPlannedDuration').textContent = user.formatted_duration;
         }
-        
+
         // Calculate time remaining
         if (user.end_date && user.end_time) {
             const endDateTime = new Date(`${user.end_date} ${user.end_time || '23:59:59'}`);
             const now = new Date();
-            
+
             if (endDateTime > now) {
                 const diffMs = endDateTime - now;
                 const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
                 const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                
+
                 let remaining = '';
                 if (diffDays > 0) remaining += `${diffDays}d `;
                 if (diffHours > 0) remaining += `${diffHours}h`;
-                
+
                 document.getElementById('taskTimeRemaining').textContent = remaining || 'Less than 1h';
             } else {
                 document.getElementById('taskTimeRemaining').textContent = 'Overdue';
