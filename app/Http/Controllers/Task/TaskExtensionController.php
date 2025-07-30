@@ -18,20 +18,15 @@ use Illuminate\Support\Facades\Auth;
 
 class TaskExtensionController extends Controller
 {
-    /**
-     * Display extension requests for approval (Supervisors/TOs)
-     */
     public function index(Request $request)
     {
         $companyId = Auth::user()->company_id;
         $userRole = Auth::user()->userRole->name ?? '';
 
-       
-
         $query = TaskExtensionRequest::with([
             'job',
-            'task',
-            'user.user',
+            'task', 
+            'user', // FIXED: removed .user relationship
             'requestedBy'
         ])->forCompany($companyId);
 
@@ -52,14 +47,11 @@ class TaskExtensionController extends Controller
         return view('tasks.extension.index', compact('extensionRequests'));
     }
 
-    /**
-     * Show form for requesting task extension (Users)
-     */
-    public function create(Task $task)
-    {
-        $user = User::where('user_id', Auth::id())->first();
-       
 
+      public function create(Task $task) 
+    {
+        $user = Auth::user(); // FIXED: Use Auth::user() directly instead of complex query
+       
         if (!$user) {
             abort(403, 'User record not found.');
         }
@@ -69,7 +61,7 @@ class TaskExtensionController extends Controller
 
         // Check if user is assigned to this task
         $jobUser = JobUser::where('task_id', $task->id)
-            ->where('user_id', $user->id)
+            ->where('user_id', $user->id) // FIXED: Use $user->id directly
             ->first();
 
         if (!$jobUser) {
@@ -83,7 +75,7 @@ class TaskExtensionController extends Controller
 
         // Check if there's already a pending request for this task
         $existingRequest = TaskExtensionRequest::where('task_id', $task->id)
-            ->where('user_id', $user->id)
+            ->where('user_id', $user->id) // FIXED: Use $user->id directly
             ->where('status', 'pending')
             ->first();
 
@@ -94,15 +86,12 @@ class TaskExtensionController extends Controller
         return view('tasks.extension.create', compact('task', 'jobUser', 'user', 'job'));
     }
 
-    /**
-     * Store task extension request (THIS IS THE METHOD THAT HANDLES THE FORM SUBMISSION)
-     */
-   public function requestTaskExtension(Request $request, Task $task)
+     public function requestTaskExtension(Request $request, Task $task)
 {
     // Validate the request
     $request->validate([
         'requested_end_date' => 'required|date|after:today',
-        'requested_end_time' => 'nullable|date_format:H:i', // ADDED
+        'requested_end_time' => 'nullable|date_format:H:i',
         'reason' => 'required|string|max:1000',
         'justification' => 'nullable|string|max:1000',
     ]);
@@ -111,7 +100,7 @@ class TaskExtensionController extends Controller
         DB::beginTransaction();
 
         $job = Job::findOrFail($task->job_id);
-        $user = User::where('user_id', Auth::id())->first();
+        $user = Auth::user(); // FIXED: Use Auth::user() directly
 
         if (!$user) {
             throw new \Exception('User record not found.');
@@ -119,7 +108,7 @@ class TaskExtensionController extends Controller
 
         // Get current end date and time
         $jobUser = JobUser::where('task_id', $task->id)
-            ->where('user_id', $user->id)
+            ->where('user_id', $user->id) // FIXED: Use $user->id directly
             ->first();
 
         if (!$jobUser) {
@@ -128,7 +117,7 @@ class TaskExtensionController extends Controller
 
         // Check for duplicate request again (to prevent race conditions)
         $existingRequest = TaskExtensionRequest::where('task_id', $task->id)
-            ->where('user_id', $user->id)
+            ->where('user_id', $user->id) // FIXED: Use $user->id directly
             ->where('status', 'pending')
             ->first();
 
@@ -155,14 +144,14 @@ class TaskExtensionController extends Controller
         $extensionRequest = TaskExtensionRequest::create([
             'job_id' => $job->id,
             'task_id' => $task->id,
-            'user_id' => $user->id,
+            'user_id' => $user->id, // FIXED: Use $user->id directly
             'requested_by' => Auth::id(),
             'current_end_date' => $currentEndDate,
-            'current_end_time' => $currentEndTime, // ADDED
+            'current_end_time' => $currentEndTime,
             'requested_end_date' => $requestedEndDate,
-            'requested_end_time' => $requestedEndTime, // ADDED
+            'requested_end_time' => $requestedEndTime,
             'extension_days' => $extensionDays,
-            'extension_hours' => $extensionHours, // ADDED
+            'extension_hours' => $extensionHours,
             'reason' => $request->reason,
             'justification' => $request->justification,
             'status' => 'pending',
@@ -202,7 +191,6 @@ class TaskExtensionController extends Controller
             ->withInput();
     }
 }
-
 
     /**
      * Show specific extension request
@@ -369,12 +357,9 @@ class TaskExtensionController extends Controller
         return $this->processRequest($request, $extensionRequest, $status);
     }
 
-    /**
-     * Show user's own extension requests
-     */
-    public function myRequests(Request $request)
+       public function myRequests(Request $request)
     {
-        $user = User::where('user_id', Auth::id())->first();
+        $user = Auth::user(); // FIXED: Use Auth::user() directly
 
         if (!$user) {
             abort(403, 'User record not found.');
@@ -384,7 +369,7 @@ class TaskExtensionController extends Controller
             'job',
             'task',
             'reviewedBy'
-        ])->where('user_id', $user->id);
+        ])->where('user_id', $user->id); // FIXED: Use $user->id directly
 
         // Filter by status
         if ($request->filled('status')) {

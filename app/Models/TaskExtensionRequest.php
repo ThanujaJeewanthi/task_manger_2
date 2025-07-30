@@ -13,14 +13,14 @@ class TaskExtensionRequest extends Model
     protected $fillable = [
         'job_id',
         'task_id',
-        'user_id',
+        'user_id', // FIXED: This should be user_id, not employee_id
         'requested_by',
         'current_end_date',
-        'current_end_time', // ADDED
+        'current_end_time',
         'requested_end_date',
-        'requested_end_time', // ADDED
+        'requested_end_time',
         'extension_days',
-        'extension_hours', // ADDED
+        'extension_hours',
         'reason',
         'justification',
         'status',
@@ -34,10 +34,10 @@ class TaskExtensionRequest extends Model
     protected $casts = [
         'current_end_date' => 'date',
         'requested_end_date' => 'date',
-        'current_end_time' => 'datetime:H:i', // ADDED
-        'requested_end_time' => 'datetime:H:i', // ADDED
+        'current_end_time' => 'datetime:H:i',
+        'requested_end_time' => 'datetime:H:i',
         'reviewed_at' => 'datetime',
-        'extension_hours' => 'decimal:2', // ADDED
+        'extension_hours' => 'decimal:2',
     ];
 
     /**
@@ -53,9 +53,10 @@ class TaskExtensionRequest extends Model
         return $this->belongsTo(Task::class);
     }
 
+    // FIXED: This should be 'user', not 'employee'
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function requestedBy()

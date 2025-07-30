@@ -9,10 +9,6 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Client;
 use App\Models\JobType;
-
-
-
-
 use App\Models\Equipment;
 use App\Models\JobOption;
 use App\Models\JobUser;
@@ -47,7 +43,15 @@ class JobController extends Controller
 
             break;
         case 'Supervisor':
-            $query->where('created_by', Auth::id());
+
+            // show jobs where  he created and  he is assigned both
+                $query->where('created_by', Auth::id())
+                      ->orWhereIn('id', function($q) {
+                          $q->select('job_id')
+                            ->from('job_users')
+                            ->where('user_id', Auth::id())
+                            ->where('active', true); // Only get active assignments
+                      });
             break;
         case 'User':
 

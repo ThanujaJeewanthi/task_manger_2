@@ -426,7 +426,7 @@
                 <tr>
                     <th>Task Name</th>
                     <th>Description</th>
-                    <th>Assigned Employees</th>
+                    <th>Assigned Users</th>
                     <th>Status</th>
                     <th>Start Date</th>
                     <th>End Date</th>
@@ -435,24 +435,22 @@
             </thead>
             <tbody>
                 @php
-                    $currentUser = \App\Models\User::where('user_id', auth()->id())->first();
+                    $currentUser = \App\Models\User::where('id', auth()->id())->first();
 
-                    $jobUsersGrouped = $isEmployee && $currentEmployee
-                        ? $job->jobUsers->where('employee_id', $currentEmployee->id)->groupBy('task_id')
-                        : $job->jobUsers->groupBy('task_id');
+                    $jobUsersGrouped = $job->jobUsers->groupBy('task_id');
                 @endphp
                 @forelse ($jobUsersGrouped as $taskId => $jobUsers)
                     @php
                         $task = $job->jobUsers->where('task_id', $taskId)->first()->task;
                         // Check if current user is assigned to this task
-                        $currentEmployee = \App\Models\Employee::where('user_id', auth()->id())->first();
-                        $isAssignedToTask = $currentEmployee && $jobUsers->contains('employee_id', $currentEmployee->id);
+                        $currentUser = \App\Models\User::where('id', auth()->id())->first();
+                        $isAssignedToTask = $currentUser && $jobUsers->contains('user_id', $currentUser->id);
 
                         // Check for pending extension requests
                         $pendingExtension = null;
-                        if($currentEmployee) {
+                        if($currentUser) {
                             $pendingExtension = \App\Models\TaskExtensionRequest::where('task_id', $task->id)
-                                ->where('employee_id', $currentEmployee->id)
+                                ->where('user_id', $currentUser->id)
                                 ->where('status', 'pending')
                                 ->first();
                         }
@@ -462,7 +460,7 @@
                         <td>{{ $task->description ?? 'N/A' }}</td>
                         <td>
                             @foreach ($jobUsers as $je)
-                                {{ $je->name ?? 'N/A' }}@if (!$loop->last)
+                                {{ $je->user->name ?? 'N/A' }}@if (!$loop->last)
                                     ,
                                 @endif
                             @endforeach
@@ -478,17 +476,12 @@
                         </td>
                         <td>
                             @php
-                                $currentUserEmployee = Auth::user()->employee ?? null;
-                                $isAssignedToTask = false;
-                                $userJobUser = null;
-
-                                if ($currentUserEmployee) {
-                                    $userJobUser = $jobUsers->where('employee_id', $currentUserEmployee->id)->first();
-                                    $isAssignedToTask = $userJobUser !== null;
-                                }
+                                $currentUser = Auth::user();
+                                $isAssignedToTask = $jobUsers->contains('user_id', $currentUser->id);
+                                $userJobUser = $jobUsers->where('user_id', $currentUser->id)->first();
                             @endphp
 
-                            @if(Auth::user()->userRole->name === 'Employee' && $isAssignedToTask)
+                            @if( $isAssignedToTask)
                                 <!-- Employee Task Actions -->
                                 <div class="btn-group" role="group">
                                     @if($task->status === 'pending')

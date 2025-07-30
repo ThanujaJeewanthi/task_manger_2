@@ -20,7 +20,7 @@ class UserTaskController extends Controller
     public function startTask(Request $request, Task $task)
     {
         $user = Auth::user();
-        $user = User::where('user_id', $user->id)->first();
+       
 
 
         if (!$user) {

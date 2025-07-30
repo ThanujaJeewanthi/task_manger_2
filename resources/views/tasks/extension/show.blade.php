@@ -105,20 +105,21 @@
                                 </div>
                             </div>
 
-                            <!-- Employee Information -->
+                            <!-- User Information -->
                             <div class="card mb-4">
                                 <div class="card-header">
-                                    <h6 class="mb-0">Employee Information</h6>
+                                    <h6 class="mb-0">User Information</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <p><strong>Name:</strong> {{ $extensionRequest->employee->user->name ?? $extensionRequest->employee->name }}</p>
-                                            <p><strong>Email:</strong> {{ $extensionRequest->employee->user->email ?? 'N/A' }}</p>
+                                            {{-- FIXED: Changed from $extensionRequest->employee to $extensionRequest->user --}}
+                                            <p><strong>Name:</strong> {{ $extensionRequest->user->name ?? 'N/A' }}</p>
+                                            <p><strong>Email:</strong> {{ $extensionRequest->user->email ?? 'N/A' }}</p>
                                         </div>
                                         <div class="col-md-6">
-                                            <p><strong>Employee ID:</strong> {{ $extensionRequest->employee->id }}</p>
-                                            <p><strong>Department:</strong> {{ $extensionRequest->employee->department ?? 'N/A' }}</p>
+                                            <p><strong>User ID:</strong> {{ $extensionRequest->user->id }}</p>
+                                            <p><strong>Role:</strong> {{ $extensionRequest->user->userRole->name ?? 'N/A' }}</p>
                                         </div>
                                     </div>
                                 </div>

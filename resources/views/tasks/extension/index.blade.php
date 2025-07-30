@@ -94,7 +94,7 @@
                         <div>
                             <span style="font-size:1.125rem;font-weight:600;">Task Extension Requests</span>
                             <br>
-                            <small class="text-muted" style="font-size:0.875rem;">Review and approve employee extension requests</small>
+                            <small class="text-muted" style="font-size:0.875rem;">Review and approve user extension requests</small>
                         </div>
                        {{-- back to any userRole dashboard based on role --}}
                      @php
@@ -163,7 +163,7 @@
                                 <tr>
                                     <th style="width: 8%;">Job ID</th>
                                     <th style="width: 18%;">Task</th>
-                                    <th style="width: 15%;">Employee</th>
+                                    <th style="width: 15%;">User</th>
                                     <th style="width: 10%;">Current End</th>
                                     <th style="width: 10%;">Requested End</th>
                                     <th style="width: 8%;">Extension</th>
@@ -189,24 +189,34 @@
                                         <td class="text-left">
                                             <div class="d-flex align-items-center">
                                                 <div>
-                                                    <strong>{{ $request->employee->user->name ?? $request->employee->name }}</strong>
-                                                    <br><small class="text-muted">{{ $request->employee->user->email ?? 'N/A' }}</small>
+                                                    {{-- FIXED: Changed from $request->employee to $request->user --}}
+                                                    <strong>{{ $request->user->name ?? 'N/A' }}</strong>
+                                                    <br><small class="text-muted">{{ $request->user->email ?? 'N/A' }}</small>
                                                 </div>
                                             </div>
                                         </td>
                                         <td>
                                             <span class="badge bg-secondary">
                                                 {{ $request->current_end_date->format('M d') }}
+                                                @if($request->current_end_time)
+                                                    <br><small>{{ $request->current_end_time->format('H:i') }}</small>
+                                                @endif
                                             </span>
                                         </td>
                                         <td>
                                             <span class="badge bg-primary">
                                                 {{ $request->requested_end_date->format('M d') }}
+                                                @if($request->requested_end_time)
+                                                    <br><small>{{ $request->requested_end_time->format('H:i') }}</small>
+                                                @endif
                                             </span>
                                         </td>
                                         <td>
                                             <span class="badge bg-info">
                                                 +{{ $request->extension_days }}d
+                                                @if($request->extension_hours > 0)
+                                                    <br><small>{{ round($request->extension_hours) }}h</small>
+                                                @endif
                                             </span>
                                         </td>
                                         <td>
@@ -222,7 +232,7 @@
                                             @if($request->status === 'pending')
                                                 <div class="d-flex gap-2">
                                                     <!-- Approval Form -->
-                                                    <form method="POST" action="/extension-requests/{{ $request->id }}/approve"
+                                                    <form method="POST" action="{{ route('extension-requests.approve', $request) }}"
                                                           onsubmit="return handleApproval(event, this)">
                                                         @csrf
                                                         <input type="hidden" name="review_notes" id="approve_notes_{{ $request->id }}">
@@ -232,7 +242,7 @@
                                                     </form>
 
                                                     <!-- Rejection Form -->
-                                                    <form method="POST" action="/extension-requests/{{ $request->id }}/reject"
+                                                    <form method="POST" action="{{ route('extension-requests.reject', $request) }}"
                                                           onsubmit="return handleRejection(event, this)">
                                                         @csrf
                                                         <input type="hidden" name="review_notes" id="reject_notes_{{ $request->id }}">
@@ -361,7 +371,7 @@ function handleRejection(event, form) {
         ...swalDefaults,
         icon: 'warning',
         title: '<span style="font-size:1.05rem;font-weight:600;">Reject Extension Request?</span>',
-        html: `<div style="font-size:0.92rem;">The employee will be notified of the rejection.<br><br>
+        html: `<div style="font-size:0.92rem;">The user will be notified of the rejection.<br><br>
             <label for="swal-reject-notes" style="font-size:0.85rem;font-weight:500;">Rejection Reason <span class="text-danger">*</span></label>
             <textarea id="swal-reject-notes" class="form-control mt-1" style="font-size:0.88rem;" rows="2" placeholder="Please provide a detailed reason (min 10 characters)"></textarea>
         </div>`,
@@ -408,5 +418,26 @@ function confirmBulkAction(action, count) {
     return confirm(`Are you sure you want to ${action} ${count} selected request${count > 1 ? 's' : ''}?`);
 }
 </script>
+
+<!-- SweetAlert2 custom styles -->
+<style>
+.swal2-consistent-ui {
+    font-size: 1rem !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+    padding: 1.1rem 1.1rem !important;
+}
+.btn-action-xs {
+    font-size: 0.98rem !important;
+    padding: 0.45rem 1.1rem !important;
+    border-radius: 0.25rem !important;
+}
+.swal2-consistent-ui .swal2-title {
+    font-size: 1.15rem !important;
+    font-weight: 600 !important;
+}
+.swal2-consistent-ui .swal2-html-container {
+    font-size: 0.98rem !important;
+}
+</style>
 
 @endsection
