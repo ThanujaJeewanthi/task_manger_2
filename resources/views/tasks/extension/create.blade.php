@@ -78,6 +78,7 @@
                         </div>
                     </div>
 
+                    <!-- FIXED: Change form action to use 'store' route -->
                     <form action="{{ route('tasks.extension.store', $task) }}" method="POST" id="extension-request-form">
                         @csrf
                         <input type="hidden" name="current_end_date" value="{{ $jobUser->end_date ? $jobUser->end_date->format('Y-m-d') : '' }}">
@@ -151,9 +152,9 @@
                                           name="reason"
                                           rows="3"
                                           maxlength="500"
-                                          placeholder="Briefly explain why you need this extension..."
+                                          placeholder="Briefly explain why you need this extension (minimum 10 characters)..."
                                           required>{{ old('reason') }}</textarea>
-                                <small class="form-text text-muted">Maximum 500 characters</small>
+                                <small class="form-text text-muted">Maximum 500 characters, minimum 10 characters</small>
                                 @error('reason')
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
@@ -194,7 +195,11 @@
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-paper-plane"></i> Submit Extension Request
                                 </button>
-                                <a href="{{ route('employee.dashboard') }}" class="btn btn-secondary ms-2">
+                                @php
+                                    $userRole = strtolower(str_replace(' ', '', Auth::user()->userRole->name ?? 'employee'));
+                                    $dashboardRoute = "{$userRole}.dashboard";
+                                @endphp
+                                <a href="{{ route($dashboardRoute) }}" class="btn btn-secondary ms-2">
                                     <i class="fas fa-times"></i> Cancel
                                 </a>
                             </div>
@@ -247,14 +252,14 @@ $(document).ready(function() {
 
         const start = new Date(`${startDate}T${startTime}:00`);
         const end = new Date(`${endDate}T${endTime}:00`);
-        
+
         if (end <= start) {
             return null;
         }
 
         const diffInMilliseconds = end - start;
         const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
-        
+
         const days = Math.floor(diffInMinutes / (24 * 60));
         const hours = Math.floor((diffInMinutes % (24 * 60)) / 60);
         const minutes = diffInMinutes % 60;
@@ -286,7 +291,7 @@ $(document).ready(function() {
     function updateExtensionInfo() {
         const requestedEndDate = $('#requested_end_date').val();
         const requestedEndTime = $('#requested_end_time').val() || currentEndTime;
-        
+
         if (!requestedEndDate || !currentEndDate) {
             $('#extension-info').hide();
             return;
@@ -295,7 +300,7 @@ $(document).ready(function() {
         // Calculate extension period
         const currentEnd = new Date(`${currentEndDate}T${currentEndTime}:00`);
         const requestedEnd = new Date(`${requestedEndDate}T${requestedEndTime}:00`);
-        
+
         if (requestedEnd <= currentEnd) {
             $('#extension-info').hide();
             return;
@@ -322,7 +327,7 @@ $(document).ready(function() {
 
         // Calculate new total duration
         const newTotalDuration = calculateDuration(currentStartDate, currentStartTime, requestedEndDate, requestedEndTime);
-        
+
         $('#extension-period-text').text(extensionText || '0 minutes');
         $('#new-duration-text').text(formatDuration(newTotalDuration));
         $('#extension-info').show();
@@ -334,7 +339,7 @@ $(document).ready(function() {
     // Initialize with current values
     updateExtensionInfo();
 
-    // FIXED: Form submission handler with proper prevention of double submission
+    // FIXED: Form submission handler with proper validation
     $('#extension-request-form').submit(function(e) {
         e.preventDefault();
 
@@ -375,7 +380,7 @@ $(document).ready(function() {
             return false;
         }
 
-        // Validation: Check reason length
+        // Validation: Check reason length (minimum 10 characters)
         if (reason.length < 10) {
             Swal.fire({
                 ...swalDefaults,
@@ -384,6 +389,7 @@ $(document).ready(function() {
                 html: '<div style="font-size:0.95rem;">Please provide a more detailed reason (at least 10 characters).</div>',
                 confirmButtonText: 'OK'
             });
+            $('#reason').focus();
             return false;
         }
 
@@ -410,22 +416,17 @@ $(document).ready(function() {
         }).then((result) => {
             if (result.isConfirmed) {
                 console.log('User confirmed submission');
-                
+
                 // Set flag to prevent re-triggering
                 isSubmitting = true;
-                
-                // Get the form element
-                const form = document.getElementById('extension-request-form');
-                
-                // Method 1: Direct form submission without triggering jQuery handler again
-                // Temporarily remove the jQuery submit handler
-                const $form = $('#extension-request-form');
-                $form.off('submit');
-                
-                // Submit the form directly
-                form.submit();
-                
-                
+
+                // Show loading state
+                const submitBtn = $('#extension-request-form button[type="submit"]');
+                const originalText = submitBtn.html();
+                submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Submitting...');
+
+                // Submit the form using native form submission
+                document.getElementById('extension-request-form').submit();
             }
         });
     });

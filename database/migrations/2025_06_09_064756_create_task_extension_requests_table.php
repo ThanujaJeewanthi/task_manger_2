@@ -30,7 +30,7 @@ return new class extends Migration
              $table->time('requested_end_time')->nullable();
             $table->integer('extension_days');
             $table->decimal('extension_hours', 5, 2)->nullable();
-             $table->decimal(' ', 5, 2)->nullable();
+         
 
             // Request details
             $table->text('reason')->nullable();

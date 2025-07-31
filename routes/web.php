@@ -400,18 +400,19 @@ Route::middleware(['auth'])->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () {
-    // Employee can request task extension
+    // Request task extension
     Route::get('/tasks/{task}/request-extension', [TaskExtensionController::class, 'create'])
         ->name('tasks.extension.create')
         ->middleware('role.permission:12.1');
 
-    Route::post('/tasks/{task}/request-extension', [TaskExtensionController::class, 'requestTaskExtension'])
+    // FIXED: Change method name to 'store' to match Laravel conventions
+    Route::post('/tasks/{task}/request-extension', [TaskExtensionController::class, 'store'])
         ->name('tasks.extension.store')
         ->middleware('role.permission:12.1');
 
     // View own extension requests
     Route::get('/my-extension-requests', [TaskExtensionController::class, 'myRequests'])
-        ->name(name: 'tasks.extension.my-requests')
+        ->name('tasks.extension.my-requests')
         ->middleware('role.permission:12.2');
 });
 
@@ -419,7 +420,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     // View pending extension requests for approval
     Route::get('/extension-requests', [TaskExtensionController::class, 'index'])
-        ->name('tasks.extension.index')   
+        ->name('tasks.extension.index')
         ->middleware('role.permission:12.3'); // Technical Officer, Supervisor, and Engineer permissions
 
     // Show specific extension request
@@ -439,7 +440,7 @@ Route::middleware(['auth'])->group(function () {
     // API endpoint for getting pending extension count (for dashboards)
     Route::get('/api/extension-requests/pending-count', [TaskExtensionController::class, 'getPendingCount'])
         ->name('tasks.extension.pending-count')
-        ->middleware('role.permission:12.6 ');
+        ->middleware('role.permission:12.6');
 });
 
 // Add these routes to routes/web.php
