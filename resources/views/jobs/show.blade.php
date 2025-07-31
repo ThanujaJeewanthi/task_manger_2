@@ -472,25 +472,25 @@
             $userJobUser = $jobUsers->where('user_id', $currentUser->id)->first();
             $badgeClass = match($userJobUser->status) {
                 'pending' => 'bg-warning',
-                'in_progress' => 'bg-primary', 
+                'in_progress' => 'bg-primary',
                 'completed' => 'bg-success',
                 'cancelled' => 'bg-danger',
                 default => 'bg-secondary'
             };
-            
+
             $statusText = match($userJobUser->status) {
                 'pending' => 'Pending',
-                'in_progress' => 'In Progress', 
+                'in_progress' => 'In Progress',
                 'completed' => 'Completed',
                 'cancelled' => 'Cancelled',
                 default => 'Unknown'
             };
         @endphp
-        
+
         <span class="badge {{ $badgeClass }}">
             {{ $statusText }} (You)
         </span>
-        
+
         {{-- Show overall task status if different --}}
         @if($task->status !== $userJobUser->status)
             <br><small class="text-muted">
@@ -511,45 +511,70 @@
                         <td>{{ $jobUsers->max('end_date') ? \Carbon\Carbon::parse($jobUsers->max('end_date'))->format('Y-m-d') : 'N/A' }}
                         </td>
                         <td>
-                            @php
-                                $currentUser = Auth::user();
-                                $isAssignedToTask = $jobUsers->contains('user_id', $currentUser->id);
-                                $userJobUser = $jobUsers->where('user_id', $currentUser->id)->first();
-                            @endphp
+                     @php
+    $currentUser = Auth::user();
+    $isAssignedToTask = $jobUsers->contains('user_id', $currentUser->id);
+    $userJobUser = $jobUsers->where('user_id', $currentUser->id)->first();
 
-                           @if($isAssignedToTask && $userJobUser)
+    // Check extension request status for current user
+    $currentUserId = Auth::id();
+    $currentUserPendingExtension = $task->taskExtensionRequests
+        ->where('status', 'pending')
+        ->where('user_id', $currentUserId)
+        ->first();
+
+    $otherUsersPendingExtensions = $task->taskExtensionRequests
+        ->where('status', 'pending')
+        ->where('user_id', '!=', $currentUserId);
+@endphp
+
+@if($isAssignedToTask && $userJobUser)
     <!-- Employee Task Actions Based on Individual Status -->
     <div class="btn-group" role="group">
         @if($userJobUser->status === 'pending')
             {{-- User hasn't started the task yet --}}
-            <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
-                @csrf
-                <button type="button" class="btn btn-primary btn-sm"
-                    onclick="showStartTaskSwal(this)">
-                    <i class="fas fa-play"></i> Start
-                </button>
-                {{-- SweetAlert script remains the same --}}
-            </form>
-        @elseif($userJobUser->status === 'in_progress')
-            {{-- User has started but not completed the task --}}
-            @if(App\Helpers\UserRoleHelper::hasPermission('11.32') && $task->taskExtensionRequests->where('status', 'pending')->count() === 0)
-                <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+            {{-- If current user has pending extension, don't allow start --}}
+            @if($currentUserPendingExtension)
+                <span class="badge bg-warning">
+                    <i class="fas fa-clock"></i> Extension Request Pending
+                </span>
+            @else
+                <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
                     @csrf
-                    <button type="button" class="btn btn-success btn-sm"
-                        onclick="handleCompleteTaskSwal(event, this.form)">
-                        <i class="fas fa-check"></i> Complete
+                    <button type="button" class="btn btn-primary btn-sm"
+                        onclick="showStartTaskSwal(this)">
+                        <i class="fas fa-play"></i> Start
                     </button>
-                    {{-- SweetAlert script remains the same --}}
                 </form>
             @endif
-            
-            {{-- Extension request button if applicable --}}
-            @if(App\Helpers\UserRoleHelper::hasPermission('12.2') && $task->taskExtensionRequests->where('status', 'pending')->count() === 0)
+
+        @elseif($userJobUser->status === 'in_progress')
+            {{-- User has started but not completed the task --}}
+            {{-- If current user has pending extension, don't allow complete --}}
+            @if($currentUserPendingExtension)
+                <span class="badge bg-warning">
+                    <i class="fas fa-clock"></i> Your Extension Request Pending
+                </span>
+            @else
+                {{-- Allow complete if no pending extension requests by current user --}}
+                @if(App\Helpers\UserRoleHelper::hasPermission('11.32'))
+                    <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                        @csrf
+                        <button type="button" class="btn btn-success btn-sm"
+                            onclick="handleCompleteTaskSwal(event, this.form)">
+                            <i class="fas fa-check"></i> Complete
+                        </button>
+                    </form>
+                @endif
+            @endif
+
+            {{-- Extension request button if applicable and no pending extension by current user --}}
+            @if(App\Helpers\UserRoleHelper::hasPermission('12.2') && !$currentUserPendingExtension)
                 <a href="{{ route('tasks.extension.create', ['task' => $task->id]) }}" class="btn btn-warning btn-sm" title="Request Extension">
                     <i class="fas fa-clock"></i> Extend
                 </a>
             @endif
-            
+
         @elseif($userJobUser->status === 'completed')
             {{-- User has completed the task --}}
             <span class="badge bg-success">
@@ -557,6 +582,18 @@
             </span>
         @endif
     </div>
+
+    {{-- Show info about other users' extension requests (if any) --}}
+    @if($otherUsersPendingExtensions->count() > 0)
+        <div class="mt-2">
+            @foreach($otherUsersPendingExtensions as $extensionRequest)
+                <span class="badge bg-info">
+                    <i class="fas fa-info-circle"></i> Extension requested by {{ $extensionRequest->user->name }}
+                </span>
+            @endforeach
+        </div>
+    @endif
+
 @else
     {{-- Non-employee or unassigned users see view/edit options --}}
     @if(App\Helpers\UserRoleHelper::hasPermission('11.16'))
@@ -571,13 +608,7 @@
         <span class="text-muted">-</span>
     @endif
 @endif
-                            {{-- if the extension request is requested --}}
-                            @if($task->taskExtensionRequests->where('status', 'pending')->count() > 0)
-                                {{-- Show extension request badge --}}
-                                <span class="badge bg-warning">
-                                    <i class="fas fa-clock"></i> Extension Request pending
-                                </span>
-                            @endif
+                           
                         </td>
                     </tr>
                 @empty
