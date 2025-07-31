@@ -287,34 +287,83 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
-<script>
+<script>// Replace the existing approveRequest() and rejectRequest() functions in your show.blade.php file
+// with this corrected version that uses the right routes and SweetAlert
+
 function approveRequest() {
     const requestId = '{{ $extensionRequest->id }}';
 
-    ModernModal.confirm({
+    // Using SweetAlert instead of ModernModal for approval confirmation
+    Swal.fire({
         title: 'Approve Extension Request',
-        type: 'form',
-        confirmText: 'Approve Extension',
-        confirmClass: 'btn-success',
-        formFields: [
-            {
-                type: 'textarea',
-                name: 'review_notes',
-                label: 'Approval Notes',
-                placeholder: 'Add any notes about the approval...'
-            }
-        ],
-        onConfirm: async (formData) => {
-            const response = await apiClient.post(`/task-extensions/${requestId}/approve`, formData.data);
+        html: `
+            <div class="text-start">
+                <p>Are you sure you want to approve this extension request?</p>
+                <label for="approval-notes" class="form-label">Approval Notes (Optional):</label>
+                <textarea id="approval-notes" class="form-control" rows="3"
+                          placeholder="Add any notes about the approval..."></textarea>
+            </div>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Approve Extension',
+        confirmButtonColor: '#28a745',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        preConfirm: () => {
+            return document.getElementById('approval-notes').value;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Approving extension request',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-            if (response.success) {
-                await ModernModal.success(response.message);
-                TaskManager.refreshPage();
-            } else {
-                throw new Error(response.message || 'Failed to approve extension');
+            // FIXED: Use the correct route URL
+            const formData = new FormData();
+            if (result.value) {
+                formData.append('review_notes', result.value);
             }
+            formData.append('_token', '{{ csrf_token() }}');
 
-            return response;
+            fetch(`/extension-requests/${requestId}/approve`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success || data.message) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: data.message || 'Extension request approved successfully!',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Redirect back to the extension requests index
+                        window.location.href = '{{ route("tasks.extension.index") }}';
+                    });
+                } else {
+                    throw new Error(data.error || 'Failed to approve extension');
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message || 'Failed to approve extension request',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
         }
     });
 }
@@ -322,31 +371,80 @@ function approveRequest() {
 function rejectRequest() {
     const requestId = '{{ $extensionRequest->id }}';
 
-    ModernModal.confirm({
+    // Using SweetAlert for rejection confirmation
+    Swal.fire({
         title: 'Reject Extension Request',
-        type: 'form',
-        confirmText: 'Reject Extension',
-        confirmClass: 'btn-danger',
-        formFields: [
-            {
-                type: 'textarea',
-                name: 'review_notes',
-                label: 'Rejection Reason',
-                placeholder: 'Explain why the extension is being rejected...',
-                required: true
+        html: `
+            <div class="text-start">
+                <p>Are you sure you want to reject this extension request?</p>
+                <label for="rejection-notes" class="form-label">Rejection Reason <span class="text-danger">*</span>:</label>
+                <textarea id="rejection-notes" class="form-control" rows="3"
+                          placeholder="Please explain why the extension is being rejected..." required></textarea>
+            </div>
+        `,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Reject Extension',
+        confirmButtonColor: '#dc3545',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        preConfirm: () => {
+            const reason = document.getElementById('rejection-notes').value;
+            if (!reason || reason.trim().length < 5) {
+                Swal.showValidationMessage('Please provide a reason for rejection (minimum 5 characters)');
+                return false;
             }
-        ],
-        onConfirm: async (formData) => {
-            const response = await apiClient.post(`/task-extensions/${requestId}/reject`, formData.data);
+            return reason;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Processing...',
+                text: 'Rejecting extension request',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-            if (response.success) {
-                await ModernModal.success(response.message);
-                TaskManager.refreshPage();
-            } else {
-                throw new Error(response.message || 'Failed to reject extension');
-            }
+            // FIXED: Use the correct route URL
+            const formData = new FormData();
+            formData.append('review_notes', result.value);
+            formData.append('_token', '{{ csrf_token() }}');
 
-            return response;
+            fetch(`/extension-requests/${requestId}/reject`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success || data.message) {
+                    Swal.fire({
+                        title: 'Rejected!',
+                        text: data.message || 'Extension request rejected successfully!',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Redirect back to the extension requests index
+                        window.location.href = '{{ route("tasks.extension.index") }}';
+                    });
+                } else {
+                    throw new Error(data.error || 'Failed to reject extension');
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message || 'Failed to reject extension request',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
         }
     });
 }

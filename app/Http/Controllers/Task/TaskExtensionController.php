@@ -257,105 +257,181 @@ class TaskExtensionController extends Controller
     }
 
     /**
-     * Process extension request (approve/reject) - FOR ENGINEERS/SUPERVISORS
-     */
-    private function processRequest(Request $request, TaskExtensionRequest $extensionRequest, $status)
-    {
-        $request->validate([
-            'review_notes' => 'nullable|string|max:1000',
+ * Process extension request (approve/reject) - FOR ENGINEERS/SUPERVISORS
+ * Improved version with better error handling and AJAX support
+ */
+private function processRequest(Request $request, TaskExtensionRequest $extensionRequest, $status)
+{
+    $request->validate([
+        'review_notes' => 'nullable|string|max:1000',
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $currentUser = Auth::user();
+        $job = $extensionRequest->job;
+        $task = $extensionRequest->task;
+        $user = $extensionRequest->user;
+
+        // Check if request can be processed
+        if ($extensionRequest->status !== 'pending') {
+            $errorMessage = 'This request has already been processed.';
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 400);
+            }
+            return redirect()->back()->with('error', $errorMessage);
+        }
+
+
+
+        // Check company access
+        if ($job->company_id !== $currentUser->company_id) {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access denied.'
+                ], 403);
+            }
+            abort(403);
+        }
+
+        // Additional check for supervisors (they can only process their own jobs)
+        if ($job->created_by !== $currentUser->id) {
+            $errorMessage = 'You can only process extension requests for jobs you created.';
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 403);
+            }
+            return redirect()->back()->with('error', $errorMessage);
+        }
+
+        // Update extension request
+        $extensionRequest->update([
+            'status' => $status,
+            'reviewed_by' => $currentUser->id,
+            'reviewed_at' => now(),
+            'review_notes' => $request->review_notes,
+            'updated_by' => $currentUser->id,
         ]);
 
-        try {
-            DB::beginTransaction();
+        if ($status === 'approved') {
+            // Find the job user assignment
+            $jobUser = JobUser::where('task_id', $task->id)
+                ->where('user_id', $user->id)
+                ->first();
 
-            $job = $extensionRequest->job;
-            $task = $extensionRequest->task;
-            $user = $extensionRequest->user;
-
-            // Check if request can be processed
-            if ($extensionRequest->status !== 'pending') {
-                return redirect()->back()->with('error', 'This request has already been processed.');
+            if (!$jobUser) {
+                throw new \Exception('Task assignment not found for the user.');
             }
 
-            // Update extension request
-            $extensionRequest->update([
-                'status' => $status,
-                'reviewed_by' => Auth::id(),
-                'reviewed_at' => now(),
-                'review_notes' => $request->review_notes,
-                'updated_by' => Auth::id(),
-            ]);
+            // Prepare job user data with proper time handling
+            $jobUserData = [
+                'end_date' => $extensionRequest->requested_end_date,
+                'end_time' => $extensionRequest->requested_end_time ?: null,
+                'updated_by' => $currentUser->id,
+            ];
 
-            if ($status === 'approved') {
-                // UPDATED: Update task deadline in JobUser with time components
-                $jobUserData = [
-                    'end_date' => $extensionRequest->requested_end_date,
-                    'end_time' => $extensionRequest->requested_end_time,
-                    'updated_by' => Auth::id(),
-                ];
-
-                // UPDATED: Recalculate duration if we have start date/time
-                $jobUser = JobUser::where('task_id', $task->id)
-                    ->where('user_id', $user->id)
-                    ->first();
-
-                if ($jobUser && $jobUser->start_date && $jobUser->start_time) {
+            // Recalculate duration if we have start date/time
+            if ($jobUser->start_date && $jobUser->start_time) {
+                try {
                     $startDateTime = Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s'));
                     $endDateTime = Carbon::parse($extensionRequest->requested_end_date . ' ' . ($extensionRequest->requested_end_time ?: '23:59:59'));
                     $jobUserData['duration'] = $startDateTime->floatDiffInRealDays($endDateTime);
+                } catch (\Exception $dateError) {
+                    Log::warning('Failed to calculate duration: ' . $dateError->getMessage());
+                    // Continue without updating duration
                 }
+            }
 
-                JobUser::where('task_id', $task->id)
-                    ->where('user_id', $user->id)
-                    ->update($jobUserData);
+            // Update the job user assignment
+            $updateResult = JobUser::where('task_id', $task->id)
+                ->where('user_id', $user->id)
+                ->update($jobUserData);
 
-                // Update job due date if necessary (considering time)
+            if ($updateResult === 0) {
+                throw new \Exception('Failed to update task assignment. No matching record found.');
+            }
+
+            // Update job due date if necessary
+            try {
                 $requestedEndDateTime = Carbon::parse($extensionRequest->requested_end_date . ' ' . ($extensionRequest->requested_end_time ?: '23:59:59'));
                 $jobDueDateTime = $job->due_date ? Carbon::parse($job->due_date . ' 23:59:59') : null;
 
                 if (!$jobDueDateTime || $requestedEndDateTime->gt($jobDueDateTime)) {
                     $job->update([
                         'due_date' => $extensionRequest->requested_end_date,
-                        'updated_by' => Auth::id(),
+                        'updated_by' => $currentUser->id,
                     ]);
                 }
+            } catch (\Exception $dateError) {
+                Log::warning('Failed to update job due date: ' . $dateError->getMessage());
+                // Continue without updating job due date
             }
-
-            // Log extension processing - wrap in try-catch
-            try {
-                JobActivityLogger::logTaskExtensionProcessed(
-                    $job,
-                    $task,
-                    $user,
-                    $status,
-                    $request->review_notes
-                );
-            } catch (\Exception $logError) {
-                Log::warning('Failed to log task extension processing: ' . $logError->getMessage());
-            }
-
-            DB::commit();
-
-            $message = $status === 'approved'
-                ? 'Task extension approved successfully!'
-                : 'Task extension rejected.';
-
-            return redirect()->route('tasks.extension.index')
-                ->with('success', $message);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to process extension request: ' . $e->getMessage(), [
-                'extension_request_id' => $extensionRequest->id,
-                'status' => $status,
-                'user_id' => Auth::id()
-            ]);
-
-            return redirect()->back()
-                ->with('error', 'Failed to process extension request. Please try again.');
         }
-    }
 
+        // Log extension processing
+        try {
+            JobActivityLogger::logTaskExtensionProcessed(
+                $job,
+                $task,
+                $user,
+                $status,
+                $request->review_notes
+            );
+        } catch (\Exception $logError) {
+            Log::warning('Failed to log task extension processing: ' . $logError->getMessage());
+        }
+
+        DB::commit();
+
+        $message = $status === 'approved'
+            ? 'Task extension approved successfully!'
+            : 'Task extension rejected successfully.';
+
+        // Handle AJAX requests
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'status' => $status,
+                'redirect_url' => route('tasks.extension.index')
+            ]);
+        }
+
+        return redirect()->route('tasks.extension.index')
+            ->with('success', $message);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        Log::error('Failed to process extension request: ' . $e->getMessage(), [
+            'extension_request_id' => $extensionRequest->id,
+            'status' => $status,
+            'user_id' => $currentUser->id ?? 'unknown',
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        $errorMessage = 'Failed to process extension request. Please try again.';
+
+        // Handle AJAX error responses
+        if (request()->expectsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage,
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+
+        return redirect()->back()
+            ->with('error', $errorMessage);
+    }
+}
     public function myRequests(Request $request)
     {
         $user = Auth::user();
