@@ -142,11 +142,11 @@ class Job extends Model
     }
 
     /**
-     * Get the employees assigned to this job.
+     * Get the users assigned to this job.
      */
-    public function employees(): BelongsToMany
+    public function users(): BelongsToMany
     {
-        return $this->belongsToMany(Employee::class, 'job_employees')
+        return $this->belongsToMany(User::class, 'job_user')
             ->withPivot('task_id', 'custom_task', 'start_date', 'end_date', 'duration_in_days', 'status', 'notes')
             ->withTimestamps();
     }

@@ -9,7 +9,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        $tables = ['user_roles', 'page_categories', 'pages','companies','user_role_details','job_employees'];
+        $tables = ['user_roles', 'page_categories', 'pages','companies','user_role_details','job_users'];
 
         foreach ($tables as $tableName) {
             Schema::table($tableName, function (Blueprint $table) use ($tableName) {
@@ -29,7 +29,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-       $tables = ['user_roles', 'page_categories', 'pages','companies','user_role_details','job_employees'];
+       $tables = ['user_roles', 'page_categories', 'pages','companies','user_role_details','job_users'];
 
         foreach ($tables as $tableName) {
             Schema::table($tableName, function (Blueprint $table) {

@@ -105,13 +105,13 @@ class EmployeeDashboardController extends Controller
 
         // My workload over time (last 6 months)
         $workloadTrends = JobUser::where('employee_id', $employee->id)
-            ->join('tasks', 'job_employees.task_id', '=', 'tasks.id')
+            ->join('tasks', 'job_users.task_id', '=', 'tasks.id')
             ->select(
-                DB::raw('DATE_FORMAT(job_employees.created_at, "%Y-%m") as month'),
+                DB::raw('DATE_FORMAT(job_users.created_at, "%Y-%m") as month'),
                 DB::raw('count(*) as assigned_tasks'),
                 DB::raw('sum(case when tasks.status = "completed" then 1 else 0 end) as completed_tasks')
             )
-            ->where('job_employees.created_at', '>=', Carbon::now()->subMonths(6))
+            ->where('job_users.created_at', '>=', Carbon::now()->subMonths(6))
             ->groupBy('month')
             ->orderBy('month')
             ->get();
@@ -526,7 +526,7 @@ private function calculateTaskProgress($task, $userId)
         // UPDATED: Use time components if available
         $startTime = $jobUser->start_time ? $jobUser->start_time->format('H:i:s') : '00:00:00';
         $endTime = $jobUser->end_time ? $jobUser->end_time->format('H:i:s') : '23:59:59';
-        
+
         $startDateTime = \Carbon\Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $startTime);
         $endDateTime = \Carbon\Carbon::parse($jobUser->end_date->format('Y-m-d') . ' ' . $endTime);
         $today = \Carbon\Carbon::now();
