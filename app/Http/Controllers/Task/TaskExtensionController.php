@@ -260,7 +260,7 @@ class TaskExtensionController extends Controller
  * Process extension request (approve/reject) - FOR ENGINEERS/SUPERVISORS
  * Improved version with better error handling and AJAX support
  */
-private function processRequest(Request $request, TaskExtensionRequest $extensionRequest, $status)
+public function processRequest(Request $request, TaskExtensionRequest $extensionRequest, $status)
 {
     $request->validate([
         'review_notes' => 'nullable|string|max:1000',
@@ -286,7 +286,17 @@ private function processRequest(Request $request, TaskExtensionRequest $extensio
             return redirect()->back()->with('error', $errorMessage);
         }
 
-
+        // Check permissions
+        $userRole = $currentUser->userRole->name ?? '';
+        if (!in_array($userRole, ['Supervisor', 'Technical Officer', 'Engineer'])) {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You do not have permission to process this request.'
+                ], 403);
+            }
+            abort(403);
+        }
 
         // Check company access
         if ($job->company_id !== $currentUser->company_id) {
@@ -300,7 +310,7 @@ private function processRequest(Request $request, TaskExtensionRequest $extensio
         }
 
         // Additional check for supervisors (they can only process their own jobs)
-        if ($job->created_by !== $currentUser->id) {
+        if ($userRole === 'Supervisor' && $job->created_by !== $currentUser->id) {
             $errorMessage = 'You can only process extension requests for jobs you created.';
             if (request()->expectsJson() || request()->ajax()) {
                 return response()->json([
@@ -330,21 +340,41 @@ private function processRequest(Request $request, TaskExtensionRequest $extensio
                 throw new \Exception('Task assignment not found for the user.');
             }
 
+            // CRITICAL FIX: Preserve original duration when extending
+            $originalDuration = $jobUser->original_duration ?? $jobUser->duration;
+
+            // Handle missing times with defaults
+            $currentEndTime = $extensionRequest->current_end_time;
+            $requestedEndTime = $extensionRequest->requested_end_time;
+
+            // Default to 23:59:59 if no time specified
+            if (!$requestedEndTime) {
+                $requestedEndTime = '23:59';
+            }
+
             // Prepare job user data with proper time handling
             $jobUserData = [
                 'end_date' => $extensionRequest->requested_end_date,
-                'end_time' => $extensionRequest->requested_end_time ?: null,
+                'end_time' => $requestedEndTime,
                 'updated_by' => $currentUser->id,
+                'original_duration' => $originalDuration, // PRESERVE original planned duration
             ];
 
-            // Recalculate duration if we have start date/time
-            if ($jobUser->start_date && $jobUser->start_time) {
+            // Calculate NEW timeline duration (start to new end)
+            if ($jobUser->start_date) {
                 try {
-                    $startDateTime = Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s'));
-                    $endDateTime = Carbon::parse($extensionRequest->requested_end_date . ' ' . ($extensionRequest->requested_end_time ?: '23:59:59'));
-                    $jobUserData['duration'] = $startDateTime->floatDiffInRealDays($endDateTime);
+                    // Handle missing start time - default to 00:00:00
+                    $startTime = $jobUser->start_time ? $jobUser->start_time->format('H:i:s') : '00:00:00';
+                    $endTime = $requestedEndTime . ':59'; // Add seconds
+
+                    $startDateTime = Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $startTime);
+                    $newEndDateTime = Carbon::parse($extensionRequest->requested_end_date . ' ' . $endTime);
+
+                    // Update current timeline duration (start to new end - this changes with extension)
+                    $jobUserData['duration'] = $startDateTime->floatDiffInRealDays($newEndDateTime);
+
                 } catch (\Exception $dateError) {
-                    Log::warning('Failed to calculate duration: ' . $dateError->getMessage());
+                    Log::warning('Failed to calculate duration during extension: ' . $dateError->getMessage());
                     // Continue without updating duration
                 }
             }
@@ -358,81 +388,74 @@ private function processRequest(Request $request, TaskExtensionRequest $extensio
                 throw new \Exception('Failed to update task assignment. No matching record found.');
             }
 
-            // Update job due date if necessary
+            // Update job due date if necessary (if extension goes beyond job due date)
             try {
-                $requestedEndDateTime = Carbon::parse($extensionRequest->requested_end_date . ' ' . ($extensionRequest->requested_end_time ?: '23:59:59'));
+                $newEndDateTime = Carbon::parse($extensionRequest->requested_end_date . ' ' . ($requestedEndTime . ':59'));
                 $jobDueDateTime = $job->due_date ? Carbon::parse($job->due_date . ' 23:59:59') : null;
 
-                if (!$jobDueDateTime || $requestedEndDateTime->gt($jobDueDateTime)) {
+                if ($jobDueDateTime && $newEndDateTime->gt($jobDueDateTime)) {
                     $job->update([
                         'due_date' => $extensionRequest->requested_end_date,
                         'updated_by' => $currentUser->id,
                     ]);
-                }
-            } catch (\Exception $dateError) {
-                Log::warning('Failed to update job due date: ' . $dateError->getMessage());
-                // Continue without updating job due date
-            }
-        }
 
-        // Log extension processing
-        try {
-            JobActivityLogger::logTaskExtensionProcessed(
-                $job,
-                $task,
-                $user,
-                $status,
-                $request->review_notes
-            );
-        } catch (\Exception $logError) {
-            Log::warning('Failed to log task extension processing: ' . $logError->getMessage());
+                    Log::info('Job due date updated due to task extension', [
+                        'job_id' => $job->id,
+                        'old_due_date' => $job->due_date,
+                        'new_due_date' => $extensionRequest->requested_end_date
+                    ]);
+                }
+            } catch (\Exception $jobUpdateError) {
+                Log::warning('Failed to update job due date: ' . $jobUpdateError->getMessage());
+                // Continue - this is not critical
+            }
+
+            // Log the approval
+            JobActivityLogger::logTaskExtensionProcessed($job, $task, $user, 'approved', $request->review_notes);
+
+            $successMessage = 'Extension request approved successfully. Task deadline has been updated.';
+        } else {
+            // Log the rejection
+            JobActivityLogger::logTaskExtensionProcessed($job, $task, $user, 'rejected', $request->review_notes);
+
+            $successMessage = 'Extension request rejected successfully.';
         }
 
         DB::commit();
 
-        $message = $status === 'approved'
-            ? 'Task extension approved successfully!'
-            : 'Task extension rejected successfully.';
-
-        // Handle AJAX requests
+        // Return appropriate response
         if (request()->expectsJson() || request()->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => $message,
-                'status' => $status,
-                'redirect_url' => route('tasks.extension.index')
+                'message' => $successMessage,
+                'status' => $status
             ]);
         }
 
         return redirect()->route('tasks.extension.index')
-            ->with('success', $message);
+            ->with('success', $successMessage);
 
     } catch (\Exception $e) {
         DB::rollBack();
-
-        Log::error('Failed to process extension request: ' . $e->getMessage(), [
+        Log::error('Failed to process extension request', [
             'extension_request_id' => $extensionRequest->id,
             'status' => $status,
-            'user_id' => $currentUser->id ?? 'unknown',
-            'trace' => $e->getTraceAsString()
+            'error' => $e->getMessage()
         ]);
 
         $errorMessage = 'Failed to process extension request. Please try again.';
 
-        // Handle AJAX error responses
         if (request()->expectsJson() || request()->ajax()) {
             return response()->json([
                 'success' => false,
                 'message' => $errorMessage,
-                'error' => config('app.debug') ? $e->getMessage() : null
+                'error' => $e->getMessage()
             ], 500);
         }
 
-        return redirect()->back()
-            ->with('error', $errorMessage);
+        return redirect()->back()->with('error', $errorMessage);
     }
-}
-    public function myRequests(Request $request)
+}    public function myRequests(Request $request)
     {
         $user = Auth::user();
 

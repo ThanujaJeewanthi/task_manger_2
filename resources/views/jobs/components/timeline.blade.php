@@ -722,7 +722,6 @@ function selectTask(taskId) {
             console.error('Error fetching task details:', error);
         });
 }
-
 function displayTaskDetails(data) {
     const panel = document.getElementById('taskDetails');
 
@@ -730,7 +729,7 @@ function displayTaskDetails(data) {
     document.getElementById('taskName').textContent = data.task.name;
     document.getElementById('taskDescription').textContent = data.task.description;
 
-    // UPDATED: Timeline info with time components
+    // Timeline info with time components
     if (data.users.length > 0) {
         const user = data.users[0];
         let timelineText = 'Not set';
@@ -749,51 +748,147 @@ function displayTaskDetails(data) {
 
         document.getElementById('taskTimeline').textContent = timelineText;
 
-        // ADDED: Duration and time remaining
-        if (user.formatted_duration) {
+        // Display planned duration (original duration)
+        if (user.formatted_planned_duration) {
+            document.getElementById('taskPlannedDuration').textContent = user.formatted_planned_duration;
+        } else if (user.formatted_duration) {
             document.getElementById('taskPlannedDuration').textContent = user.formatted_duration;
         }
 
-        // Calculate time remaining
-        if (user.end_date && user.end_time) {
-            const endDateTime = new Date(`${user.end_date} ${user.end_time || '23:59:59'}`);
-            const now = new Date();
-
-            if (endDateTime > now) {
-                const diffMs = endDateTime - now;
-                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-                const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-                let remaining = '';
-                if (diffDays > 0) remaining += `${diffDays}d `;
-                if (diffHours > 0) remaining += `${diffHours}h`;
-
-                document.getElementById('taskTimeRemaining').textContent = remaining || 'Less than 1h';
-            } else {
-                document.getElementById('taskTimeRemaining').textContent = 'Overdue';
-            }
-        }
+        // Calculate and display time remaining
+        calculateAndDisplayTimeRemaining(user);
     }
 
     // Update progress
     const progressBar = document.getElementById('taskProgressBar');
     const progressText = document.getElementById('taskProgressText');
-    progressBar.style.width = data.task.progress + '%';
-    progressText.textContent = data.task.progress + '%';
+    if (progressBar && progressText) {
+        progressBar.style.width = data.task.progress + '%';
+        progressText.textContent = data.task.progress + '%';
+    }
 
     // Update users
     const usersContainer = document.getElementById('taskUsers');
-    usersContainer.innerHTML = '';
-    data.users.forEach(user => {
-        const userDiv = document.createElement('div');
-        userDiv.className = 'badge bg-secondary me-2 mb-1';
-        userDiv.innerHTML = `${user.name} <small>(${user.status})</small>`;
-        usersContainer.appendChild(userDiv);
-    });
+    if (usersContainer) {
+        usersContainer.innerHTML = '';
+        data.users.forEach(user => {
+            const userDiv = document.createElement('div');
+            userDiv.className = 'badge bg-secondary me-2 mb-1';
+            userDiv.innerHTML = `${user.name} <small>(${user.status})</small>`;
+            usersContainer.appendChild(userDiv);
+        });
+    }
 
     panel.style.display = 'block';
 }
 
+
+function calculateAndDisplayTimeRemaining(user) {
+    const timeRemainingElement = document.getElementById('taskTimeRemaining');
+    if (!timeRemainingElement) return;
+
+    if (!user.end_date || !user.end_time) {
+        timeRemainingElement.textContent = 'Not set';
+        return;
+    }
+
+    // Create end datetime - use 23:59:59 if no time specified
+    const endTime = user.end_time || '23:59';
+    const endDateTime = new Date(`${user.end_date} ${endTime}:59`);
+    const now = new Date();
+
+    // Calculate difference in milliseconds
+    const diffMs = endDateTime - now;
+
+    if (Math.abs(diffMs) < 60000) { // Less than 1 minute
+        timeRemainingElement.textContent = '0 hours remaining';
+        return;
+    }
+
+    // Calculate time components
+    const absDiffMs = Math.abs(diffMs);
+    const totalMinutes = Math.floor(absDiffMs / (1000 * 60));
+    const days = Math.floor(totalMinutes / (24 * 60));
+    const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+    const minutes = totalMinutes % 60;
+
+    let timeText = '';
+
+    // For very short durations (< 1 hour) - show only minutes
+    if (totalMinutes < 60) {
+        timeText = totalMinutes + ' minute' + (totalMinutes !== 1 ? 's' : '');
+    }
+    // For short durations (< 1 day) - show hours and minutes
+    else if (days === 0) {
+        if (hours > 0) {
+            timeText += hours + ' hour' + (hours !== 1 ? 's' : '');
+        }
+        if (minutes > 0) {
+            timeText += (timeText ? ' ' : '') + minutes + ' minute' + (minutes !== 1 ? 's' : '');
+        }
+    }
+    // For longer durations - show days and hours
+    else {
+        if (days > 0) {
+            timeText += days + ' day' + (days !== 1 ? 's' : '');
+        }
+        if (hours > 0) {
+            timeText += (timeText ? ' ' : '') + hours + ' hour' + (hours !== 1 ? 's' : '');
+        }
+    }
+
+    // Format based on whether it's overdue or remaining
+    if (diffMs < 0) {
+        // Overdue - show negative format
+        timeRemainingElement.innerHTML = `<span class="text-danger">${timeText} overdue</span>`;
+    } else {
+        // Still time remaining
+        timeRemainingElement.innerHTML = `<span class="text-success">${timeText} remaining</span>`;
+    }
+}
+
+function formatDuration(durationInRealDays) {
+    if (!durationInRealDays || durationInRealDays <= 0) {
+        return '0 minutes';
+    }
+
+    const days = Math.floor(durationInRealDays);
+    const hours = (durationInRealDays - days) * 24;
+    const wholeHours = Math.floor(hours);
+    const minutes = Math.round((hours - wholeHours) * 60);
+
+    let formatted = '';
+
+    // For very short durations (< 1 hour) - show only minutes
+    if (durationInRealDays < (1/24)) {
+        const totalMinutes = Math.round(durationInRealDays * 24 * 60);
+        return totalMinutes + ' minute' + (totalMinutes !== 1 ? 's' : '');
+    }
+
+    // For short durations (< 1 day) - show hours and minutes
+    if (days === 0) {
+        if (wholeHours > 0) {
+            formatted += wholeHours + ' hour' + (wholeHours !== 1 ? 's' : '');
+        }
+        if (minutes > 0) {
+            formatted += (formatted ? ' ' : '') + minutes + ' minute' + (minutes !== 1 ? 's' : '');
+        }
+        return formatted || '0 minutes';
+    }
+
+    // For longer durations - show days, hours, minutes
+    if (days > 0) {
+        formatted += days + ' day' + (days !== 1 ? 's' : '');
+    }
+    if (wholeHours > 0) {
+        formatted += (formatted ? ' ' : '') + wholeHours + ' hour' + (wholeHours !== 1 ? 's' : '');
+    }
+    if (minutes > 0) {
+        formatted += (formatted ? ' ' : '') + minutes + ' minute' + (minutes !== 1 ? 's' : '');
+    }
+
+    return formatted || '0 minutes';
+}
 function updateDateRange() {
     initTimeline();
 }
