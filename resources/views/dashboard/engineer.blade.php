@@ -618,7 +618,7 @@
                                                     <td>{{ $task->job->id }}</td>
                                                     <td>
                                                         @foreach($task->jobUsers as $assignment)
-                                                        <small class="badge bg-info">{{ $assignment->employee->name ?? 'N/A' }}</small>
+                                                        <small class="badge bg-info">{{ $assignment->user->name ?? 'N/A' }}</small>
                                                         @endforeach
                                                     </td>
                                                     <td>

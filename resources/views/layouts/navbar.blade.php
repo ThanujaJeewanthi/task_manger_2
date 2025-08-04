@@ -3,13 +3,13 @@
         <!-- Logo section -->
         <div class="d-flex align-items-center" style="width: 90px;">
             <a href="{{ route('dashboard') }}" class="navbar-brand p-0">
-                <span class="fw-bold">Spin App</span>
+                <span class="fw-bold">Task Manager</span>
             </a>
         </div>
 
         @auth
         <!-- Search bar -->
-        <div class="search-bar d-flex align-items-center mx-3" style="flex-grow: 1; ">
+        <div class="search-bar d-flex align-items-center mx-5" style="flex-grow: 1; ">
             <div class="input-group">
                 {{-- <span class="input-group-text bg-dark text-light ">
                     <i class="fas fa-search"></i>
