@@ -171,29 +171,11 @@
 
 
 
-        <button class="dropdown-btn">
-            <i class="fa fa-bars icon-spacing"></i>
-            <span class="side-link"> Link page 1</span>
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
-        </div>
 
 
 
-        <button class="dropdown-btn">
-            <i class="fa fa-cog icon-spacing"></i>
-            <span class="side-link"> Link page 1</span>
-            <i class="fa fa-caret-down"></i>
-        </button>
-        <div class="dropdown-container">
-            <a href="#">Link 1</a>
-            <a href="#">Link 2</a>
-            <a href="#">Link 3</a>
-        </div>
+
+      
          {{-- <button class="dropdown-btn">
             <i class="fa fa-caret-down"></i>
             <span class="side-link"> Last Link page</span>
