@@ -56,8 +56,8 @@
                 <div class="col-12">
                     <div class="dcards-card bg-primary-subtle bg-opacity-20">
                         <div class="dcards-card-body">
-                            <h3 class="h5 mb-2">About Spin App</h3>
-                            <p class="mb-0">Spin App is a comprehensive laundry management system that connects clients, riders, and laundry services through a seamless digital platform. Our goal is to simplify the laundry process from pickup to delivery.</p>
+                            <h3 class="h5 mb-2">About Task Manager</h3>
+                            <p class="mb-0">Task Manager is a comprehensive solution for managing tasks and projects efficiently. Our platform connects users with the tools they need to streamline their workflow and enhance productivity.</p>
                         </div>
                     </div>
                 </div>
