@@ -74,7 +74,10 @@
                                     </div>
                                 </div>
 
-                                <!-- End Date -->
+
+                            </div>
+                            <div class="row">
+                              <!-- End Date -->
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="end_date">End Date</label>
@@ -84,7 +87,6 @@
                                         @enderror
                                     </div>
                                 </div>
-                            </div>
                             <!-- End Time -->
                             <div class="col-md-6">
                                 <div class="form-group mb-4">
@@ -95,6 +97,7 @@
                                     @enderror
                                 </div>
                             </div>
+                        </div>
 
                             <!-- Enhanced User Selection -->
                             <div class="form-group mb-4">
