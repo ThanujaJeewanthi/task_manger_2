@@ -53,19 +53,16 @@ class JobController extends Controller
                             ->where('active', true); // Only get active assignments
                       });
             break;
-        case 'User':
-
-            $userId = Auth::user()->user->id ?? null;
-
-
-                $query->whereIn('id', function($q) use ($userId) {
-                    $q->select('job_id')
-                      ->from('job_users')
-                      ->where('user_id', $userId)
-                      ->where('active', true); // Only get active assignments
-                });
-
-            break;
+        case 'Employee':
+// get jobs of which the tasks assigned to this user 
+            // Show jobs where the user is assigned to a task
+            // and the job is active
+            $query->whereIn('id', function($q) {
+                $q->select('job_id')
+                  ->from('job_users')
+                  ->where('user_id', Auth::id())
+                  ->where('active', true); // Only get active assignments
+            });
 
         case 'Engineer':
             // Show all active jobs within company (no additional filter needed)
