@@ -1,205 +1,173 @@
-<!-- Updated Timeline Section with proper time handling -->
+{{-- CORRECTED: Updated timeline.blade.php with ORIGINAL styles/CSS and only logic changes --}}
 
-<div class="timeline-section ">
-    <div class="card">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">
-                    <i class="fas fa-chart-gantt me-2"></i>Project Timeline
-                </h5>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-outline-primary btn-sm" onclick="refreshTimeline()">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
-            </div>
-        </div>
 
-        <div class="card-body">
-            <!-- Project Overview -->
-            <div class="project-overview mb-4">
-                <div class="row">
-                    <div class="col-md-8">
-                        <h6 class="fw-bold">Job #{{ $job->id }} - {{ $job->jobType->name }}</h6>
-                        <div class="job-meta">
-                            @if($job->start_date && $job->due_date)
-                                <span class="badge bg-info me-2">
-                                    <i class="fas fa-calendar me-1"></i>
-                                    {{ $job->start_date->format('M d') }} - {{ $job->due_date->format('M d, Y') }}
-                                </span>
-                            @else
-                                <span class="badge bg-warning me-2">
-                                    <i class="fas fa-exclamation-triangle me-1"></i>
-                                    No dates set
-                                </span>
-                            @endif
 
-                            @php
-                                $statusColors = [
-                                    'pending' => 'warning',
-                                    'in_progress' => 'primary',
-                                    'completed' => 'success',
-                                    'cancelled' => 'danger'
-                                ];
-                            @endphp
-                            <span class="badge bg-{{ $statusColors[$job->status] ?? 'secondary' }}">
-                                {{ ucfirst(str_replace('_', ' ', $job->status)) }}
-                            </span>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-end">
-                        <div class="progress-circle">
-                            <div class="progress-text">{{ $jobStats['overall_progress'] }}%</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            @if($timelineData['tasks'] && count($timelineData['tasks']) > 0)
-                <!-- Date Range Controls -->
-                <div class="date-controls mb-3">
+<div class="container-fluid px-0">
+    <div class="row">
+        <div class="col-12">
+            <div class="timeline-section">
+                <!-- Project Overview Header -->
+                <div class="project-overview">
                     <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <div class="d-flex gap-2 align-items-center">
-                                <label class="form-label mb-0 fw-bold">View:</label>
-                                <input type="date" class="form-control form-control-sm" id="startDate"
-                                       value="{{ $job->start_date ? $job->start_date->format('Y-m-d') : date('Y-m-d') }}" style="width: auto;">
-                                <span class="text-muted">to</span>
-                                <input type="date" class="form-control form-control-sm" id="endDate"
-                                       value="{{ $job->due_date ? $job->due_date->format('Y-m-d') : date('Y-m-d', strtotime('+30 days')) }}" style="width: auto;">
-                                <button class="btn btn-primary btn-sm" onclick="updateDateRange()">Update</button>
+                        <div class="col-md-8">
+                            <h3 class="mb-1">{{ $job->name }}</h3>
+                            <div class="job-meta">
+                                <span class="badge bg-{{ $job->status === 'pending' ? 'warning' : ($job->status === 'in_progress' ? 'primary' : ($job->status === 'completed' ? 'success' : 'secondary')) }}">
+                                    {{ ucfirst(str_replace('_', ' ', $job->status)) }}
+                                </span>
                             </div>
                         </div>
-                        <div class="col-md-6 text-end">
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-secondary" onclick="setQuickRange('week')">This Week</button>
-                                <button class="btn btn-outline-secondary" onclick="setQuickRange('month')">This Month</button>
-                                <button class="btn btn-outline-secondary active" onclick="setQuickRange('job')">Full Job</button>
+                        <div class="col-md-4 text-end">
+                            <div class="progress-circle">
+                                <div class="progress-text">{{ $jobStats['overall_progress'] }}%</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Timeline Chart -->
-                <div class="timeline-chart">
-                    <div class="timeline-scroll-container">
-                        <div class="timeline-header">
-                            <div class="timeline-labels">Tasks</div>
-                            <div class="timeline-dates-container">
-                                <div class="timeline-dates" id="timelineDates">
-                                    <!-- Dates generated by JS -->
+                @if($timelineData['tasks'] && count($timelineData['tasks']) > 0)
+                    <!-- UPDATED: Date Range Controls - Now defaults to full job timeline -->
+                    <div class="date-controls mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <label class="form-label mb-0 fw-bold">View:</label>
+                                    <input type="date" class="form-control form-control-sm" id="startDate"
+                                           value="{{ $timelineData['timeline_start'] ? $timelineData['timeline_start']->format('Y-m-d') : ($job->start_date ? $job->start_date->format('Y-m-d') : date('Y-m-d')) }}" style="width: auto;">
+                                    <span class="text-muted">to</span>
+                                    <input type="date" class="form-control form-control-sm" id="endDate"
+                                           value="{{ $timelineData['timeline_end'] ? $timelineData['timeline_end']->format('Y-m-d') : ($job->due_date ? $job->due_date->format('Y-m-d') : date('Y-m-d', strtotime('+30 days'))) }}" style="width: auto;">
+                                    <button class="btn btn-primary btn-sm" onclick="updateDateRange()">Update</button>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-secondary" onclick="setQuickRange('week')">This Week</button>
+                                    <button class="btn btn-outline-secondary" onclick="setQuickRange('month')">This Month</button>
+                                    <button class="btn btn-outline-secondary active" onclick="setQuickRange('job')">Full Job</button>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Scrollable Container for Task Rows -->
-                        <div class="timeline-content">
-                            <!-- Task Rows -->
-                            @foreach($timelineData['tasks'] as $task)
-                                <div class="timeline-row" onclick="selectTask({{ $task['id'] }})" data-task-id="{{ $task['id'] }}">
-                                    <div class="task-label">
-                                        <div class="task-info">
-                                            @php
-                                                $statusIcons = [
-                                                    'completed' => 'fas fa-check-circle text-success',
-                                                    'in_progress' => 'fas fa-play-circle text-primary',
-                                                    'pending' => 'fas fa-clock text-warning',
-                                                    'cancelled' => 'fas fa-times-circle text-danger'
-                                                ];
-                                            @endphp
-                                            <i class="{{ $statusIcons[$task['status']] ?? 'fas fa-circle text-secondary' }} me-2"></i>
-                                            <div>
-                                                <div class="task-name">{{ $task['name'] }}</div>
-                                                <div class="task-users">
-                                                    {{ implode(', ', array_column($task['users']->toArray(), 'name')) }}
-                                                </div>
-                                                <!-- ADDED: Duration display -->
-                                                <div class="task-duration text-muted small">
-                                                    <i class="fas fa-clock me-1"></i>
-                                                    {{ $task['formatted_duration'] ?? 'Not set' }}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="task-timeline-container">
-                                        <div class="task-timeline">
-                                            @php
-                                                $barClass = match($task['status']) {
-                                                    'completed' => 'task-completed',
-                                                    'in_progress' => 'task-progress',
-                                                    'pending' => 'task-pending',
-                                                    default => 'task-pending'
-                                                };
-                                            @endphp
-                                            <!-- FIXED: Use the new datetime fields -->
-                                            <div class="task-bar {{ $barClass }}"
-                                                 data-start="{{ $task['start_date_time'] ? $task['start_date_time']->format('Y-m-d') : '' }}"
-                                                 data-end="{{ $task['end_date_time'] ? $task['end_date_time']->format('Y-m-d') : '' }}"
-                                                 data-start-time="{{ $task['start_date_time'] ? $task['start_date_time']->format('H:i') : '' }}"
-                                                 data-end-time="{{ $task['end_date_time'] ? $task['end_date_time']->format('H:i') : '' }}"
-                                                 data-progress="{{ $task['progress'] }}">
-                                                <div class="task-content">
-                                                    <span class="task-title">{{ Str::limit($task['name'], 20) }}</span>
-                                                    @if($task['status'] === 'in_progress' && $task['progress'] > 0)
-                                                        <div class="progress-fill" style="width: {{ $task['progress'] }}%"></div>
-                                                    @endif
-                                                </div>
-                                                @if($task['has_extension_request'])
-                                                    <div class="extension-badge" title="Extension Requested">
-                                                        <i class="fas fa-clock"></i>
-                                                    </div>
-                                                @endif
-                                                <!-- ADDED: Time indicators -->
-                                                @if($task['start_date_time'] && $task['end_date_time'])
-                                                    <div class="time-indicator start-time" title="Start: {{ $task['start_date_time']->format('M d, H:i') }}">
-                                                        <i class="fas fa-play"></i>
-                                                    </div>
-                                                    <div class="time-indicator end-time" title="End: {{ $task['end_date_time']->format('M d, H:i') }}">
-                                                        <i class="fas fa-stop"></i>
-                                                    </div>
-                                                @endif
-                                            </div>
-                                        </div>
+                    <!-- Timeline Chart -->
+                    <div class="timeline-chart">
+                        <div class="timeline-scroll-container">
+                            <div class="timeline-header">
+                                <div class="timeline-labels">Tasks</div>
+                                <div class="timeline-dates-container">
+                                    <div class="timeline-dates" id="timelineDates">
+                                        <!-- Dates generated by JS -->
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
+                            </div>
 
-                <!-- Task Details Panel -->
-                <div class="container mt-5 mb-5 me-0" style="margin-left:0; margin-right:0;">
-                    <div class="card">
-                        <div class="task-details" id="taskDetails" style="display: none;">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <h6 id="taskName" class="text-dark fw-bold">Task Details</h6>
-                                    <p id="taskDescription" class="text-muted mb-3">Select a task to view details</p>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <strong>Timeline:</strong><br>
-                                            <span id="taskTimeline">-</span>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <strong>Progress:</strong><br>
-                                            <div class="progress">
-                                                <div class="progress-bar" id="taskProgressBar" style="width: 0%"></div>
+                            <!-- Scrollable Container for Task Rows -->
+                            <div class="timeline-content">
+                                <!-- Task Rows -->
+                                @foreach($timelineData['tasks'] as $task)
+                                    <div class="timeline-row" onclick="selectTask({{ $task['id'] }})" data-task-id="{{ $task['id'] }}">
+                                        <div class="task-label">
+                                            <div class="task-info">
+                                                @php
+                                                    $statusIcons = [
+                                                        'completed' => 'fas fa-check-circle text-success',
+                                                        'in_progress' => 'fas fa-play-circle text-primary',
+                                                        'pending' => 'fas fa-clock text-warning',
+                                                        'cancelled' => 'fas fa-times-circle text-danger'
+                                                    ];
+                                                @endphp
+                                                <i class="{{ $statusIcons[$task['status']] ?? 'fas fa-circle text-secondary' }} me-2"></i>
+                                                <div>
+                                                    <div class="task-name">{{ $task['name'] }}</div>
+                                                    <div class="task-users">
+                                                        {{ implode(', ', array_column($task['users']->toArray(), 'name')) }}
+                                                    </div>
+                                                    <!-- ORIGINAL: Duration styling -->
+                                                    <div class="task-duration text-muted small">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        {{ $task['formatted_duration'] ?? 'Not set' }}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <small id="taskProgressText">0%</small>
+                                        </div>
+                                        <div class="task-timeline-container">
+                                            <div class="task-timeline">
+                                                @php
+                                                    $barClass = match($task['status']) {
+                                                        'completed' => 'task-completed',
+                                                        'in_progress' => 'task-progress',
+                                                        'pending' => 'task-pending',
+                                                        default => 'task-pending'
+                                                    };
+                                                @endphp
+                                                <!-- UPDATED: Task bar positioning uses ORIGINAL task dates -->
+                                                <div class="task-bar {{ $barClass }}"
+                                                     data-start="{{ $task['start_date_time'] ? $task['start_date_time']->format('Y-m-d') : '' }}"
+                                                     data-end="{{ $task['end_date_time'] ? $task['end_date_time']->format('Y-m-d') : '' }}"
+                                                     data-start-time="{{ $task['start_date_time'] ? $task['start_date_time']->format('H:i') : '' }}"
+                                                     data-end-time="{{ $task['end_date_time'] ? $task['end_date_time']->format('H:i') : '' }}">
+                                                    <div class="task-content">
+                                                        {{ $task['progress'] }}%
+                                                        @if($task['has_extension_request'])
+                                                            <div class="extension-badge">!</div>
+                                                        @endif
+                                                        <!-- ORIGINAL: Time indicators -->
+                                                        @if($task['start_date_time'])
+                                                            <div class="time-indicator start-time">S</div>
+                                                        @endif
+                                                        @if($task['end_date_time'])
+                                                            <div class="time-indicator end-time">E</div>
+                                                        @endif
+                                                    </div>
+                                                    <!-- ORIGINAL: Progress fill based on actual progress -->
+                                                    <div class="progress-fill" style="width: {{ $task['progress'] }}%"></div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
 
-                                    <!-- ADDED: Duration details -->
-                                    <div class="row mt-3">
-                                        <div class="col-md-6">
-                                            <strong>Planned Duration:</strong><br>
-                                            <span id="taskPlannedDuration">-</span>
+                    <!-- Scroll Instructions -->
+                    <div class="alert alert-info alert-sm mt-3" id="scrollInstructions" style="display: none;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Use horizontal scroll or drag to navigate the timeline.
+                    </div>
+
+                    <!-- Task Details Panel -->
+                    <div class="task-details" id="taskDetails" style="display: none;">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h6 id="taskName" class="text-dark fw-bold">Task Details</h6>
+                                <p id="taskDescription" class="text-muted mb-3">Select a task to view details</p>
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Timeline:</strong><br>
+                                        <span id="taskTimeline">-</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Progress:</strong><br>
+                                        <div class="progress">
+                                            <div class="progress-bar" id="taskProgressBar" style="width: 0%"></div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <strong>Time Remaining:</strong><br>
-                                            <span id="taskTimeRemaining">-</span>
-                                        </div>
+                                        <small id="taskProgressText">0%</small>
+                                    </div>
+                                </div>
+
+                                <!-- ORIGINAL: Duration details -->
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <strong>Planned Duration:</strong><br>
+                                        <span id="taskPlannedDuration">-</span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Time Remaining:</strong><br>
+                                        <span id="taskTimeRemaining">-</span>
                                     </div>
                                 </div>
                             </div>
@@ -212,17 +180,18 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            @else
-                <div class="text-center py-5">
-                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-                    <h5 class="text-muted">No Tasks Available</h5>
-                    <p class="text-muted">Tasks will appear here once they are created and assigned.</p>
-                </div>
-            @endif
+                @else
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Tasks Available</h5>
+                        <p class="text-muted">Tasks will appear here once they are created and assigned.</p>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 </div>
+
 
 @section('styles')
 <style>
@@ -602,6 +571,7 @@ function positionTasks() {
         const taskBar = row.querySelector('.task-bar');
         if (!taskBar) return;
 
+        // UPDATED: Use original task dates (not when user actually started)
         const taskStart = taskBar.dataset.start ? new Date(taskBar.dataset.start) : null;
         const taskEnd = taskBar.dataset.end ? new Date(taskBar.dataset.end) : null;
 
@@ -614,7 +584,7 @@ function positionTasks() {
         // Show tasks that fall within or overlap the range
         row.style.display = 'flex';
 
-        // Calculate position in pixels
+        // UPDATED: Calculate position in pixels using ORIGINAL task dates
         const effectiveStart = new Date(Math.max(taskStart, startDate));
         const effectiveEnd = new Date(Math.min(taskEnd, endDate));
 
@@ -666,45 +636,34 @@ function checkScrollNeed() {
 }
 
 function setupScrollSync() {
-    const headerDatesContainer = document.querySelector('.timeline-dates-container');
-    const taskTimelineContainers = document.querySelectorAll('.task-timeline-container');
+    const datesContainer = document.querySelector('.timeline-dates-container');
+    const taskContainers = document.querySelectorAll('.task-timeline-container');
 
-    if (!headerDatesContainer || taskTimelineContainers.length === 0) return;
+    if (!datesContainer) return;
 
-    let isScrolling = false;
-
-    headerDatesContainer.addEventListener('scroll', function() {
-        if (isScrolling) return;
-        isScrolling = true;
-
-        taskTimelineContainers.forEach(container => {
+    datesContainer.addEventListener('scroll', function() {
+        taskContainers.forEach(container => {
             container.scrollLeft = this.scrollLeft;
         });
-
-        setTimeout(() => { isScrolling = false; }, 10);
     });
 
-    taskTimelineContainers.forEach((container, index) => {
+    taskContainers.forEach(container => {
         container.addEventListener('scroll', function() {
-            if (isScrolling) return;
-            isScrolling = true;
-
-            headerDatesContainer.scrollLeft = this.scrollLeft;
-
-            taskTimelineContainers.forEach((otherContainer, otherIndex) => {
-                if (otherIndex !== index) {
+            datesContainer.scrollLeft = this.scrollLeft;
+            taskContainers.forEach(otherContainer => {
+                if (otherContainer !== this) {
                     otherContainer.scrollLeft = this.scrollLeft;
                 }
             });
-
-            setTimeout(() => { isScrolling = false; }, 10);
         });
     });
 }
 
 function selectTask(taskId) {
     // Remove previous selection
-    document.querySelectorAll('.timeline-row').forEach(row => row.classList.remove('selected'));
+    document.querySelectorAll('.timeline-row').forEach(row => {
+        row.classList.remove('selected');
+    });
 
     // Add selection to current row
     const selectedRow = document.querySelector(`[data-task-id="${taskId}"]`);
@@ -748,10 +707,15 @@ function displayTaskDetails(data) {
 
         document.getElementById('taskTimeline').textContent = timelineText;
 
+<<<<<<< HEAD
         // Display planned duration (original duration)
         if (user.formatted_planned_duration) {
             document.getElementById('taskPlannedDuration').textContent = user.formatted_planned_duration;
         } else if (user.formatted_duration) {
+=======
+        // Duration and time remaining
+        if (user.formatted_duration) {
+>>>>>>> c55036b96b312ce89e98f06e74b54c01f3b04a06
             document.getElementById('taskPlannedDuration').textContent = user.formatted_duration;
         }
 
@@ -918,8 +882,9 @@ function setQuickRange(type) {
             endInput.value = monthEnd.toISOString().split('T')[0];
             break;
         case 'job':
-            startInput.value = '{{ $job->start_date ? $job->start_date->format('Y-m-d') : date('Y-m-d') }}';
-            endInput.value = '{{ $job->due_date ? $job->due_date->format('Y-m-d') : date('Y-m-d', strtotime('+30 days')) }}';
+            // UPDATED: Use full timeline dates from PHP data
+            startInput.value = '{{ $timelineData["timeline_start"] ? $timelineData["timeline_start"]->format("Y-m-d") : ($job->start_date ? $job->start_date->format("Y-m-d") : date("Y-m-d")) }}';
+            endInput.value = '{{ $timelineData["timeline_end"] ? $timelineData["timeline_end"]->format("Y-m-d") : ($job->due_date ? $job->due_date->format("Y-m-d") : date("Y-m-d", strtotime("+30 days"))) }}';
             break;
     }
 

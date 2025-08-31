@@ -338,7 +338,7 @@
                                                 <span class="badge bg-warning">Requested</span>
                                             </td>
                                             <td>
-                                                <a href="{{ route('jobs.show', $job) }}" class="btn-sm btn-primary">
+                                                <a href="{{ route('jobs.show', $job) }}" class="btn btn-sm btn-primary">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             </td>

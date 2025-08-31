@@ -238,212 +238,187 @@
             </div>
 
             <!-- My Active Tasks -->
-            <div class="row align-items-stretch">
-                <div class="col d-flex flex-column">
-                    <div class="card mb-3 flex-fill h-100">
-                        <div class="card-header">
-                            <div class="d-component-title">
-                                <span>My Active Tasks</span>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-compact">
-                                <table class="table table-sm">
-                                    <thead>
-                                        <tr>
-                                            <th>Task</th>
-                                            <th>Job</th>
-                                            <th>Start Date</th>
-                                            <th>End Date</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($myActiveTasks as $task)
-                                        @php
-                                            $jobUser = $task->jobUsers->where('employee_id', $employee->id)->first();
-                                        @endphp
-                                        <tr id="task-row-{{ $task->id }}">
-                                            <td>
-                                                <strong>{{ Str::limit($task->task, 30) }}</strong>
-                                                @if($task->description)
-                                                <br><small class="text-muted">{{ Str::limit($task->description, 50) }}</small>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                {{ $task->job->id ?? 'N/A' }}
-                                                @if($task->job)
-                                                <br><small class="text-muted">{{ $task->job->jobType->name ?? '' }}</small>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($jobUser && $jobUser->start_date)
-                                                    {{ \Carbon\Carbon::parse($jobUser->start_date)->format('M d, Y') }}
-                                                @else
-                                                    <span class="text-muted">Not started</span>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if($jobUser && $jobUser->end_date)
-                                                    @php
-                                                        $endDate = \Carbon\Carbon::parse($jobUser->end_date);
-                                                        $isOverdue = $endDate->isPast() && $jobUser->status !== 'completed';
-                                                    @endphp
-                                                    <span class="{{ $isOverdue ? 'text-danger' : '' }}">
-                                                        {{ $endDate->format('M d, Y') }}
-                                                    </span>
-                                                    @if($isOverdue)
-                                                        <i class="fas fa-exclamation-triangle text-danger" title="Overdue"></i>
-                                                    @endif
-                                                @else
-                                                    N/A
-                                                @endif
-                                            </td>
-                                            <td>
-                                         {{-- Individual User Status Badge --}}
-@if($isAssignedToTask && $userJobUser)
-    @php
-        $badgeClass = match($userJobUser->status) {
-            'pending' => 'bg-warning',
-            'in_progress' => 'bg-primary', 
-            'completed' => 'bg-success',
-            'cancelled' => 'bg-danger',
-            default => 'bg-secondary'
-        };
-        
-        $statusText = match($userJobUser->status) {
-            'pending' => 'Pending',
-            'in_progress' => 'In Progress', 
-            'completed' => 'Completed',
-            'cancelled' => 'Cancelled',
-            default => 'Unknown'
-        };
-    @endphp
-    
-    <span class="badge {{ $badgeClass }}" id="task-status-{{ $task->id }}">
-        {{ $statusText }} (You)
-    </span>
-    
-    {{-- Show overall task status if different --}}
-    @if($task->status !== $userJobUser->status)
-        <br><small class="text-muted">
-            Overall: <span class="badge bg-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'warning') }}">
-                {{ ucfirst(str_replace('_', ' ', $task->status)) }}
-            </span>
-        </small>
-    @endif
-@else
-    {{-- Show overall task status for non-assigned users --}}
-    <span class="badge bg-secondary" id="task-status-{{ $task->id }}">
-        Not Assigned
-    </span>
-@endif
-
-                                                {{-- Show overall task status if different from employee status --}}
-                                                {{-- @if($jobUser && $task->status !== $employeeStatus)
-                                                    <br>
-                                                    <small class="text-muted">
-                                                        Overall:
-                                                        <span class="badge bg-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'warning') }} badge-sm">
-                                                            {{ ucfirst(str_replace('_', ' ', $task->status)) }}
-                                                        </span>
-                                                    </small>
-                                                @endif --}}
-
-                                                {{-- Progress indicator for tasks with multiple employees --}}
-                                                @if($task->jobUsers->count() > 1)
-                                                    @php
-                                                        $totalEmployees = $task->jobUsers->count();
-                                                        $completedEmployees = $task->jobUsers->where('status', 'completed')->count();
-                                                        $progressPercentage = $totalEmployees > 0 ? round(($completedEmployees / $totalEmployees) * 100) : 0;
-                                                    @endphp
-                                                    <br>
-                                                    <small class="text-muted">
-                                                        Progress: {{ $completedEmployees }}/{{ $totalEmployees }} employees
-                                                        <div class="progress mt-1" style="height: 4px;">
-                                                            <div class="progress-bar bg-success" style="width: {{ $progressPercentage }}%"></div>
-                                                        </div>
-                                                    </small>
-                                                @endif
-                                            </td>
-                                           <td>
-    @if($jobUser)
-        @php
-            $currentUserEmployee = Auth::user()->employee ?? null;
-            $isAssignedToTask = false;
-            $userJobUser = null;
-
-            if ($currentUserEmployee) {
-                $userJobUser = $jobUser;
-                $isAssignedToTask = $userJobUser !== null;
-            }
-        @endphp
-
-      @if($isAssignedToTask && $userJobUser)
-    <!-- Employee Task Actions Based on Individual Status -->
-    <div class="btn-group" role="group">
-        @if($userJobUser->status === 'pending')
-            {{-- User hasn't started the task yet --}}
-            <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
-                @csrf
-                <button type="button" class="btn btn-primary btn-sm"
-                    onclick="showStartTaskSwal(this)">
-                   <i class="fas fa-play"></i> Start
-                </button>
-                {{-- SweetAlert script remains the same --}}
-            </form>
-        @elseif($userJobUser->status === 'in_progress')
-            {{-- User has started but not completed the task --}}
-            @if(App\Helpers\UserRoleHelper::hasPermission('11.32'))
-                <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
-                    @csrf
-                    <button type="button" class="btn btn-success btn-sm"
-                        onclick="completeTask({{ $task->id }}, '{{ $task->task }}')">
-                        <i class="fas fa-check"></i> Complete
-                    </button>
-                </form>
-            @endif
-        @elseif($userJobUser->status === 'completed')
-            {{-- User has completed the task --}}
-            <span class="badge bg-success">
-                <i class="fas fa-check"></i> Completed by You
-            </span>
-        @endif
-    </div>
-@else
-    {{-- Non-employee or unassigned users see view/edit options --}}
-    @if(in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor', 'Technical Officer', 'admin']))
-        <div class="btn-group" role="group">
-            @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
-                <a href="{{ route('jobs.tasks.edit', ['job' => $task->job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
-                    <i class="fas fa-edit"></i>
-                </a>
-            @endif
-        </div>
-    @else
-        <span class="text-muted">-</span>
-    @endif
-@endif
-    @else
-        <span class="text-muted">Not assigned</span>
-    @endif
-</td>
-                                        </tr>
-                                        @empty
-                                        <tr>
-                                            <td colspan="6" class="text-center">No active tasks assigned to you</td>
-                                        </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+           {{-- My Active Tasks - FIXED VERSION --}}
+<div class="row align-items-stretch">
+    <div class="col d-flex flex-column">
+        <div class="card mb-3 flex-fill h-100">
+            <div class="card-header">
+                <div class="d-component-title">
+                    <span>My Active Tasks</span>
                 </div>
-
-
             </div>
+            <div class="card-body">
+                <div class="table-responsive table-compact">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Task</th>
+                                <th>Job</th>
+                                <th>Start Date</th>
+                                <th>End Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($myActiveTasks as $task)
+                            @php
+                                // FIXED: Get the current user's assignment for this task
+                                $currentUser = Auth::user();
+                                $jobUser = $task->jobUsers->where('user_id', $currentUser->id)->first();
+                                $isAssignedToTask = $jobUser !== null;
+                            @endphp
+                            <tr id="task-row-{{ $task->id }}">
+                                <td>
+                                    <strong>{{ Str::limit($task->task, 30) }}</strong>
+                                    @if($task->description)
+                                    <br><small class="text-muted">{{ Str::limit($task->description, 50) }}</small>
+                                    @endif
+                                </td>
+                                <td>
+                                    {{ $task->job->id ?? 'N/A' }}
+                                    @if($task->job)
+                                    <br><small class="text-muted">{{ $task->job->jobType->name ?? '' }}</small>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($jobUser && $jobUser->start_date)
+                                        {{ \Carbon\Carbon::parse($jobUser->start_date)->format('M d, Y') }}
+                                    @else
+                                        <span class="text-muted">Not started</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($jobUser && $jobUser->end_date)
+                                        @php
+                                            $endDate = \Carbon\Carbon::parse($jobUser->end_date);
+                                            $isOverdue = $endDate->isPast() && $jobUser->status !== 'completed';
+                                        @endphp
+                                        <span class="{{ $isOverdue ? 'text-danger' : '' }}">
+                                            {{ $endDate->format('M d, Y') }}
+                                        </span>
+                                        @if($isOverdue)
+                                            <i class="fas fa-exclamation-triangle text-danger" title="Overdue"></i>
+                                        @endif
+                                    @else
+                                        N/A
+                                    @endif
+                                </td>
+                                <td>
+                                    {{-- FIXED: Individual User Status Badge --}}
+                                    @if($isAssignedToTask && $jobUser)
+                                        @php
+                                            $badgeClass = match($jobUser->status) {
+                                                'pending' => 'bg-warning',
+                                                'in_progress' => 'bg-primary', 
+                                                'completed' => 'bg-success',
+                                                'cancelled' => 'bg-danger',
+                                                default => 'bg-secondary'
+                                            };
+                                            
+                                            $statusText = match($jobUser->status) {
+                                                'pending' => 'Pending',
+                                                'in_progress' => 'In Progress', 
+                                                'completed' => 'Completed',
+                                                'cancelled' => 'Cancelled',
+                                                default => 'Unknown'
+                                            };
+                                        @endphp
+                                        
+                                        <span class="badge {{ $badgeClass }}" id="task-status-{{ $task->id }}">
+                                            {{ $statusText }} (You)
+                                        </span>
+                                        
+                                        {{-- Show overall task status if different --}}
+                                        @if($task->status !== $jobUser->status)
+                                            <br><small class="text-muted">
+                                                Overall: <span class="badge bg-{{ $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'warning') }}">
+                                                    {{ ucfirst(str_replace('_', ' ', $task->status)) }}
+                                                </span>
+                                            </small>
+                                        @endif
+                                    @else
+                                        {{-- Show overall task status for non-assigned users --}}
+                                        <span class="badge bg-secondary" id="task-status-{{ $task->id }}">
+                                            Not Assigned
+                                        </span>
+                                    @endif
+
+                                    {{-- Progress indicator for tasks with multiple employees --}}
+                                    @if($task->jobUsers->count() > 1)
+                                        @php
+                                            $totalEmployees = $task->jobUsers->count();
+                                            $completedEmployees = $task->jobUsers->where('status', 'completed')->count();
+                                            $progressPercentage = $totalEmployees > 0 ? round(($completedEmployees / $totalEmployees) * 100) : 0;
+                                        @endphp
+                                        <br>
+                                        <small class="text-muted">
+                                            Progress: {{ $completedEmployees }}/{{ $totalEmployees }} employees
+                                            <div class="progress mt-1" style="height: 4px;">
+                                                <div class="progress-bar bg-success" style="width: {{ $progressPercentage }}%"></div>
+                                            </div>
+                                        </small>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($isAssignedToTask && $jobUser)
+                                        <!-- FIXED: Employee Task Actions Based on Individual Status -->
+                                        <div class="btn-group" role="group">
+                                            @if($jobUser->status === 'pending')
+                                                {{-- User hasn't started the task yet --}}
+                                                <form action="{{ route('tasks.start', $task) }}" method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="button" class="btn btn-primary btn-sm"
+                                                        onclick="showStartTaskSwal(this)">
+                                                       <i class="fas fa-play"></i> Start
+                                                    </button>
+                                                </form>
+                                            @elseif($jobUser->status === 'in_progress')
+                                                {{-- User has started but not completed the task --}}
+                                                @if(App\Helpers\UserRoleHelper::hasPermission('11.32'))
+                                                    <form action="{{ route('tasks.complete', $task) }}" method="POST" style="display: inline;">
+                                                        @csrf
+                                                        <button type="button" class="btn btn-success btn-sm"
+                                                            onclick="completeTask({{ $task->id }}, '{{ $task->task }}')">
+                                                            <i class="fas fa-check"></i> Complete
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @elseif($jobUser->status === 'completed')
+                                                {{-- User has completed the task --}}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Completed by You
+                                                </span>
+                                            @endif
+                                        </div>
+                                    @else
+                                        {{-- Non-employee or unassigned users see view/edit options --}}
+                                        @if(in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor', 'Technical Officer', 'Admin']))
+                                            <div class="btn-group" role="group">
+                                                @if($task->status !== 'completed' && in_array(Auth::user()->userRole->name, ['Engineer', 'Supervisor']))
+                                                    <a href="{{ route('jobs.tasks.edit', ['job' => $task->job->id, 'task' => $task->id]) }}" class="btn btn-secondary btn-sm" title="Edit Task">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    @endif
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="6" class="text-center">No active tasks assigned to you</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 </div>

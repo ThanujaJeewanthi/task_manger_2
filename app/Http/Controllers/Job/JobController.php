@@ -53,19 +53,16 @@ class JobController extends Controller
                             ->where('active', true); // Only get active assignments
                       });
             break;
-        case 'User':
-
-            $userId = Auth::user()->user->id ?? null;
-
-
-                $query->whereIn('id', function($q) use ($userId) {
-                    $q->select('job_id')
-                      ->from('job_users')
-                      ->where('user_id', $userId)
-                      ->where('active', true); // Only get active assignments
-                });
-
-            break;
+        case 'Employee':
+// get jobs of which the tasks assigned to this user 
+            // Show jobs where the user is assigned to a task
+            // and the job is active
+            $query->whereIn('id', function($q) {
+                $q->select('job_id')
+                  ->from('job_users')
+                  ->where('user_id', Auth::id())
+                  ->where('active', true); // Only get active assignments
+            });
 
         case 'Engineer':
             // Show all active jobs within company (no additional filter needed)
@@ -1591,9 +1588,44 @@ private function getTimelineData(Job $job)
         ])
         ->get();
 
+    // UPDATED: Calculate full job timeline from actual task dates
+    $allTaskStarts = collect();
+    $allTaskEnds = collect();
+
+    // Collect all task start and end dates to determine full timeline
+    foreach ($tasks as $task) {
+        $taskUsers = $task->jobUsers;
+        if ($taskUsers->isNotEmpty()) {
+            foreach ($taskUsers as $jobUser) {
+                if ($jobUser->start_date && $jobUser->start_time) {
+                    $allTaskStarts->push(Carbon::parse($jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s')));
+                }
+                if ($jobUser->end_date && $jobUser->end_time) {
+                    $allTaskEnds->push(Carbon::parse($jobUser->end_date->format('Y-m-d') . ' ' . $jobUser->end_time->format('H:i:s')));
+                }
+            }
+        }
+    }
+
+    // UPDATED: Use actual task timeline or fallback to job dates
+    $timelineStart = null;
+    $timelineEnd = null;
+
+    if ($allTaskStarts->isNotEmpty() && $allTaskEnds->isNotEmpty()) {
+        $timelineStart = $allTaskStarts->min();
+        $timelineEnd = $allTaskEnds->max();
+    } else {
+        // Fallback to job dates if no task dates available
+        $timelineStart = $job->start_date ? Carbon::parse($job->start_date) : Carbon::now();
+        $timelineEnd = $job->due_date ? Carbon::parse($job->due_date) : Carbon::now()->addDays(30);
+    }
+
     $timelineData = [
         'job_start' => $job->start_date ? Carbon::parse($job->start_date) : null,
         'job_end' => $job->due_date ? Carbon::parse($job->due_date) : null,
+        // UPDATED: Full timeline based on actual task dates
+        'timeline_start' => $timelineStart,
+        'timeline_end' => $timelineEnd,
         'tasks' => collect()
     ];
 
@@ -1604,7 +1636,7 @@ private function getTimelineData(Job $job)
             continue;
         }
 
-        // UPDATED: Find earliest and latest times with precision
+        // UPDATED: Find earliest and latest times with precision - use ORIGINAL task dates
         $earliestStart = null;
         $latestEnd = null;
 
@@ -1638,8 +1670,8 @@ private function getTimelineData(Job $job)
             'name' => $task->task,
             'description' => $task->description,
             'status' => $task->status,
-            'start_date_time' => $earliestStart,
-            'end_date_time' => $latestEnd,
+            'start_date_time' => $earliestStart, // ORIGINAL task start date/time
+            'end_date_time' => $latestEnd, // ORIGINAL task end date/time
             'planned_duration' => $plannedDuration,
             'formatted_duration' => $plannedDuration ? self::formatDuration($plannedDuration) : 'Not set',
             'progress' => $progress,
@@ -1829,6 +1861,7 @@ private function calculateTaskProgress(Task $task, $taskUsers)
         $taskUsers = $task->jobUsers;
         $progress = $this->calculateTaskProgress($task, $taskUsers);
 
+<<<<<<< HEAD
         return response()->json([
             'task' => [
                 'id' => $task->id,
@@ -1904,5 +1937,46 @@ private function calculateTaskProgress(Task $task, $taskUsers)
             'message' => 'An error occurred while loading the task information.'
         ], 500);
     }
+=======
+    return response()->json([
+        'task' => [
+            'id' => $task->id,
+            'name' => $task->task,
+            'description' => $task->description ?: 'No description provided',
+            'status' => $task->status,
+            'progress' => $progress
+        ],
+        'users' => $taskUsers->map(function($jobUser) {
+            return [
+                'name' => $jobUser->user->name,
+                'status' => $jobUser->status,
+                // UPDATED: Return both date and time components - ORIGINAL task dates
+                'start_date' => $jobUser->start_date ? $jobUser->start_date->format('Y-m-d') : null,
+                'start_time' => $jobUser->start_time ? $jobUser->start_time->format('H:i') : null,
+                'end_date' => $jobUser->end_date ? $jobUser->end_date->format('Y-m-d') : null,
+                'end_time' => $jobUser->end_time ? $jobUser->end_time->format('H:i') : null,
+                // UPDATED: Include formatted duration based on ORIGINAL dates
+                'formatted_duration' => $jobUser->formatted_duration ?? 'Not set',
+                'duration_real_days' => $jobUser->duration ?? 0,
+                // UPDATED: Include datetime objects for calculations - ORIGINAL task dates
+                'start_datetime' => ($jobUser->start_date && $jobUser->start_time)
+                    ? $jobUser->start_date->format('Y-m-d') . ' ' . $jobUser->start_time->format('H:i:s')
+                    : null,
+                'end_datetime' => ($jobUser->end_date && $jobUser->end_time)
+                    ? $jobUser->end_date->format('Y-m-d') . ' ' . $jobUser->end_time->format('H:i:s')
+                    : null,
+            ];
+        }),
+        'extension_requests' => $task->taskExtensionRequests->map(function($request) {
+            return [
+                'requested_end_date' => $request->requested_end_date->format('M d, Y'),
+                'requested_end_time' => $request->requested_end_time ? $request->requested_end_time->format('H:i') : null,
+                'reason' => $request->reason,
+                'status' => $request->status,
+                'formatted_extension' => $request->formatted_extension ?? $request->formatted_extension_days
+            ];
+        })
+    ]);
+>>>>>>> c55036b96b312ce89e98f06e74b54c01f3b04a06
 }
 }

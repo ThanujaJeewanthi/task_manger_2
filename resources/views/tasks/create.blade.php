@@ -74,7 +74,10 @@
                                     </div>
                                 </div>
 
-                                <!-- End Date -->
+
+                            </div>
+                            <div class="row">
+                              <!-- End Date -->
                                 <div class="col-md-6">
                                     <div class="form-group mb-4">
                                         <label for="end_date">End Date</label>
@@ -84,7 +87,6 @@
                                         @enderror
                                     </div>
                                 </div>
-                            </div>
                             <!-- End Time -->
                             <div class="col-md-6">
                                 <div class="form-group mb-4">
@@ -95,6 +97,7 @@
                                     @enderror
                                 </div>
                             </div>
+                        </div>
 
                             <!-- Enhanced User Selection -->
                             <div class="form-group mb-4">
@@ -320,39 +323,45 @@
 $(document).ready(function() {
     let selectedUsers = [];
 
-    // Initialize with old values if form was submitted with errors
-    @if(old('user_ids'))
-        const oldUserIds = @json(old('user_ids'));
-        oldUserIds.forEach(function(userId) {
-            const userItem = $(`.user-item[data-id="${userId}"]`);
-            if (userItem.length) {
-                addUserToSelected(userId, userItem.find('.user-name').text(), userItem.find('.user-userRole').text());
-            }
-        });
-    @endif
+    // Show more users functionality - Fixed button ID
+    $('#show-more-btn').on('click', function() {
+        $('#remaining-users').show();
+        $(this).parent().hide();
+    });
 
-    // Search functionality
+    // Fixed Search functionality with proper debouncing
+    let searchTimeout;
     $('#user-search').on('input', function() {
-        const searchTerm = $(this).val().toLowerCase();
+        const searchTerm = $(this).val().toLowerCase().trim();
 
-        $('.user-item').each(function() {
-            const userName = $(this).data('name');
-            const userUserRole = $(this).data('userRole');
+        // Clear previous timeout
+        clearTimeout(searchTimeout);
 
-            if (userName.includes(searchTerm) || userUserRole.includes(searchTerm)) {
-                $(this).removeClass('hidden');
-            } else {
-                $(this).addClass('hidden');
+        // Add debouncing to prevent too many searches
+        searchTimeout = setTimeout(function() {
+            $('.user-item').each(function() {
+                const userName = $(this).data('name') || '';
+                const userUserRole = $(this).data('userrole') || '';
+
+                // Check if user is already selected
+                const userId = $(this).data('id').toString();
+                const isSelected = selectedUsers.includes(userId);
+
+                if (!isSelected && (userName.includes(searchTerm) || userUserRole.includes(searchTerm))) {
+                    $(this).removeClass('hidden');
+                } else if (!isSelected) {
+                    $(this).addClass('hidden');
+                }
+            });
+
+            // Show "no results" message if no users visible
+            const visibleUsers = $('.user-item:not(.hidden)').length;
+            $('.no-users-message').remove();
+
+            if (visibleUsers === 0 && searchTerm.length > 0) {
+                $('#user-list').append('<div class="no-users-message">No users found matching your search.</div>');
             }
-        });
-
-        // Show "no results" message if no users visible
-        const visibleUsers = $('.user-item:not(.hidden)').length;
-        $('.no-users-message').remove();
-
-        if (visibleUsers === 0 && searchTerm.length > 0) {
-            $('#user-list').append('<div class="no-users-message">No users found matching your search.</div>');
-        }
+        }, 300); // 300ms debounce
     });
 
     // Add user
@@ -360,7 +369,7 @@ $(document).ready(function() {
         const userItem = $(this).closest('.user-item');
         const userId = userItem.data('id');
         const userName = userItem.find('.user-name').text();
-        const userUserRole = userItem.find('.user-role').text();
+        const userUserRole = userItem.find('.user-userRole').text();
 
         addUserToSelected(userId, userName, userUserRole);
     });
@@ -425,6 +434,32 @@ $(document).ready(function() {
         // Trigger search to refresh the list
         $('#user-search').trigger('input');
     }
+
+    // Fix time input popup closing issue
+    $('input[type="time"]').on('blur', function() {
+        // Force close any open time picker by removing focus
+        $(this).blur();
+
+        // Additional fix for some browsers that keep the picker open
+        setTimeout(() => {
+            if (document.activeElement === this) {
+                this.blur();
+            }
+        }, 100);
+    });
+
+    // Handle time input change event to close picker
+    $('input[type="time"]').on('change', function() {
+        // Force blur to close picker
+        $(this).blur();
+    });
+
+    // Handle click outside time input to close picker
+    $(document).on('click', function(e) {
+        if (!$(e.target).is('input[type="time"]')) {
+            $('input[type="time"]').blur();
+        }
+    });
 
     // Form validation
     $('#task-create-form').on('submit', function(e) {

@@ -63,7 +63,7 @@
                                                     <i class="fas fa-edit"></i> Edit
                                                 </a>
                                             @endif
-                                            @if (App\Models\User::hasPermission('9.4'))
+                                            @if (App\Helpers\UserRoleHelper::hasPermission('9.4'))
                                                <form action="{{ route('equipments.destroy', $equipment) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -71,9 +71,9 @@
                                                     <i class="fas fa-trash"></i> Delete
                                                 </button>
                                             </form>
-                                                
+
                                             @endif
-                                           
+
                                         </td>
                                     </tr>
                                 @empty
